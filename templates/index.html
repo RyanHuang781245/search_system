@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件管理系統 Pro - Phase 1 MVP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/document-console.css' %}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top app-navbar">
+        <div class="container-xl">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <div class="brand-mark">
+                    <i data-lucide="files"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-dark">文件管理系統 Pro</div>
+                    <div class="brand-subtitle">Phase 1 MVP / Bootstrap 5 Console</div>
+                </div>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+                <div class="user-badge">AD</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-xl py-4 py-lg-5">
+        <!-- <section class="hero-panel mb-4 mb-lg-5">
+            <span class="hero-kicker">Document Control Center</span>
+            <h1 class="hero-title">文件上傳、列表查詢、明細檢視與刪除操作</h1>
+            <p class="hero-text mb-0">
+                這個畫面直接串接 Django REST API，支援 PDF / DOCX 上傳、metadata 查詢、
+                soft delete，以及原始檔最後修改時間 `file_modified_at` 顯示。
+            </p>
+        </section> -->
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <section class="app-card h-100">
+                    <div class="app-card-header">
+                        <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                            <i data-lucide="upload"></i>
+                            上傳文件
+                        </h2>
+                        <span class="badge text-bg-light border">PDF / DOCX</span>
+                    </div>
+                    <div class="app-card-body">
+                        <form id="upload-form">
+                            <input id="file-modified-at" name="file_modified_at" type="hidden">
+
+                            <label id="dropzone" class="upload-zone mb-4" for="file-input">
+                                <input id="file-input" name="file" type="file" accept=".pdf,.docx" hidden>
+                                <div class="upload-icon-wrapper">
+                                    <i data-lucide="plus"></i>
+                                </div>
+                                <div class="fw-bold text-dark mb-1">拖曳文件到這裡，或點擊選擇檔案</div>
+                                <div class="text-muted small">限制 50MB，僅支援 .pdf 與 .docx</div>
+                                <div id="selected-file" class="selected-file mt-3">尚未選擇檔案</div>
+                            </label>
+
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-12 col-xl-6">
+                                    <label class="form-label">文件類型</label>
+                                    <input type="text" class="form-control" name="doc_type" placeholder="例如：report">
+                                </div>
+                                <div class="col-md-6 col-lg-12 col-xl-6">
+                                    <label class="form-label">標籤</label>
+                                    <input type="text" class="form-control" name="tags" placeholder="例如：finance, monthly">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">描述</label>
+                                    <textarea class="form-control" name="description" rows="4" placeholder="補充文件用途或備註"></textarea>
+                                </div>
+                                <div class="col-12 pt-2">
+                                    <button id="upload-submit" class="btn btn-primary btn-primary-custom w-100" type="submit">
+                                        <i data-lucide="upload"></i>
+                                        <span>上傳文件</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-5">
+                <section class="app-card h-100">
+                    <div class="app-card-header">
+                        <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                            <i data-lucide="search"></i>
+                            文件列表
+                        </h2>
+                        <span class="small text-muted">自動同步 API</span>
+                    </div>
+                    <div class="app-card-body d-flex flex-column">
+                        <form id="filter-form" class="row g-2 mb-4">
+                            <div class="col-12 col-md-5">
+                                <input type="text" class="form-control" name="keyword" placeholder="搜尋檔名關鍵字">
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <input type="text" class="form-control" name="doc_type" placeholder="文件類型">
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <select class="form-select" name="status">
+                                    <option value="">全部狀態</option>
+                                    <option value="uploaded">uploaded</option>
+                                    <option value="deleted">deleted</option>
+                                    <option value="error">error</option>
+                                </select>
+                            </div>
+                        </form>
+
+                        <div id="document-list" class="document-list flex-grow-1"></div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top">
+                            <button id="prev-page" class="btn btn-link text-decoration-none text-muted px-0" type="button">
+                                <i data-lucide="chevron-left"></i>
+                                上一頁
+                            </button>
+                            <span id="page-indicator" class="pagination-indicator">第 1 頁 / 共 1 頁</span>
+                            <button id="next-page" class="btn btn-link text-decoration-none text-muted px-0" type="button">
+                                下一頁
+                                <i data-lucide="chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-3">
+                <section class="app-card h-100">
+                    <div class="app-card-header">
+                        <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                            <i data-lucide="info"></i>
+                            文件詳細資料
+                        </h2>
+                    </div>
+                    <div class="app-card-body">
+                        <div id="empty-detail" class="detail-empty">
+                            <div class="detail-placeholder">
+                                <i data-lucide="file-text"></i>
+                            </div>
+                            <h3 class="h6 fw-bold">選一份文件來查看</h3>
+                            <p class="text-muted small mb-0">
+                                從列表點擊文件後，這裡會顯示 metadata、檔案修改時間與刪除操作。
+                            </p>
+                        </div>
+
+                        <div id="detail-content" class="d-none">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <h3 id="detail-name" class="h6 fw-bold mb-1">-</h3>
+                                    <div id="detail-id" class="text-muted small">-</div>
+                                </div>
+                                <span id="detail-status" class="badge rounded-pill text-bg-primary">uploaded</span>
+                            </div>
+
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">文件類型</div>
+                                    <div id="detail-doc-type" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">副檔名</div>
+                                    <div id="detail-ext" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">大小</div>
+                                    <div id="detail-size" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">MIME</div>
+                                    <div id="detail-mime" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item detail-item-full">
+                                    <div class="detail-label">檔案修改時間</div>
+                                    <div id="detail-file-modified" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item detail-item-full">
+                                    <div class="detail-label">建立時間</div>
+                                    <div id="detail-created" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item detail-item-full">
+                                    <div class="detail-label">更新時間</div>
+                                    <div id="detail-updated" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item detail-item-full">
+                                    <div class="detail-label">路徑</div>
+                                    <div id="detail-path" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item detail-item-full">
+                                    <div class="detail-label">描述</div>
+                                    <div id="detail-description" class="detail-value">-</div>
+                                </div>
+                                <div class="detail-item detail-item-full">
+                                    <div class="detail-label">標籤</div>
+                                    <div id="detail-tags" class="detail-value">-</div>
+                                </div>
+                            </div>
+
+                            <button id="delete-button" class="btn btn-outline-danger w-100 mt-4" type="button">
+                                <i data-lucide="trash-2"></i>
+                                <span>刪除此文件</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="status-toast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true">
+            <div class="d-flex">
+                <div id="status-toast-body" class="toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{% static 'js/document-console.js' %}"></script>
+</body>
+</html>
