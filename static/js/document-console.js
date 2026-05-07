@@ -1,12 +1,32 @@
 const state = {
-    page: 1,
-    limit: 10,
-    total: 0,
-    selectedDocumentId: null,
-    filters: {
-        keyword: "",
-        doc_type: "",
-        status: "",
+    documents: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        selectedDocumentId: null,
+        filters: {
+            keyword: "",
+            doc_type: "",
+            status: "",
+        },
+    },
+    meetings: {
+        selectedMeetingId: null,
+        filters: {
+            keyword: "",
+            meeting_name: "",
+            date_from: "",
+            date_to: "",
+            responsible_unit: "",
+        },
+    },
+    items: {
+        filters: {
+            keyword: "",
+            owner: "",
+            planned_date: "",
+            meeting_id: "",
+        },
     },
 };
 
@@ -16,18 +36,29 @@ const elements = {
     fileModifiedAt: document.getElementById("file-modified-at"),
     selectedFile: document.getElementById("selected-file"),
     uploadSubmit: document.getElementById("upload-submit"),
-    filterForm: document.getElementById("filter-form"),
     refreshButton: document.getElementById("refresh-button"),
+    filterForm: document.getElementById("filter-form"),
     documentList: document.getElementById("document-list"),
     pageIndicator: document.getElementById("page-indicator"),
     prevPage: document.getElementById("prev-page"),
     nextPage: document.getElementById("next-page"),
     emptyDetail: document.getElementById("empty-detail"),
     detailContent: document.getElementById("detail-content"),
+    parseButton: document.getElementById("parse-button"),
     deleteButton: document.getElementById("delete-button"),
+    parseResult: document.getElementById("parse-result"),
+    parseResultBody: document.getElementById("parse-result-body"),
+    dropzone: document.getElementById("dropzone"),
     toastElement: document.getElementById("status-toast"),
     toastBody: document.getElementById("status-toast-body"),
-    dropzone: document.getElementById("dropzone"),
+    meetingFilterForm: document.getElementById("meeting-filter-form"),
+    meetingList: document.getElementById("meeting-list"),
+    meetingDetailEmpty: document.getElementById("meeting-detail-empty"),
+    meetingDetailContent: document.getElementById("meeting-detail-content"),
+    meetingDetailItems: document.getElementById("meeting-detail-items"),
+    meetingItemsCount: document.getElementById("meeting-items-count"),
+    itemFilterForm: document.getElementById("item-filter-form"),
+    meetingItemsList: document.getElementById("meeting-items-list"),
 };
 
 const detailFields = {
@@ -46,36 +77,56 @@ const detailFields = {
     tags: document.getElementById("detail-tags"),
 };
 
+const meetingDetailFields = {
+    name: document.getElementById("meeting-detail-name"),
+    id: document.getElementById("meeting-detail-id"),
+    documentId: document.getElementById("meeting-detail-document-id"),
+    date: document.getElementById("meeting-detail-date"),
+    time: document.getElementById("meeting-detail-time"),
+    location: document.getElementById("meeting-detail-location"),
+    chairperson: document.getElementById("meeting-detail-chairperson"),
+    recorder: document.getElementById("meeting-detail-recorder"),
+    unit: document.getElementById("meeting-detail-unit"),
+    pageCount: document.getElementById("meeting-detail-page-count"),
+    attendees: document.getElementById("meeting-detail-attendees"),
+};
+
 const toast = new bootstrap.Toast(elements.toastElement, { delay: 2800 });
 
 init();
 
 function init() {
     bindEvents();
-    resetDetailPanel();
+    resetDocumentDetailPanel();
+    resetMeetingDetailPanel();
     loadDocuments();
+    loadMeetingMinutes();
+    loadMeetingItems();
     renderIcons();
 }
 
 function bindEvents() {
     elements.fileInput.addEventListener("change", handleFileSelection);
     elements.uploadForm.addEventListener("submit", handleUpload);
-    elements.refreshButton.addEventListener("click", loadDocuments);
-    elements.filterForm.addEventListener("input", debounce(handleFilterChange, 300));
-    elements.filterForm.addEventListener("change", handleFilterChange);
+    elements.refreshButton.addEventListener("click", handleRefreshAll);
+    elements.filterForm.addEventListener("input", debounce(handleDocumentFilterChange, 300));
+    elements.filterForm.addEventListener("change", handleDocumentFilterChange);
     elements.prevPage.addEventListener("click", () => changePage(-1));
     elements.nextPage.addEventListener("click", () => changePage(1));
+    elements.parseButton.addEventListener("click", handleParseMeetingMinutes);
     elements.deleteButton.addEventListener("click", handleDelete);
+    elements.meetingFilterForm.addEventListener("input", debounce(handleMeetingFilterChange, 300));
+    elements.meetingFilterForm.addEventListener("change", handleMeetingFilterChange);
+    elements.itemFilterForm.addEventListener("input", debounce(handleItemFilterChange, 300));
+    elements.itemFilterForm.addEventListener("change", handleItemFilterChange);
 
     elements.dropzone.addEventListener("dragover", (event) => {
         event.preventDefault();
         elements.dropzone.classList.add("is-dragover");
     });
-
     elements.dropzone.addEventListener("dragleave", () => {
         elements.dropzone.classList.remove("is-dragover");
     });
-
     elements.dropzone.addEventListener("drop", (event) => {
         event.preventDefault();
         elements.dropzone.classList.remove("is-dragover");
@@ -86,25 +137,29 @@ function bindEvents() {
     });
 }
 
+function handleRefreshAll() {
+    loadDocuments();
+    loadMeetingMinutes();
+    loadMeetingItems();
+}
+
 function handleFileSelection() {
     const file = elements.fileInput.files[0];
     if (!file) {
-        elements.selectedFile.textContent = "尚未選擇檔案";
+        elements.selectedFile.textContent = "No file selected";
         elements.fileModifiedAt.value = "";
         return;
     }
 
-    elements.selectedFile.textContent = `${file.name} · ${formatFileSize(file.size)}`;
-    elements.fileModifiedAt.value = file.lastModified
-        ? new Date(file.lastModified).toISOString()
-        : "";
+    elements.selectedFile.textContent = `${file.name} | ${formatFileSize(file.size)}`;
+    elements.fileModifiedAt.value = file.lastModified ? new Date(file.lastModified).toISOString() : "";
 }
 
 async function handleUpload(event) {
     event.preventDefault();
 
     if (!elements.fileInput.files.length) {
-        showToast("請先選擇要上傳的文件。", "error");
+        showToast("Please select a file first.", "error");
         return;
     }
 
@@ -112,21 +167,16 @@ async function handleUpload(event) {
     setUploadSubmitting(true);
 
     try {
-        const response = await fetch("/api/documents/upload/", {
+        const result = await fetchJson("/api/documents/upload/", {
             method: "POST",
             body: formData,
         });
-        const result = await response.json();
 
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Upload failed.");
-        }
-
-        showToast(result.message || "File uploaded successfully.", "success");
+        showToast(result.message || "Upload succeeded.", "success");
         elements.uploadForm.reset();
-        elements.selectedFile.textContent = "尚未選擇檔案";
+        elements.selectedFile.textContent = "No file selected";
         elements.fileModifiedAt.value = "";
-        state.page = 1;
+        state.documents.page = 1;
         await loadDocuments();
 
         if (result.data?.document_id) {
@@ -144,83 +194,74 @@ function setUploadSubmitting(isSubmitting) {
         element.disabled = isSubmitting;
     });
     elements.uploadSubmit.innerHTML = isSubmitting
-        ? '<span class="spinner-border spinner-border-sm me-2"></span><span>上傳中...</span>'
-        : '<i data-lucide="upload"></i><span>上傳文件</span>';
+        ? '<span class="spinner-border spinner-border-sm me-2"></span><span>Uploading...</span>'
+        : '<i data-lucide="upload"></i><span>Upload Document</span>';
     renderIcons();
 }
 
-function handleFilterChange() {
+function handleDocumentFilterChange() {
     const formData = new FormData(elements.filterForm);
-    state.filters.keyword = String(formData.get("keyword") || "").trim();
-    state.filters.doc_type = String(formData.get("doc_type") || "").trim();
-    state.filters.status = String(formData.get("status") || "").trim();
-    state.page = 1;
+    state.documents.filters.keyword = String(formData.get("keyword") || "").trim();
+    state.documents.filters.doc_type = String(formData.get("doc_type") || "").trim();
+    state.documents.filters.status = String(formData.get("status") || "").trim();
+    state.documents.page = 1;
     loadDocuments();
 }
 
 async function loadDocuments() {
-    elements.documentList.innerHTML = renderLoadingState("正在取得最新文件列表");
+    elements.documentList.innerHTML = renderLoadingState("Loading documents...");
 
     try {
         const params = new URLSearchParams({
-            page: String(state.page),
-            limit: String(state.limit),
+            page: String(state.documents.page),
+            limit: String(state.documents.limit),
         });
 
-        Object.entries(state.filters).forEach(([key, value]) => {
+        Object.entries(state.documents.filters).forEach(([key, value]) => {
             if (value) {
                 params.set(key, value);
             }
         });
 
-        const response = await fetch(`/api/documents/?${params.toString()}`);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Failed to load documents.");
-        }
-
-        state.total = result.data.total;
+        const result = await fetchJson(`/api/documents/?${params.toString()}`);
+        state.documents.total = result.data.total;
         renderDocumentList(result.data.documents);
         updatePagination();
 
         if (
-            state.selectedDocumentId &&
-            !result.data.documents.some((document) => document.document_id === state.selectedDocumentId)
+            state.documents.selectedDocumentId &&
+            !result.data.documents.some((document) => document.document_id === state.documents.selectedDocumentId)
         ) {
-            state.selectedDocumentId = null;
-            resetDetailPanel();
+            state.documents.selectedDocumentId = null;
+            resetDocumentDetailPanel();
         }
     } catch (error) {
-        elements.documentList.innerHTML = renderEmptyState("載入失敗", error.message);
+        elements.documentList.innerHTML = renderEmptyState("Load failed", error.message);
         showToast(error.message, "error");
     }
 }
 
 function renderDocumentList(documents) {
     if (!documents.length) {
-        elements.documentList.innerHTML = renderEmptyState(
-            "目前沒有符合條件的文件",
-            "你可以先上傳一份文件，或調整上方篩選條件。"
-        );
+        elements.documentList.innerHTML = renderEmptyState("No documents", "No matching documents were found.");
         renderIcons();
         return;
     }
 
     elements.documentList.innerHTML = documents
         .map((document) => {
-            const activeClass = document.document_id === state.selectedDocumentId ? "active" : "";
+            const activeClass = document.document_id === state.documents.selectedDocumentId ? "active" : "";
             return `
                 <article class="document-card ${activeClass}" data-document-id="${escapeHtml(document.document_id)}">
                     <div class="document-card-head">
                         <div class="document-card-main">
                             <h3 class="document-card-title">${escapeHtml(document.original_filename)}</h3>
-                            <p class="document-card-meta">${escapeHtml(document.doc_type || "unknown")} · ${formatFileSize(document.file_size)}</p>
+                            <p class="document-card-meta">${escapeHtml(document.doc_type || "unknown")} | ${formatFileSize(document.file_size)}</p>
                         </div>
                         <span class="badge rounded-pill text-bg-light border document-status-badge">${escapeHtml(document.status)}</span>
                     </div>
-                    <p class="document-card-meta mb-1">建立時間：${formatDate(document.created_at)}</p>
-                    <p class="document-card-meta mb-0">檔案修改時間：${formatDate(document.file_modified_at)}</p>
+                    <p class="document-card-meta mb-1">Created: ${formatDate(document.created_at)}</p>
+                    <p class="document-card-meta mb-0">Modified: ${formatDate(document.file_modified_at)}</p>
                 </article>
             `;
         })
@@ -233,19 +274,19 @@ function renderDocumentList(documents) {
 }
 
 function updatePagination() {
-    const totalPages = Math.max(1, Math.ceil(state.total / state.limit));
-    elements.pageIndicator.textContent = `第 ${state.page} 頁 / 共 ${totalPages} 頁`;
-    elements.prevPage.disabled = state.page <= 1;
-    elements.nextPage.disabled = state.page >= totalPages;
+    const totalPages = Math.max(1, Math.ceil(state.documents.total / state.documents.limit));
+    elements.pageIndicator.textContent = `Page ${state.documents.page} / ${totalPages}`;
+    elements.prevPage.disabled = state.documents.page <= 1;
+    elements.nextPage.disabled = state.documents.page >= totalPages;
 }
 
 function changePage(direction) {
-    const totalPages = Math.max(1, Math.ceil(state.total / state.limit));
-    const nextPage = state.page + direction;
+    const totalPages = Math.max(1, Math.ceil(state.documents.total / state.documents.limit));
+    const nextPage = state.documents.page + direction;
     if (nextPage < 1 || nextPage > totalPages) {
         return;
     }
-    state.page = nextPage;
+    state.documents.page = nextPage;
     loadDocuments();
 }
 
@@ -253,28 +294,20 @@ async function loadDocumentDetail(documentId) {
     elements.emptyDetail.classList.remove("d-none");
     elements.detailContent.classList.add("d-none");
     elements.emptyDetail.innerHTML = `
-        <div class="detail-placeholder">
-            <i data-lucide="loader-circle"></i>
-        </div>
-        <h3 class="h6 fw-bold">載入明細中</h3>
-        <p class="text-muted small mb-0">正在取得文件 metadata。</p>
+        <div class="detail-placeholder"><i data-lucide="loader-circle"></i></div>
+        <h3 class="h6 fw-bold">Loading document detail</h3>
+        <p class="text-muted small mb-0">Fetching metadata from the API.</p>
     `;
     renderIcons();
 
     try {
-        const response = await fetch(`/api/documents/${documentId}/`);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Failed to load detail.");
-        }
-
-        state.selectedDocumentId = documentId;
+        const result = await fetchJson(`/api/documents/${documentId}/`);
+        state.documents.selectedDocumentId = documentId;
         renderDocumentDetail(result.data);
         highlightSelectedCard();
     } catch (error) {
         showToast(error.message, "error");
-        resetDetailPanel();
+        resetDocumentDetailPanel();
     }
 }
 
@@ -285,7 +318,7 @@ function renderDocumentDetail(document) {
     detailFields.name.textContent = document.original_filename || "-";
     detailFields.id.textContent = document.document_id || "-";
     detailFields.status.textContent = document.status || "-";
-    detailFields.status.className = `badge rounded-pill ${document.status === "deleted" ? "text-bg-danger" : "text-bg-primary"}`;
+    detailFields.status.className = `badge rounded-pill ${statusBadgeClass(document.status)}`;
     detailFields.docType.textContent = document.doc_type || "unknown";
     detailFields.ext.textContent = document.file_ext || "-";
     detailFields.size.textContent = formatFileSize(document.file_size);
@@ -298,33 +331,102 @@ function renderDocumentDetail(document) {
     detailFields.tags.textContent = Array.isArray(document.tags) && document.tags.length
         ? document.tags.join(", ")
         : "-";
+
+    elements.parseButton.disabled = document.status === "deleted" || document.file_ext !== ".pdf";
+    elements.parseResult.classList.add("d-none");
 }
 
-async function handleDelete() {
-    if (!state.selectedDocumentId) {
+async function handleParseMeetingMinutes() {
+    if (!state.documents.selectedDocumentId) {
         return;
     }
 
-    const confirmed = window.confirm("確定要刪除這份文件嗎？此操作會做 soft delete。");
+    elements.parseButton.disabled = true;
+    elements.parseButton.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span><span>Parsing...</span>';
+
+    try {
+        const result = await fetchJson(
+            `/api/documents/${state.documents.selectedDocumentId}/parse-meeting-minutes/`,
+            { method: "POST" }
+        );
+
+        if (result.data?.status === "needs_ocr") {
+            showToast(result.message || "OCR is required.", "error");
+            renderParseResult({
+                status: "needs_ocr",
+                message: "The PDF text layer is insufficient. Document status was updated to needs_ocr.",
+            });
+        } else {
+            showToast(result.message || "Meeting minutes parsed successfully.", "success");
+            renderParseResult({
+                status: "parsed",
+                meeting_id: result.data.meeting_id,
+                meeting_name: result.data.meeting_name,
+                meeting_date: result.data.meeting_date,
+                item_count: result.data.item_count,
+            });
+
+            if (result.data?.meeting_id) {
+                state.meetings.selectedMeetingId = result.data.meeting_id;
+                state.items.filters.meeting_id = result.data.meeting_id;
+                syncItemFilterForm();
+                await loadMeetingDetail(result.data.meeting_id);
+            }
+        }
+
+        await loadDocumentDetail(state.documents.selectedDocumentId);
+        await loadDocuments();
+        await loadMeetingMinutes();
+        await loadMeetingItems();
+    } catch (error) {
+        showToast(error.message, "error");
+    } finally {
+        elements.parseButton.disabled = false;
+        elements.parseButton.innerHTML = '<i data-lucide="scan-text"></i><span>Parse Meeting PDF</span>';
+        renderIcons();
+    }
+}
+
+function renderParseResult(result) {
+    elements.parseResult.classList.remove("d-none");
+
+    if (result.status === "needs_ocr") {
+        elements.parseResultBody.innerHTML = `
+            <div class="summary-pill warning">needs_ocr</div>
+            <div class="summary-copy">${escapeHtml(result.message)}</div>
+        `;
+        return;
+    }
+
+    elements.parseResultBody.innerHTML = `
+        <div class="summary-pill success">parsed</div>
+        <div class="summary-copy">
+            <div><strong>${escapeHtml(result.meeting_name || "-")}</strong></div>
+            <div>Meeting ID: ${escapeHtml(result.meeting_id || "-")}</div>
+            <div>Date: ${escapeHtml(result.meeting_date || "-")} | Items: ${escapeHtml(String(result.item_count ?? "-"))}</div>
+        </div>
+    `;
+}
+
+async function handleDelete() {
+    if (!state.documents.selectedDocumentId) {
+        return;
+    }
+
+    const confirmed = window.confirm("Delete this document with soft delete?");
     if (!confirmed) {
         return;
     }
 
     elements.deleteButton.disabled = true;
-
     try {
-        const response = await fetch(`/api/documents/${state.selectedDocumentId}/`, {
+        const result = await fetchJson(`/api/documents/${state.documents.selectedDocumentId}/`, {
             method: "DELETE",
         });
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Delete failed.");
-        }
-
-        showToast(result.message || "Document deleted successfully.", "success");
-        state.selectedDocumentId = null;
-        resetDetailPanel();
+        showToast(result.message || "Document deleted.", "success");
+        state.documents.selectedDocumentId = null;
+        resetDocumentDetailPanel();
         await loadDocuments();
     } catch (error) {
         showToast(error.message, "error");
@@ -333,26 +435,235 @@ async function handleDelete() {
     }
 }
 
-function resetDetailPanel() {
+function resetDocumentDetailPanel() {
     elements.emptyDetail.classList.remove("d-none");
-    elements.emptyDetail.innerHTML = `
-        <div class="detail-placeholder">
-            <i data-lucide="file-text"></i>
-        </div>
-        <h3 class="h6 fw-bold">選一份文件來查看</h3>
-        <p class="text-muted small mb-0">
-            從列表點擊文件後，這裡會顯示 metadata、檔案修改時間與刪除操作。
-        </p>
-    `;
     elements.detailContent.classList.add("d-none");
-    highlightSelectedCard();
+    elements.emptyDetail.innerHTML = `
+        <div class="detail-placeholder"><i data-lucide="file-text"></i></div>
+        <h3 class="h6 fw-bold">Select a document</h3>
+        <p class="text-muted small mb-0">View metadata and parse a PDF into structured meeting records.</p>
+    `;
     renderIcons();
+    highlightSelectedCard();
 }
 
 function highlightSelectedCard() {
     elements.documentList.querySelectorAll(".document-card").forEach((card) => {
-        card.classList.toggle("active", card.dataset.documentId === state.selectedDocumentId);
+        card.classList.toggle("active", card.dataset.documentId === state.documents.selectedDocumentId);
     });
+}
+
+function handleMeetingFilterChange() {
+    const formData = new FormData(elements.meetingFilterForm);
+    state.meetings.filters.keyword = String(formData.get("keyword") || "").trim();
+    state.meetings.filters.meeting_name = String(formData.get("meeting_name") || "").trim();
+    state.meetings.filters.date_from = String(formData.get("date_from") || "").trim();
+    state.meetings.filters.date_to = String(formData.get("date_to") || "").trim();
+    state.meetings.filters.responsible_unit = String(formData.get("responsible_unit") || "").trim();
+    loadMeetingMinutes();
+}
+
+async function loadMeetingMinutes() {
+    elements.meetingList.innerHTML = renderLoadingState("Loading meeting minutes...");
+
+    try {
+        const params = new URLSearchParams();
+        Object.entries(state.meetings.filters).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value);
+            }
+        });
+
+        const query = params.toString();
+        const result = await fetchJson(`/api/meeting-minutes/${query ? `?${query}` : ""}`);
+        renderMeetingList(result.data.meeting_minutes || []);
+
+        if (state.meetings.selectedMeetingId) {
+            const hasSelected = (result.data.meeting_minutes || []).some(
+                (item) => item.meeting_id === state.meetings.selectedMeetingId
+            );
+            if (!hasSelected) {
+                resetMeetingDetailPanel();
+            }
+        }
+    } catch (error) {
+        elements.meetingList.innerHTML = renderEmptyState("Load failed", error.message);
+        showToast(error.message, "error");
+    }
+}
+
+function renderMeetingList(meetings) {
+    if (!meetings.length) {
+        elements.meetingList.innerHTML = renderEmptyState(
+            "No meeting minutes",
+            "No matching meeting records were found."
+        );
+        renderIcons();
+        return;
+    }
+
+    elements.meetingList.innerHTML = meetings
+        .map((meeting) => {
+            const activeClass = meeting.meeting_id === state.meetings.selectedMeetingId ? "active" : "";
+            return `
+                <article class="document-card ${activeClass}" data-meeting-id="${escapeHtml(meeting.meeting_id)}">
+                    <div class="document-card-head">
+                        <div class="document-card-main">
+                            <h3 class="document-card-title">${escapeHtml(meeting.meeting_name || "-")}</h3>
+                            <p class="document-card-meta">${escapeHtml(meeting.meeting_date || "-")} | ${escapeHtml(meeting.responsible_unit || "-")}</p>
+                        </div>
+                        <span class="badge rounded-pill text-bg-light border document-status-badge">${escapeHtml(meeting.status || "parsed")}</span>
+                    </div>
+                    <p class="document-card-meta mb-1">Meeting ID: ${escapeHtml(meeting.meeting_id)}</p>
+                    <p class="document-card-meta mb-0">Document: ${escapeHtml(meeting.document_id || "-")}</p>
+                </article>
+            `;
+        })
+        .join("");
+
+    elements.meetingList.querySelectorAll("[data-meeting-id]").forEach((card) => {
+        card.addEventListener("click", () => loadMeetingDetail(card.dataset.meetingId));
+    });
+    renderIcons();
+}
+
+async function loadMeetingDetail(meetingId) {
+    try {
+        const result = await fetchJson(`/api/meeting-minutes/${meetingId}/`);
+        state.meetings.selectedMeetingId = meetingId;
+        renderMeetingDetail(result.data.meeting_minutes, result.data.meeting_items || []);
+        highlightMeetingCard();
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+function renderMeetingDetail(meeting, items) {
+    elements.meetingDetailEmpty.classList.add("d-none");
+    elements.meetingDetailContent.classList.remove("d-none");
+
+    meetingDetailFields.name.textContent = meeting.meeting_name || "-";
+    meetingDetailFields.id.textContent = meeting.meeting_id || "-";
+    meetingDetailFields.documentId.textContent = meeting.document_id || "-";
+    meetingDetailFields.date.textContent = meeting.meeting_date || "-";
+    meetingDetailFields.time.textContent = [meeting.start_time, meeting.end_time].filter(Boolean).join(" - ") || "-";
+    meetingDetailFields.location.textContent = meeting.location || "-";
+    meetingDetailFields.chairperson.textContent = meeting.chairperson || "-";
+    meetingDetailFields.recorder.textContent = meeting.recorder || "-";
+    meetingDetailFields.unit.textContent = meeting.responsible_unit || "-";
+    meetingDetailFields.pageCount.textContent = meeting.page_count ?? "-";
+    meetingDetailFields.attendees.textContent = Array.isArray(meeting.attendees) && meeting.attendees.length
+        ? meeting.attendees.join(", ")
+        : "-";
+
+    elements.meetingItemsCount.textContent = `${items.length} items`;
+    elements.meetingDetailItems.innerHTML = items.length
+        ? items
+              .map(
+                  (item) => `
+            <tr>
+                <td>${escapeHtml(item.item_no || "-")}</td>
+                <td class="text-break">${escapeHtml(item.content || "-")}</td>
+                <td>${escapeHtml(item.owner || "-")}</td>
+                <td>${escapeHtml(item.planned_date || "-")}</td>
+                <td>${escapeHtml(item.actual_completed_date || "-")}</td>
+                <td class="text-break">${escapeHtml(item.tracking_result || "-")}</td>
+            </tr>
+        `
+              )
+              .join("")
+        : '<tr><td colspan="6" class="text-center text-muted py-4">No parsed items for this meeting.</td></tr>';
+}
+
+function resetMeetingDetailPanel() {
+    state.meetings.selectedMeetingId = null;
+    elements.meetingDetailEmpty.classList.remove("d-none");
+    elements.meetingDetailContent.classList.add("d-none");
+    elements.meetingDetailItems.innerHTML = "";
+    highlightMeetingCard();
+}
+
+function highlightMeetingCard() {
+    elements.meetingList.querySelectorAll("[data-meeting-id]").forEach((card) => {
+        card.classList.toggle("active", card.dataset.meetingId === state.meetings.selectedMeetingId);
+    });
+}
+
+function handleItemFilterChange() {
+    const formData = new FormData(elements.itemFilterForm);
+    state.items.filters.keyword = String(formData.get("keyword") || "").trim();
+    state.items.filters.owner = String(formData.get("owner") || "").trim();
+    state.items.filters.planned_date = String(formData.get("planned_date") || "").trim();
+    state.items.filters.meeting_id = String(formData.get("meeting_id") || "").trim();
+    loadMeetingItems();
+}
+
+function syncItemFilterForm() {
+    elements.itemFilterForm.elements.meeting_id.value = state.items.filters.meeting_id || "";
+}
+
+async function loadMeetingItems() {
+    elements.meetingItemsList.innerHTML =
+        '<tr><td colspan="6" class="text-center text-muted py-4">Loading...</td></tr>';
+
+    try {
+        const params = new URLSearchParams();
+        Object.entries(state.items.filters).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value);
+            }
+        });
+
+        const query = params.toString();
+        const result = await fetchJson(`/api/meeting-items/${query ? `?${query}` : ""}`);
+        renderMeetingItemsTable(result.data.meeting_items || []);
+    } catch (error) {
+        elements.meetingItemsList.innerHTML = `
+            <tr><td colspan="6" class="text-center text-danger py-4">${escapeHtml(error.message)}</td></tr>
+        `;
+        showToast(error.message, "error");
+    }
+}
+
+function renderMeetingItemsTable(items) {
+    elements.meetingItemsList.innerHTML = items.length
+        ? items
+              .map(
+                  (item) => `
+            <tr>
+                <td class="text-break">
+                    <button type="button" class="btn btn-link btn-sm px-0 item-link" data-item-meeting-id="${escapeHtml(item.meeting_id || "")}">
+                        ${escapeHtml(item.meeting_id || "-")}
+                    </button>
+                </td>
+                <td>${escapeHtml(item.item_no || "-")}</td>
+                <td class="text-break">${escapeHtml(item.content || "-")}</td>
+                <td>${escapeHtml(item.owner || "-")}</td>
+                <td>${escapeHtml(item.planned_date || "-")}</td>
+                <td>${escapeHtml(String(item.page_number ?? "-"))}</td>
+            </tr>
+        `
+              )
+              .join("")
+        : '<tr><td colspan="6" class="text-center text-muted py-4">No matching meeting items.</td></tr>';
+
+    elements.meetingItemsList.querySelectorAll(".item-link").forEach((button) => {
+        button.addEventListener("click", () => {
+            const meetingId = button.dataset.itemMeetingId;
+            if (meetingId) {
+                loadMeetingDetail(meetingId);
+            }
+        });
+    });
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, options);
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Request failed.");
+    }
+    return result;
 }
 
 function showToast(message, type) {
@@ -373,9 +684,7 @@ function renderLoadingState(message) {
 function renderEmptyState(title, message) {
     return `
         <div class="empty-state-shell">
-            <div class="empty-state-icon">
-                <i data-lucide="file-search"></i>
-            </div>
+            <div class="empty-state-icon"><i data-lucide="file-search"></i></div>
             <div class="fw-bold text-dark mb-1">${escapeHtml(title)}</div>
             <div class="text-muted small">${escapeHtml(message)}</div>
         </div>
@@ -424,6 +733,19 @@ function debounce(callback, delay) {
         window.clearTimeout(timerId);
         timerId = window.setTimeout(() => callback(...args), delay);
     };
+}
+
+function statusBadgeClass(status) {
+    if (status === "deleted") {
+        return "text-bg-danger";
+    }
+    if (status === "parsed") {
+        return "text-bg-success";
+    }
+    if (status === "needs_ocr") {
+        return "text-bg-warning";
+    }
+    return "text-bg-primary";
 }
 
 function escapeHtml(value) {

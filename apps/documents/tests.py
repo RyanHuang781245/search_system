@@ -66,6 +66,14 @@ class FakeDocumentsCollection:
                 return self._project(updated, projection)
         return None
 
+    def update_one(self, query, update):
+        for index, document in enumerate(self.documents):
+            if self._matches(document, query):
+                updated = dict(document)
+                updated.update(update.get("$set", {}))
+                self.documents[index] = updated
+                return
+
     def _filter(self, query):
         return [dict(document) for document in self.documents if self._matches(document, query)]
 
