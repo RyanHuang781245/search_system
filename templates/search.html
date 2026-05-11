@@ -1,0 +1,138 @@
+{% extends "base_console.html" %}
+{% load static %}
+
+{% block title %}相關度搜尋 | 會議記錄檢索系統{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <div class="page-kicker">流程 3</div>
+        <h1 class="page-title">相關度搜尋</h1>
+        <p class="page-text mb-0">以關鍵字同時搜尋會議 metadata 與會議項目，並依規則分數進行排序。</p>
+    </div>
+    <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
+        <i data-lucide="refresh-cw"></i>
+    </button>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="app-card">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="search-code"></i>
+                    會議搜尋
+                </h2>
+                <span class="small text-muted">規則分數排序</span>
+            </div>
+            <div class="app-card-body">
+                <form id="search-form" class="search-form-grid mb-4">
+                    <div class="search-field search-field-keyword">
+                        <input type="text" class="form-control" name="q" placeholder="輸入關鍵字，例如 FDA / Conformity stem">
+                    </div>
+                    <div class="search-field">
+                        <input type="date" class="form-control" name="date_from">
+                    </div>
+                    <div class="search-field">
+                        <input type="date" class="form-control" name="date_to">
+                    </div>
+                    <div class="search-field">
+                        <input type="text" class="form-control" name="responsible_unit" placeholder="權責單位">
+                    </div>
+                    <div class="search-field">
+                        <input type="text" class="form-control" name="owner" placeholder="負責人">
+                    </div>
+                    <div class="search-field">
+                        <input type="text" class="form-control" name="chairperson" placeholder="主席">
+                    </div>
+                    <div class="search-field">
+                        <select class="form-select" name="status">
+                            <option value="">全部狀態</option>
+                            <option value="parsed">parsed</option>
+                            <option value="needs_ocr">needs_ocr</option>
+                        </select>
+                    </div>
+                    <div class="search-field">
+                        <input type="number" class="form-control" name="limit" min="1" value="10" placeholder="筆數">
+                    </div>
+                    <div class="search-field search-field-submit">
+                        <button id="search-submit" class="btn btn-primary btn-primary-custom w-100" type="submit">
+                            <i data-lucide="search"></i>
+                            <span>搜尋</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div id="search-summary" class="text-muted small">尚未執行搜尋</div>
+                    <div class="d-flex gap-2">
+                        <button id="search-prev-page" class="btn btn-sm btn-outline-secondary" type="button">上一頁</button>
+                        <button id="search-next-page" class="btn btn-sm btn-outline-secondary" type="button">下一頁</button>
+                    </div>
+                </div>
+
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-5">
+        <section class="app-card h-100">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="file-search"></i>
+                    結果預覽
+                </h2>
+                <span class="small text-muted">會議明細預覽</span>
+            </div>
+            <div class="app-card-body">
+                <div id="meeting-detail-empty" class="detail-empty compact-empty">
+                    <div class="detail-placeholder">
+                        <i data-lucide="notebook-pen"></i>
+                    </div>
+                    <h3 class="h6 fw-bold">選擇一筆搜尋結果</h3>
+                    <p class="text-muted small mb-0">點擊左側結果後，這裡會顯示對應會議的摘要與命中項目。</p>
+                </div>
+
+                <div id="meeting-detail-content" class="d-none">
+                    <div class="meeting-meta-grid mb-4">
+                        <div class="detail-item detail-item-full"><div class="detail-label">會議名稱</div><div id="meeting-detail-name" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">Meeting ID</div><div id="meeting-detail-id" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">文件 ID</div><div id="meeting-detail-document-id" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">日期</div><div id="meeting-detail-date" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">時間</div><div id="meeting-detail-time" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">地點</div><div id="meeting-detail-location" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">主席</div><div id="meeting-detail-chairperson" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">記錄</div><div id="meeting-detail-recorder" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">權責單位</div><div id="meeting-detail-unit" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">出席人員</div><div id="meeting-detail-attendees" class="detail-value">-</div></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="h6 fw-bold mb-0">命中項目 / 會議項目</h3>
+                        <span id="meeting-items-count" class="badge text-bg-light border">0 筆</span>
+                    </div>
+                    <div class="table-shell">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr><th>項次</th><th>會議內容</th><th>負責人</th><th>預計日期</th><th>實際完成日</th><th>追蹤結果</th></tr>
+                            </thead>
+                            <tbody id="meeting-detail-items"></tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <a id="open-meetings-link" class="btn btn-outline-secondary" href="/meetings/">
+                            <i data-lucide="arrow-right"></i>
+                            <span>前往會議頁</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/search-page.js' %}?v=20260507-ui-zh-1"></script>
+{% endblock %}

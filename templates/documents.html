@@ -1,0 +1,178 @@
+{% extends "base_console.html" %}
+{% load static %}
+
+{% block title %}文件管理 | 會議記錄檢索系統{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <div class="page-kicker">流程 1</div>
+        <h1 class="page-title">文件管理</h1>
+        <p class="page-text mb-0">上傳與管理原始文件，檢視 metadata，並從這裡啟動會議記錄 PDF 解析。</p>
+    </div>
+    <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
+        <i data-lucide="refresh-cw"></i>
+    </button>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="app-card h-100">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="upload"></i>
+                    上傳文件
+                </h2>
+                <span class="badge text-bg-light border">PDF / DOCX</span>
+            </div>
+            <div class="app-card-body">
+                <form id="upload-form">
+                    <input id="file-modified-at" name="file_modified_at" type="hidden">
+                    <label id="dropzone" class="upload-zone mb-4" for="file-input">
+                        <input id="file-input" name="file" type="file" accept=".pdf,.docx" hidden>
+                        <div class="upload-icon-wrapper">
+                            <i data-lucide="plus"></i>
+                        </div>
+                        <div class="fw-bold text-dark mb-1">點擊選擇檔案，或將檔案拖曳到這裡</div>
+                        <div class="text-muted small">支援最大 50MB，格式限 .pdf 與 .docx</div>
+                        <div id="selected-file" class="selected-file mt-3">尚未選擇檔案</div>
+                    </label>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-12 col-xl-6">
+                            <label class="form-label">文件類型</label>
+                            <input type="text" class="form-control" name="doc_type" placeholder="meeting_minutes">
+                        </div>
+                        <div class="col-md-6 col-lg-12 col-xl-6">
+                            <label class="form-label">標籤</label>
+                            <input type="text" class="form-control" name="tags" placeholder="meeting, parser">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" name="description" rows="4" placeholder="補充文件用途、來源或辨識資訊"></textarea>
+                        </div>
+                        <div class="col-12 pt-2">
+                            <button id="upload-submit" class="btn btn-primary btn-primary-custom w-100" type="submit">
+                                <i data-lucide="upload"></i>
+                                <span>上傳文件</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-5">
+        <section class="app-card h-100">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="file-stack"></i>
+                    文件列表
+                </h2>
+                <span class="small text-muted">文件資料來源</span>
+            </div>
+            <div class="app-card-body d-flex flex-column">
+                <form id="filter-form" class="row g-2 mb-4">
+                    <div class="col-12 col-md-5">
+                        <input type="text" class="form-control" name="keyword" placeholder="檔名或關鍵字">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <input type="text" class="form-control" name="doc_type" placeholder="類型">
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <select class="form-select" name="status">
+                            <option value="">全部狀態</option>
+                            <option value="uploaded">uploaded</option>
+                            <option value="parsed">parsed</option>
+                            <option value="needs_ocr">needs_ocr</option>
+                            <option value="deleted">deleted</option>
+                        </select>
+                    </div>
+                </form>
+
+                <div id="document-list" class="document-list flex-grow-1"></div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top">
+                    <button id="prev-page" class="btn btn-link text-decoration-none text-muted px-0" type="button">
+                        <i data-lucide="chevron-left"></i>
+                        上一頁
+                    </button>
+                    <span id="page-indicator" class="pagination-indicator">第 1 / 1 頁</span>
+                    <button id="next-page" class="btn btn-link text-decoration-none text-muted px-0" type="button">
+                        下一頁
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-3">
+        <section class="app-card h-100">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="info"></i>
+                    文件明細
+                </h2>
+            </div>
+            <div class="app-card-body">
+                <div id="empty-detail" class="detail-empty">
+                    <div class="detail-placeholder">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <h3 class="h6 fw-bold">選擇一份文件</h3>
+                    <p class="text-muted small mb-0">查看文件 metadata，並從這裡執行會議記錄 PDF 解析。</p>
+                </div>
+
+                <div id="detail-content" class="d-none">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h3 id="detail-name" class="h6 fw-bold mb-1">-</h3>
+                            <div id="detail-id" class="text-muted small">-</div>
+                        </div>
+                        <span id="detail-status" class="badge rounded-pill text-bg-primary">uploaded</span>
+                    </div>
+
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">文件類型</div><div id="detail-doc-type" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">副檔名</div><div id="detail-ext" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">大小</div><div id="detail-size" class="detail-value">-</div></div>
+                        <div class="detail-item"><div class="detail-label">MIME</div><div id="detail-mime" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">檔案修改時間</div><div id="detail-file-modified" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">建立時間</div><div id="detail-created" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">更新時間</div><div id="detail-updated" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">儲存路徑</div><div id="detail-path" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">描述</div><div id="detail-description" class="detail-value">-</div></div>
+                        <div class="detail-item detail-item-full"><div class="detail-label">標籤</div><div id="detail-tags" class="detail-value">-</div></div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button id="parse-button" class="btn btn-primary btn-primary-custom" type="button">
+                            <i data-lucide="scan-text"></i>
+                            <span>解析會議記錄 PDF</span>
+                        </button>
+                        <a id="open-meetings-link" class="btn btn-outline-secondary" href="/meetings/">
+                            <i data-lucide="arrow-right"></i>
+                            <span>前往會議頁</span>
+                        </a>
+                        <button id="delete-button" class="btn btn-outline-danger" type="button">
+                            <i data-lucide="trash-2"></i>
+                            <span>刪除文件</span>
+                        </button>
+                    </div>
+
+                    <div id="parse-result" class="meeting-summary-panel d-none mt-4">
+                        <div class="summary-label">最近一次解析結果</div>
+                        <div id="parse-result-body" class="summary-body"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/documents-page.js' %}?v=20260507-ui-zh-1"></script>
+{% endblock %}

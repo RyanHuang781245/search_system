@@ -28,6 +28,21 @@ const state = {
             meeting_id: "",
         },
     },
+    search: {
+        searchId: null,
+        page: 1,
+        limit: 10,
+        total: 0,
+        filters: {
+            q: "",
+            date_from: "",
+            date_to: "",
+            responsible_unit: "",
+            owner: "",
+            chairperson: "",
+            status: "",
+        },
+    },
 };
 
 const elements = {
@@ -59,6 +74,12 @@ const elements = {
     meetingItemsCount: document.getElementById("meeting-items-count"),
     itemFilterForm: document.getElementById("item-filter-form"),
     meetingItemsList: document.getElementById("meeting-items-list"),
+    searchForm: document.getElementById("search-form"),
+    searchSubmit: document.getElementById("search-submit"),
+    searchSummary: document.getElementById("search-summary"),
+    searchResults: document.getElementById("search-results"),
+    searchPrevPage: document.getElementById("search-prev-page"),
+    searchNextPage: document.getElementById("search-next-page"),
 };
 
 const detailFields = {
@@ -102,6 +123,7 @@ function init() {
     loadDocuments();
     loadMeetingMinutes();
     loadMeetingItems();
+    loadSearchResults();
     renderIcons();
 }
 
@@ -119,6 +141,11 @@ function bindEvents() {
     elements.meetingFilterForm.addEventListener("change", handleMeetingFilterChange);
     elements.itemFilterForm.addEventListener("input", debounce(handleItemFilterChange, 300));
     elements.itemFilterForm.addEventListener("change", handleItemFilterChange);
+    elements.searchForm.addEventListener("input", debounce(handleSearchFilterChange, 300));
+    elements.searchForm.addEventListener("change", handleSearchFilterChange);
+    elements.searchForm.addEventListener("submit", handleSearchSubmit);
+    elements.searchPrevPage.addEventListener("click", () => changeSearchPage(-1));
+    elements.searchNextPage.addEventListener("click", () => changeSearchPage(1));
 
     elements.dropzone.addEventListener("dragover", (event) => {
         event.preventDefault();
@@ -141,6 +168,7 @@ function handleRefreshAll() {
     loadDocuments();
     loadMeetingMinutes();
     loadMeetingItems();
+    loadSearchResults();
 }
 
 function handleFileSelection() {
@@ -600,6 +628,169 @@ function handleItemFilterChange() {
 
 function syncItemFilterForm() {
     elements.itemFilterForm.elements.meeting_id.value = state.items.filters.meeting_id || "";
+}
+
+function handleSearchFilterChange() {
+    const formData = new FormData(elements.searchForm);
+    state.search.filters.q = String(formData.get("q") || "").trim();
+    state.search.filters.date_from = String(formData.get("date_from") || "").trim();
+    state.search.filters.date_to = String(formData.get("date_to") || "").trim();
+    state.search.filters.responsible_unit = String(formData.get("responsible_unit") || "").trim();
+    state.search.filters.owner = String(formData.get("owner") || "").trim();
+    state.search.filters.chairperson = String(formData.get("chairperson") || "").trim();
+    state.search.filters.status = String(formData.get("status") || "").trim();
+    state.search.limit = Math.max(parseInt(formData.get("limit") || "10", 10) || 10, 1);
+    state.search.page = 1;
+    loadSearchResults();
+}
+
+function handleSearchSubmit(event) {
+    event.preventDefault();
+    handleSearchFilterChange();
+}
+
+function changeSearchPage(direction) {
+    const totalPages = Math.max(1, Math.ceil(state.search.total / state.search.limit));
+    const nextPage = state.search.page + direction;
+    if (nextPage < 1 || nextPage > totalPages) {
+        return;
+    }
+    state.search.page = nextPage;
+    loadSearchResults();
+}
+
+async function loadSearchResults() {
+    elements.searchResults.innerHTML = renderLoadingState("Loading search results...");
+    if (elements.searchSubmit) {
+        elements.searchSubmit.disabled = true;
+    }
+    try {
+        const params = new URLSearchParams({
+            page: String(state.search.page),
+            limit: String(state.search.limit),
+        });
+        Object.entries(state.search.filters).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value);
+            }
+        });
+
+        const result = await fetchJson(`/api/search/meeting-minutes/?${params.toString()}`);
+        state.search.searchId = result.data.search_id || null;
+        state.search.total = result.data.total || 0;
+        renderSearchSummary(result.data);
+        renderSearchResults(result.data.results || []);
+        updateSearchPagination();
+    } catch (error) {
+        elements.searchSummary.textContent = "Search failed.";
+        elements.searchResults.innerHTML = renderEmptyState("Search failed", error.message);
+        showToast(error.message, "error");
+    } finally {
+        if (elements.searchSubmit) {
+            elements.searchSubmit.disabled = false;
+        }
+    }
+}
+
+function renderSearchSummary(data) {
+    const totalPages = Math.max(1, Math.ceil((data.total || 0) / state.search.limit));
+    const queryText = data.query ? `"${data.query}"` : "all meetings";
+    elements.searchSummary.textContent =
+        `${queryText} | ${data.total || 0} results | page ${state.search.page} / ${totalPages}`;
+}
+
+function updateSearchPagination() {
+    const totalPages = Math.max(1, Math.ceil(state.search.total / state.search.limit));
+    elements.searchPrevPage.disabled = state.search.page <= 1;
+    elements.searchNextPage.disabled = state.search.page >= totalPages;
+}
+
+function renderSearchResults(results) {
+    if (!results.length) {
+        elements.searchResults.innerHTML = renderEmptyState("No search results", "Try another keyword or relax the filters.");
+        renderIcons();
+        return;
+    }
+
+    elements.searchResults.innerHTML = results.map((result) => {
+        const matchedFields = Array.isArray(result.matched_fields) && result.matched_fields.length
+            ? result.matched_fields.map((field) => `<span class="search-chip">${escapeHtml(field)}</span>`).join("")
+            : '<span class="search-chip">no direct field match</span>';
+        const matchedItems = Array.isArray(result.matched_items) && result.matched_items.length
+            ? result.matched_items.map((item) => `
+                <button type="button" class="search-item-match" data-search-meeting-id="${escapeHtml(result.meeting_id)}" data-search-item-id="${escapeHtml(item.item_id || "")}" data-search-document-id="${escapeHtml(result.document_id || "")}">
+                    <div class="search-item-top">
+                        <span>#${escapeHtml(item.item_no || "-")}</span>
+                        <span>score ${escapeHtml(String(item.score ?? 0))}</span>
+                    </div>
+                    <div class="search-item-body">${escapeHtml(item.content || "-")}</div>
+                    <div class="search-item-meta">${escapeHtml(item.owner || "-")} | ${escapeHtml(item.planned_date || "-")}</div>
+                </button>
+            `).join("")
+            : '<div class="text-muted small">No matched items.</div>';
+
+        return `
+            <article class="search-result-card">
+                <button type="button" class="search-result-main" data-search-meeting-id="${escapeHtml(result.meeting_id)}" data-search-document-id="${escapeHtml(result.document_id || "")}">
+                    <div class="search-result-head">
+                        <div>
+                            <h3 class="search-result-title">${escapeHtml(result.meeting_name || "-")}</h3>
+                            <div class="search-result-meta">${escapeHtml(result.meeting_date || "-")} | ${escapeHtml(result.responsible_unit || "-")}</div>
+                        </div>
+                        <div class="search-score-badge">score ${escapeHtml(String(result.score ?? 0))}</div>
+                    </div>
+                    <div class="search-result-submeta">Meeting ID: ${escapeHtml(result.meeting_id || "-")} | Document: ${escapeHtml(result.document_id || "-")}</div>
+                </button>
+                <div class="search-field-row">${matchedFields}</div>
+                <div class="search-item-list">${matchedItems}</div>
+            </article>
+        `;
+    }).join("");
+
+    elements.searchResults.querySelectorAll(".search-result-main").forEach((button) => {
+        button.addEventListener("click", async () => {
+            await logSearchClick({
+                meeting_id: button.dataset.searchMeetingId,
+                document_id: button.dataset.searchDocumentId,
+            });
+            if (button.dataset.searchMeetingId) {
+                loadMeetingDetail(button.dataset.searchMeetingId);
+            }
+        });
+    });
+
+    elements.searchResults.querySelectorAll(".search-item-match").forEach((button) => {
+        button.addEventListener("click", async () => {
+            await logSearchClick({
+                meeting_id: button.dataset.searchMeetingId,
+                item_id: button.dataset.searchItemId,
+                document_id: button.dataset.searchDocumentId,
+            });
+            if (button.dataset.searchMeetingId) {
+                loadMeetingDetail(button.dataset.searchMeetingId);
+            }
+        });
+    });
+}
+
+async function logSearchClick({ meeting_id, item_id = null, document_id = null }) {
+    if (!state.search.searchId || !meeting_id) {
+        return;
+    }
+    try {
+        await fetchJson("/api/search/click/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                search_id: state.search.searchId,
+                meeting_id,
+                item_id,
+                document_id,
+            }),
+        });
+    } catch (error) {
+        console.error("Failed to log search click", error);
+    }
 }
 
 async function loadMeetingItems() {

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.documents",
     "apps.meetings",
+    "apps.search.apps.SearchConfig",
 ]
 
 MIDDLEWARE = [

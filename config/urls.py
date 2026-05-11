@@ -1,9 +1,25 @@
 from django.urls import include, path
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="index.html"), name="dashboard"),
+    path("", RedirectView.as_view(pattern_name="documents-page", permanent=False)),
+    path(
+        "documents/",
+        TemplateView.as_view(template_name="documents.html", extra_context={"active_page": "documents"}),
+        name="documents-page",
+    ),
+    path(
+        "meetings/",
+        TemplateView.as_view(template_name="meetings.html", extra_context={"active_page": "meetings"}),
+        name="meetings-page",
+    ),
+    path(
+        "search/",
+        TemplateView.as_view(template_name="search.html", extra_context={"active_page": "search"}),
+        name="search-page",
+    ),
     path("api/documents/", include("apps.documents.urls")),
     path("api/", include("apps.meetings.urls")),
+    path("api/", include("apps.search.urls")),
 ]
