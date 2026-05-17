@@ -40,6 +40,8 @@ def ensure_indexes():
     get_meeting_items_collection().create_index([("document_id", ASCENDING)], name="item_document_id")
     get_meeting_items_collection().create_index([("owner", ASCENDING)], name="item_owner")
     get_meeting_items_collection().create_index([("planned_date", ASCENDING)], name="item_planned_date")
+    get_meeting_items_collection().create_index([("actual_completed_date", ASCENDING)], name="item_actual_completed_date")
+    get_meeting_items_collection().create_index([("tracking_result", ASCENDING)], name="item_tracking_result")
     get_meeting_items_collection().create_index([("content", ASCENDING)], name="item_content")
 
     get_search_logs_collection().create_index(
@@ -47,6 +49,7 @@ def ensure_indexes():
         unique=True,
         name="uniq_search_id",
     )
+    get_search_logs_collection().create_index([("query", ASCENDING)], name="search_query")
     get_search_logs_collection().create_index([("created_at", ASCENDING)], name="search_created_at")
 
     get_search_click_logs_collection().create_index(
