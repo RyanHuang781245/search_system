@@ -5,6 +5,7 @@ from uuid import uuid4
 from django.utils import timezone
 
 from apps.meetings.services import _serialize_mongo_document
+from apps.graph.services import get_graph_score_context
 
 from .feedback import build_feedback_context, score_item_feedback, score_meeting_feedback
 from .highlighter import collect_matched_snippets
@@ -50,6 +51,7 @@ def search_meeting_minutes(
     meetings = list(get_meeting_minutes_collection().find({}, {"_id": 0}))
     items = list(get_meeting_items_collection().find({}, {"_id": 0}))
     feedback_context = build_feedback_context(query)
+    graph_context = _get_safe_graph_context(query)
 
     meetings = [meeting for meeting in meetings if _meeting_matches_filters(meeting, date_from, date_to, responsible_unit, chairperson, status)]
 
@@ -82,22 +84,26 @@ def search_meeting_minutes(
         meeting_score_detail = score_meeting_metadata(meeting, query)
         recency_score = score_recency(meeting.get("meeting_date"))
         meeting_feedback_score = score_meeting_feedback(meeting_id, feedback_context)
+        meeting_graph_score = float(graph_context["meeting_scores"].get(meeting_id, 0))
 
         matched_items = []
         aggregate_keyword = meeting_score_detail["keyword_score"]
         aggregate_structure = meeting_score_detail["structure_score"]
         aggregate_task = 0.0
         aggregate_feedback = meeting_feedback_score
+        aggregate_graph = meeting_graph_score
         matched_fields = list(meeting_score_detail["matched_fields"])
 
         for item in filtered_items:
             item_score_detail = score_item(item, query)
             item_feedback_score = score_item_feedback(item.get("item_id"), feedback_context)
+            item_graph_score = float(graph_context["item_scores"].get(item.get("item_id"), 0))
             item_score_detail["feedback_score"] = float(item_feedback_score)
+            item_score_detail["graph_score"] = item_graph_score
             item_final_score = finalize_item_score(item_score_detail)
 
             include_item = True
-            if query and item_score_detail["keyword_score"] == 0 and not owner and not item_filters_active:
+            if query and item_score_detail["keyword_score"] == 0 and item_graph_score == 0 and not owner and not item_filters_active:
                 include_item = False
 
             if include_item:
@@ -125,6 +131,7 @@ def search_meeting_minutes(
             "task_score": float(aggregate_task),
             "recency_score": float(recency_score),
             "feedback_score": float(aggregate_feedback),
+            "graph_score": float(aggregate_graph),
         }
         final_score = finalize_meeting_score(meeting_total_score_detail)
 
@@ -145,7 +152,12 @@ def search_meeting_minutes(
             "final_score": final_score,
             "score_detail": _round_score_detail(meeting_total_score_detail),
             "matched_fields": sorted(set(matched_fields)),
-            "matched_snippets": collect_matched_snippets(query, meeting, filtered_items if matched_items else []),
+            "matched_snippets": collect_matched_snippets(
+                query,
+                meeting,
+                filtered_items if matched_items else [],
+                extra_terms=graph_context["expanded_keywords"],
+            ),
             "matched_items": matched_items,
         }
         results.append(result)
@@ -180,6 +192,7 @@ def search_meeting_minutes(
         "query": query,
         "search_id": search_log["search_id"],
         "total": total,
+        "expanded_keywords_from_graph": graph_context["expanded_keywords"],
         "results": paged_results,
     }
 
@@ -306,6 +319,16 @@ def _sort_search_results(results, sort_by):
             )
         )
         return
+    if sort_key in {"graph", "graph_score"}:
+        results.sort(
+            key=lambda item: (
+                -item.get("score_detail", {}).get("graph_score", 0),
+                -(item.get("final_score") or 0),
+                item.get("meeting_date") or "",
+                item.get("meeting_id") or "",
+            )
+        )
+        return
 
     results.sort(key=lambda item: (-(item.get("final_score") or 0), item.get("meeting_date") or "", item.get("meeting_id") or ""))
 
@@ -316,3 +339,12 @@ def _round_score_detail(score_detail):
         for key, value in score_detail.items()
         if isinstance(value, (int, float))
     }
+
+
+def _get_safe_graph_context(query: str) -> dict:
+    if not query:
+        return {"expanded_keywords": [], "meeting_scores": {}, "item_scores": {}, "matches": []}
+    try:
+        return get_graph_score_context(query)
+    except Exception:
+        return {"expanded_keywords": [], "meeting_scores": {}, "item_scores": {}, "matches": []}

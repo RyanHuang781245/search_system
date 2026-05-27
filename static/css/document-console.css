@@ -621,6 +621,21 @@ body {
     font-weight: 700;
 }
 
+.search-score-stack {
+    display: grid;
+    gap: 0.4rem;
+    justify-items: end;
+}
+
+.search-score-subbadge {
+    border-radius: 999px;
+    background: #ecfeff;
+    color: #0f766e;
+    padding: 0.28rem 0.72rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
 .search-field-row {
     display: flex;
     flex-wrap: wrap;
@@ -875,6 +890,10 @@ body {
 
 .related-card-static {
     cursor: default;
+}
+
+.graph-keyword-card {
+    cursor: pointer;
 }
 
 .related-title {

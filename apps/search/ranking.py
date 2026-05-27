@@ -118,6 +118,7 @@ def finalize_item_score(score_detail: dict) -> float:
         + score_detail.get("structure_score", 0)
         + score_detail.get("task_score", 0)
         + score_detail.get("feedback_score", 0)
+        + score_detail.get("graph_score", 0)
     )
 
 
@@ -128,6 +129,7 @@ def finalize_meeting_score(score_detail: dict) -> float:
         + score_detail.get("task_score", 0)
         + score_detail.get("recency_score", 0)
         + score_detail.get("feedback_score", 0)
+        + score_detail.get("graph_score", 0)
     )
 
 

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.documents",
     "apps.meetings",
+    "apps.graph",
     "apps.search.apps.SearchConfig",
 ]
 
@@ -61,6 +62,11 @@ REST_FRAMEWORK = {
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "document_retrieval_system")
+
+NEO4J_URI = os.getenv("NEO4J_URI", "")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
 UPLOAD_ROOT = BASE_DIR / "uploads"
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024

@@ -159,6 +159,19 @@
         <section class="app-card mb-4">
             <div class="app-card-header">
                 <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="share-2"></i>
+                    圖譜擴展
+                </h2>
+                <span class="small text-muted">Keyword graph</span>
+            </div>
+            <div class="app-card-body">
+                <div id="graph-keywords" class="related-list"></div>
+            </div>
+        </section>
+
+        <section class="app-card mb-4">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
                     <i data-lucide="bar-chart-3"></i>
                     搜尋概況
                 </h2>
@@ -243,5 +256,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'js/search-page.js' %}?v=20260511-search-stage4-2"></script>
+<script src="{% static 'js/search-page.js' %}?v=20260511-search-stage5-graph-fix-1"></script>
 {% endblock %}

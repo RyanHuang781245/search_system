@@ -184,6 +184,25 @@ class SearchAPITestCase(APISimpleTestCase):
         self.assertEqual(result["score_detail"]["feedback_score"], 2.5)
         self.assertEqual(result["matched_items"][0]["score_detail"]["feedback_score"], 1.5)
 
+    def test_search_includes_graph_score_and_expanded_keywords_when_graph_matches_exist(self):
+        with patch(
+            "apps.search.services.get_graph_score_context",
+            return_value={
+                "expanded_keywords": ["TFDA", "CFDA"],
+                "meeting_scores": {"meet_001": 2.5},
+                "item_scores": {"item_003": 1.5},
+                "matches": [],
+            },
+        ):
+            response = self.client.get(reverse("meeting-minutes-search"), {"q": "FDA"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["expanded_keywords_from_graph"], ["TFDA", "CFDA"])
+        result = next(item for item in response.data["data"]["results"] if item["meeting_id"] == "meet_001")
+        self.assertEqual(result["score_detail"]["graph_score"], 2.5)
+        matched_item = next(item for item in result["matched_items"] if item["item_id"] == "item_003")
+        self.assertEqual(matched_item["score_detail"]["graph_score"], 1.5)
+
     def test_related_meetings_returns_reasoned_matches(self):
         response = self.client.get(reverse("related-meetings", args=["meet_001"]))
 

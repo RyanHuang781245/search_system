@@ -3,5 +3,6 @@ name = "backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "neo4j>=6.2.0",
     "pymupdf>=1.27.2.3",
 ]

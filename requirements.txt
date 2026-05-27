@@ -3,3 +3,4 @@ djangorestframework
 pymongo
 python-dotenv
 PyMuPDF
+neo4j
