@@ -1,0 +1,1539 @@
+# 聯合骨科器材股份有限公司 專 案 結 案 報 告 書
+
+|專案編號|P1707|專案執行期間|2017/06/05~2022/02/14| | |
+|---|---|---|---|---|---|
+|專案名稱|HA-Fit Stem| | |計畫負責人|陸正光，倪仲 達|
+|本結案報告書具備下列各項資料：<br><br>1. 計畫簡介<br>2. 計畫執行情形及差異分析<br>3. 經費運用情形<br>4. 成果效益檢討<br>5. 結論與建議<br>| | | | | |
+
+
+|Prepared By 撰寫者|Approved By 核准者|Date Completed 完成日期|
+|---|---|---|
+|倪仲達|鄭雅文|2023/12/20|
+
+
+一. 計畫簡介 臨床需求
+
+人工髖關節自 1970 年代由英國醫師 John Charnley 提出第一代的金屬 -聚乙烯配對的設計，迄今已超過 45 年的歷史。早期在手術器械發展未臻精 良、技術尚未達到完全成熟的情形下，人工髖關節股骨柄(hip stem)與近端 股骨的結合往往仰賴骨水泥(bone cement)做為間隙填補的基材，藉以降低 因股骨柄遠端或近端與骨髓腔幾何匹配性不足而發生可能的術後併發症。然 而，除了一般骨水泥的風險外，過去也發現由於骨水泥穩定效果不均勻，產 生股骨柄發生斷裂的問題，因此生物性固定(biological fixation)的意識逐漸 被導入骨科植入物的設計。氫氧基磷灰石(hydroxyapatite, HA)噴塗於植入 物表面、促進骨整合效果的概念於 1980 年的早期開始出現，此後於 1985 年由法國里昂的 ASTRO 團隊應用了此項技術，並就臨床及生物力學的角度 修正了人工髖關節股骨柄的幾何設計，推出了一款股骨柄，自此稱霸非骨水 泥式股骨柄的市場達 30 年之久，目前仍多為歐美的骨科醫師推崇為首選， 這便是 DePuy 的 Corail hip stem。
+
+而在非骨水泥式的人工股骨柄上是否要使用 HA 噴塗的論點，在過去的 臨床及動物實驗中也有相當程度的探討，可以肯定的是對於促進術後初期的 骨整合效果、降低失敗率的目的，HA 噴塗具有相當的實用價值。
+
+## 市場需求
+
+具有 HA 噴塗的非骨水泥式人工股骨柄產品相當多，而根據各國關節註 冊中心年度報告整理的結果，目前與 DePuy Corail hip stem 稱得上做為主 要競爭對象的產品有 Zimmer 的 Avenir Muller stem、Smith & Nephew 的 Polarstem 以及 Corin 的 Metefix 等。這些產品在股骨柄的外型及主要 結構紋理大致上與 Corail hip stem 是雷同的。市場上的反應可看出在各國 Corail hip stem 仍是此類股骨柄植入物的主流，其設計及品質獲得了多數 臨床醫師的肯定。
+
+有鑑於 Corail hip stem 在市場上的成功、各廠牌競相效仿，本企劃案 中擬修正股骨柄長度至合理範圍(有助於微創或 DAA 手術的操作)，以及
+
+offset 的適當調整，涵蓋東西方人口族群之解剖參數，將提升產品之競爭力， 並更為符合臨床操作及患者需求。
+
+二. 計畫執行情形及差異分析 本專案計畫產出:
+
+- 1. Cementless standard HA-Fit stem (collarless)、
+- 2. Cementless standard HA-Fit stem (collared)、
+- 3. Cementless high-offset HA-Fit stem (collarless) 、
+- 4. Cementless high-offset HA-Fit stem (collared) 、
+- 5. Cementless coxa vara (high-offset) HA-Fit stem (collared)、
+- 6. Cemented standard HA-Fit stem (collarless)、
+- 7. Cemented high-offset HA-Fit stem (collarless)。 本計劃於 2017/5/3 由產品開發部提出企劃書，2017/6/1 董事長核淮
+
+
+開發。
+
+## 計劃執行進度如下:
+
+2017/5/3 UPD 提出企劃書，2017/6/1 核准開發，2017/11/30 新產 品進度會議納入開發管控，訂定 2017/12/05 召開專案啟動會議，確認產品 規格及詳細時間。2018/2/7 UPD 確認系統名 United Hip System，品名 Conformity stem。開發時程細節詳見表 1、表 2。
+
+表 1、計劃執行情形一覽表 – 前期研究
+
+|歷程紀錄|
+|---|
+|1. 2016/4/22 收到林先生的一封回覆 Francois 的郵件，提到公司擬向 Northmed (法國公司，產品有 Corail-like stem & Dual Mobility Cup) 討論合作使用 Northmed 的 stem, head, DM cup 在歐洲市場銷售的計畫。當時，林先生提出 四種可能的組合<br><br>(a) N stem + N Head + N cup or dual mobility (no problem)<br>(b) N stem + N ceramic Head + UM II cup (need drawings and specification of N ceramic Head and confirm with CeramTec)<br>(c) N stem + U Heads + UM II Cup (Need N stems drawing to check dimension of Trunion, If dimension fit; we need samples to run fatigue<br>|
+
+
+|歷程紀錄|
+|---|
+|test and pull off test, then when Northmed apply new CE to make United as brand owner, together to send out for CE approval.)<br><br>(d) U stem + U Heads + N Dual Mobility cup (need drawing of Dual mobility)<br><br>2. 2016/6/21 林先生轉寄 Francois 的郵件，內容是一間供應 Corail Forging 的廠 家 Marle 的產品資訊<br>3. 2016/7/1 JJ 提供 Marle 的工程圖面，2016/7/7 整理相關資訊，比對 Marle 與 Corail stem 之異同。結論如下<br><br>(a) 軸頭尺寸可共用，可以搭配聯合的股小球<br>(b) 傾角與 Corail stem 相同 (135°)<br>(c) 輪廓外形接近 Corail stem<br>(d) 搭配 UOC head 之後的 offset 與 neck length 略小於 Corail stem 規格 (size 16 需要再確認)<br>(e) 血溝設計 (數目與分界線) 與 Corail stem 比較不同  外觀上比較顯著的差 異<br>(f) 尺寸比 Corail stem 少 #8 & #20<br><br><br>4. 2016/7/11 收到 Francois 寄來的 templates of Northomed and 3D models of Polar stem (S&N)，初步比較 retrieval of #11 Corail stem，drawing of #11 S/C S-A Marle stem，3D model of #4 S&N Polar stem，drawing of Northmed stem<br><br>(a) The ML profile: Polar >> Marle ~ Northomed > Corail<br>(b) The distal profile: Polar > Northomed > Marle<br><br><br>5. 2016/7/20~2016/10/3 期間與 Marle 討論合作的可行性。期間並針對 Marle drawings 與 Corail brochure and retrieval 資訊進行比對。<br>6. 2016/11/4 提出 UCL ( United Corail Like) stem 之規格，林先生回覆同意，並 開始著手計畫該專案<br>7. 2016/11/15 參考 Marle 圖檔建立#08 model，2016/11/16 建立 #08h model。<br>8. 2016/11/18 前述#08h 之有限元分析顯示其 von mises 和 maximum principle stress 都遠大於 worst case (UTF-r #00)。<br>9. 2016/11/27 參考 ExacTech 圖檔建立 3D model。<br>10. 2016/11/28 嘗試將 distal groove 移除之後再分析，應力仍是超差。<br>11. 2016/11/29 查了 Corail stem 的規格，發現#8 沒有 high offset，重新對 #8 執行 stem fatigue 分析，結果仍是超差。<br>|
+
+
+|歷程紀錄|
+|---|
+|12. 2016/11/30 建立 #9h model，分析結果仍是超差。<br>13. 2016/12/13 UPD 草擬了一份產品規格文件，包含 standard / high-offset / cemented 等各樣式。<br>14. 2016/12/26 提供相關資訊給 UR1 評估製造成本。<br>15. 2017/1/21 Matt 與 JJ 赴美與 Dr. Su 及 Dr. Yun 討論有關 Corail stem 計畫 (會 議記錄 : U”Corial” Stem Design Meeting Minutes.docx )，並從美國帶回 Corail stem (collared) sample<br>16. 2017/3/3 Matt 提供 Corail stem templates<br>17. 2017/3/8 UPD Kelvin 提出企畫書草稿，2017/3/10 修正 1 版。<br>18. 2016/12/26~2017/3/16，持續修正，建立#9 各種不同型式之 model<br>19. 2017/3 AAOS 期間與 Dr. Yun 開會，討論 Corail stem 與 DAA 手術器械。 (Corail-like stem_DAA instruments 2.pptx )<br>20. 2017/3/30~2017/4/13，根據 AAOS 會議決定之規格，重新建立#8 model，並 進行有限元素分析，但分析結果始終超出允收標準。<br>21. 2017/4/14 ~ 2017/5/4，建立#9 各種不同型式之 model，並進行有限元素分 析，確認#9 之外形設計。<br>22. 2017/5/3 UPD 提出企畫書，2017/6/1 核准開發。<br>23. 2017/5/4 更新進度 (design meeting_20170504.pptx )<br><br>(a) #8 無法滿足應力需求 (stem fatigue)<br>(b) #9 可以滿足應力需求 (stem fatigue & neck fatigue)以及 impingement<br>(c) #10~#13 之 standard model 已經建立 因為 Corail stem brochure 中的 offset 是以+5mm 球頭來作定義，而我們拿來 與 U2 及 UTF 比較，明顯較大，會議中，林先生希望看 neck length 之差異，重 新整理資料後，待內部討論之後，再跟 Calvin 說明，希望能夠跟顧問醫師討論調 整 neck length 之規格<br><br><br>24. 2017/7/19 UPD 與美國公司討論調整 neck length 之規格 (New HA-Fit stem20170718_v1.pptx)<br>25. 2017/7/26 美國公司 Calvin 向顧問醫師提出調整 neck length 之規格， 2017/8/1 顧問醫師回覆意見，對於調整頸長與 offset 的問題有疑問。<br>26. 2017/8/6 UPD Kelvin 整理五個選項給美國公司 Calvin，Calvin 在收到後建議， 希望能先確保最小尺寸的疲勞分析能過關<br>27. 2017/8/8 ~ 2017/9/12 針對#8 ~ #10 各種型式進行設計與分析<br>28. 2017/10/11 UPD 跟美國醫師開會決議 UOC HA-Fit stem (Corail-like stem)採 用 neck length 35.5mm 的設計<br>29. 2017/10/24 提出預估時程，預計 2017/11/21 完成 phase I 工程圖<br>30. 2017/11/13 寄#8 四支骨柄 parasolid 給 Roy(倪仲達)，2017/11/15 修正其中 兩個檔案，由 Roy 接手分析工作<br>|
+
+
+|歷程紀錄|
+|---|
+|31. 2017/11/24 寄#9 五支骨柄 parasolid 給 Roy<br>32. 2017/11/28 美國公司業務 Johnny，提供他自己設計的 Ortho development corail like stem 相關資料給我，參考其資料，決定修改#8/#9 collar 的外形尺寸<br>33. 2017/12/5 召開專案啟動會議，確認產品規格及詳細時間<br>34. 2018/1/16 UPD 通知系統名 Co-Fit stem<br>35. 2018/1/29 design meeting 確認系統名 Conformity stem system<br>36. 2018/2/7 UPD 確認系統名 United Hip System，品名 Conformity stem<br>|
+
+
+### 表 2、計劃執行情形一覽表
+
+|項目|預期完成|實際完成|說明|
+|---|---|---|---|
+|Cementless type| | | |
+|Phase I 設計圖面發行|2018/3/28|2018/6/14| |
+|Phase I 導量產|2018/9/28|2018/10/12| |
+|測試報告|2018/11/14|2018/11/21| |
+|Phase II 設計圖面發行|2018/8/10|2018/10/9| |
+|Phase II 導量產|2019/7/10|2019/11/14|UR1 美國導量產 (有領) : 2019/7/31 UR1 美國導量產 (無領) : 2019/11/14|
+|申請 TFDA 認證|2018/8/15|2019/3/11|補件通知 : 2019/7/17 補件送件 : 2020/2/18<br><br>|
+|取得 TFDA 認證|2019/2/1|2020/7/10| |
+|申請 CE 認證|2018/7/11|2019/3/29<br>2020/7/28<br>|Pre-review 補件 1st : 2020/8/27 (收件)，2020/9/14 送件 2nd : 2020/9/28 (收件)，2020/11/5 送件|
+|取得 CE 認證|2019/3/8|2021/3/18| |
+|申請 FDA 認證|2018/8/15|2018/11/26|補件通知 : 2019/1/29 補件送件 : 2019/7/5|
+|取得 FDA 認證|2019/4/12|2019/8/8| |
+|設計移轉|2019/12/17|2019/8/22<br>2020/1/15<br>|有領 : 2019/8/22 無領 : 2020/1/15|
+|Cemented type| | | |
+|Phase I 設計圖面發行|2018/9/12|2018/10/22| |
+|Phase I 導量產|2019/1/4|2019/2/2| |
+|測試報告|2019/2/13|2019/4/16|FDA 內毒素 : 2019/03/19 內毒素廠內完整版 : 2019/04/16 生物相容性 : 2019/04/12|
+|Phase II|2018/9/26|2018/11/7| |
+
+
+|項目|預期完成|實際完成|說明|
+|---|---|---|---|
+|設計圖面發行| | | |
+|Phase II 導量產|2019/9/10|2020/7/7| |
+|申請 TFDA 認證|2018/8/15|2019/3/11|與 cementless type 一起|
+|取得 TFDA 認證|2019/2/1|2020/7/10|與 cementless type 一起|
+|申請 CE 認證|2018/7/11|2019/3/29<br>2020/7/28<br>|與 cementless type 一起|
+|取得 CE 認證|2019/3/8|2021/3/18|與 cementless type 一起|
+|申請 FDA 認證|2019/4/11|2019/4/6|補件通知 : 2019/6/19 補件送件 : 2019/12/4|
+|取得 FDA 認證|2019/9/18|2020/1/3| |
+|設計移轉|2019/10/1|2020/7/24| |
+|Short neck| | | |
+|測試報告|-|2018/10/12| |
+|Phase II 設計圖面發行|2018/9/26|2018/10/9| |
+|Phase II 導量產|2019/7/31|2019/11/14|有領 : 2019/7/31 無領 : 2019/11/14|
+|申請 TFDA 認證|2018/8/15|2019/3/11|與 cementless type 一起|
+|取得 TFDA 認證|2019/2/1|2020/7/10|與 cementless type 一起|
+|申請 CE 認證|2018/7/11|2019/3/29<br>2020/7/28<br>|與 cementless type 一起|
+|取得 CE 認證|2019/3/8|2021/3/18|與 cementless type 一起|
+|申請 FDA 認證|2018/8/15|2018/11/26|與 cementless type 一起|
+|取得 FDA 認證|2019/4/12|2019/8/8|與 cementless type 一起|
+|設計移轉|2019/12/17|2019/8/22|與 cementless type 一起|
+|器械 : cementless| | | |
+|器械草圖|2018/9/28|2019/5/20| |
+|器械打樣|2018/12/28|2019/6/17| |
+|器械功能確認|2019/3/15|2019/6/21| |
+|器械工程圖|2019/5/31|2019/7/14| |
+|器械導量產|2019/9/30|2019/8/27| |
+|工具箱草圖|2019/4/30|2019/5/16| |
+|工具箱打樣|2019/5/31|2019/6/14| |
+|工具箱功能確認|2019/6/7|2019/6/17| |
+|工具箱工程圖|2019/7/31|2019/7/19| |
+|工具箱導量產|2019/9/30|2019/8/27| |
+
+
+|項目|預期完成|實際完成|說明|
+|---|---|---|---|
+|器械 : cemented| | | |
+|器械草圖|2020/5/15|2020/11/3| |
+|器械打樣|2020/6/15|2020/11/27| |
+|器械功能確認|2020/6/22|2021/1/11| |
+|器械工程圖|2021/2/5|2021/3/4| |
+|器械導量產|2021/8/20|2021/9/2| |
+|工具箱草圖|2021/4/30|2021/5/24|國際版|
+|工具箱打樣|2021/6/24|2021/8/10|國際版|
+|工具箱功能確認|2021/6/30|2021/8/12|國際版|
+|工具箱工程圖|2021/5/31|2021/8/30|國際版|
+|工具箱導量產|2021/8/30|2021/10/4|國際版 5 套 : 2021/10/04 31 套 : 2021/11/12|
+|工具箱草圖|2021/7/15|2021/7/26|美國版|
+|工具箱打樣|2021/8/23|2021/10/6|美國版|
+|工具箱功能確認|2021/8/31|2021/10/13|美國版|
+|工具箱工程圖|2021/8/31|2021/10/21|美國版|
+|工具箱導量產|2022/1/31|2021/2/8|美國版 : 3 套|
+
+
+由於本計畫開發品項眾多，為了爭取產品上市時間，將產品依照 cementless type 與 cemented type 分別開發，先開發 cementless type， 之後再開發 cemented type。有領式 Cementless type 首批上市的時間為 2019/8/22，較企劃書所希望的日期 2018 年 AAOS (2018/3/6~2018/3/9) 前完成上市審核，晚了 1 年 6 個月，總結原因如下 :
+
+- 1. 前期研究時間比預期久，一直到 2017/12/5 才召開專案啟動會議，確認 產品規格及詳細時間
+- 2. 原 定 2018/3/28 完 成 cementless type phase I 圖面，但遲至 2018/6/14 才完成。
+- 3. 原定 2018/8/15 提出 FDA 認證申請，延遲至 2018/11/26 才送出，期 間於 2019/1/29 收到補件通知，並於 2019/7/5 補件送件，FDA 認證 於 2019/8/8 才通過，比原定 2019/4/12 取得 FDA 認證延遲四個月。
+
+
+三. 經費運用情形
+
+### 1. 計畫費用預算： 根據企劃書，本計畫之開發成本包含測試費用 902,200 元，法規認證費
+
+用 3,233,646 元。模具開發費用每一品號 173,500 元，加工治具費用每一 品號 38,000 元。本計畫共開發 81 支股骨柄，模具開發費用與加工治具費 用隻預算分別是 14,053,500 元與 3,078,000。詳如表 4 所示。
+
+表 4、企劃書之開發成本預估
+
+|項次|內容|單價|總價|
+|---|---|---|---|
+|測試費用|TFDA/FDA/CE|540,000|540,000|
+| |CFDA|362,200|362,200|
+|法規認證費用|CE|1,335,600|1,335,600|
+| |FDA|327,546|327,546|
+| |CFDA|1,544,000|1,544,000|
+| |TFDA|26,500|26,500|
+|模具費用<br><br>|模具開發費用|173,500 / 每一品號|14,053,500|
+| |加工治具費用|38,000 / 每一品號|3,078,000|
+|總計|21,267,346| | |
+
+
+### 2. 實際開發費用： 本計劃實際開發費用為 21,160,377 元(詳表 5)。其中，差異較大之項 目分別是：
+
+- a. 模具費用高估，預算 14,053,500 元，實際發生 3,810,400 元。
+- b. 委外測試費用低估，預算 902,200 元，實際發生 3,055,546 元。
+- c. 消耗工具費低估，預算 3,078,000 元，實際發生 9,816,380 元。
+- d. 法規認證費用低估，原本預算 3,233,646 元，實際發生 3,596,200 元，主要差異來自 CE 認證費用 2,407,011 元高於預算。
+
+
+費用執行明細如附件一。 表 5、本計畫之實際開發成本
+
+|年份|委外費用|消耗工具費|消耗品|法規認證|模具成本|總計|
+|---|---|---|---|---|---|---|
+|2018|1,523,823|3,431,238|39,458| |1,012,000|600,6519|
+|2019|1,497,778|5,772,930|87,226|703,264|2,574,000|10,635,198|
+
+
+|2020|709,982|158,263|330|485,925| |1,354,500|
+|---|---|---|---|---|---|---|
+|2021| |247,118| |2,407,011|224,400|3,058,529|
+|2022|78,800|159,956| | | |238,756|
+|2023| |46,875| | | |46,875|
+|總計|3,810,383|9,816,380|127,014|3,596,200|3,810,400|21,160,377|
+
+
+四. 成果效益檢討
+
+1. 產品開發規格 植入物詳細之法規申請與開發品號清單如表 6 所示：
+
+表 6、本計畫植入物之法規申請與開發品號清單
+
+|品號|品名|TFDA|CE|FDA|
+|---|---|---|---|---|
+|PE11101001|United Hip System Conformity Stem, Collared, #1|006907|CE 2195|K183312|
+|PE11101002|United Hip System Conformity Stem, Collared, #2|006907|CE 2195|K183312|
+|PE11101003|United Hip System Conformity Stem, Collared, #3|006907|CE 2195|K183312|
+|PE11101004|United Hip System Conformity Stem, Collared, #4|006907|CE 2195|K183312|
+|PE11101005|United Hip System Conformity Stem, Collared, #5|006907|CE 2195|K183312|
+|PE11101006|United Hip System Conformity Stem, Collared, #6|006907|CE 2195|K183312|
+|PE11101007|United Hip System Conformity Stem, Collared, #7|006907|CE 2195|K183312|
+|PE11101008|United Hip System Conformity Stem, Collared, #8|006907|CE 2195|K183312|
+|PE11101009|United Hip System Conformity Stem, Collared, #9|006907|CE 2195|K183312|
+|PE11101010|United Hip System Conformity Stem, Collared, #10|006907|CE 2195|K183312|
+|PE11101011|United Hip System Conformity Stem, Collared, #11|006907|CE 2195|K183312|
+|PE11101201|United Hip System Conformity Stem, High Offset, Collared, #1|006907|CE 2195|K183312|
+|PE11101202|United Hip System Conformity Stem, High Offset, Collared, #2|006907|CE 2195|K183312|
+|PE11101203|United Hip System Conformity Stem, High Offset, Collared, #3|006907|CE 2195|K183312|
+|PE11101204|United Hip System Conformity Stem, High Offset, Collared, #4|006907|CE 2195|K183312|
+|PE11101205|United Hip System Conformity Stem, High Offset, Collared, #5|006907|CE 2195|K183312|
+
+
+|品號|品名|TFDA|CE|FDA|
+|---|---|---|---|---|
+|PE11101206|United Hip System Conformity Stem, High Offset, Collared, #6|006907|CE 2195|K183312|
+|PE11101207|United Hip System Conformity Stem, High Offset, Collared, #7|006907|CE 2195|K183312|
+|PE11101208|United Hip System Conformity Stem, High Offset, Collared, #8|006907|CE 2195|K183312|
+|PE11101209|United Hip System Conformity Stem, High Offset, Collared, #9|006907|CE 2195|K183312|
+|PE11101210|United Hip System Conformity Stem, High Offset, Collared, #10|006907|CE 2195|K183312|
+|PE11101211|United Hip System Conformity Stem, High Offset, Collared, #11|006907|CE 2195|K183312|
+|PE11101401|United Hip System Conformity Stem, Short Neck, Collared, #1|006907|CE 2195|K183312|
+|PE11101402|United Hip System Conformity Stem, Short Neck, Collared, #2|006907|CE 2195|K183312|
+|PE11101403|United Hip System Conformity Stem, Short Neck, Collared, #3|006907|CE 2195|K183312|
+|PE11101404|United Hip System Conformity Stem, Short Neck, Collared, #4|無備註|無備註|無備註|
+|PE11101405|United Hip System Conformity Stem, Short Neck, Collared, #5|無備註|無備註|無備註|
+|PE11101406|United Hip System Conformity Stem, Short Neck, Collared, #6|無備註|無備註|無備註|
+|PE11101407|United Hip System Conformity Stem, Short Neck, Collared, #7|無備註|無備註|無備註|
+|PE11103001|United Hip System Conformity Stem, #1|006907|CE 2195|K183312|
+|PE11103002|United Hip System Conformity Stem, #2|006907|CE 2195|K183312|
+|PE11103003|United Hip System Conformity Stem, #3|006907|CE 2195|K183312|
+|PE11103004|United Hip System Conformity Stem, #4|006907|CE 2195|K183312|
+|PE11103005|United Hip System Conformity Stem, #5|006907|CE 2195|K183312|
+|PE11103006|United Hip System Conformity Stem, #6|006907|CE 2195|K183312|
+|PE11103007|United Hip System Conformity Stem, #7|006907|CE 2195|K183312|
+|PE11103008|United Hip System Conformity Stem, #8|006907|CE 2195|K183312|
+|PE11103009|United Hip System Conformity Stem, #9|006907|CE 2195|K183312|
+|PE11103010|United Hip System Conformity Stem, #10|006907|CE 2195|K183312|
+
+
+|品號|品名|TFDA|CE|FDA|
+|---|---|---|---|---|
+|PE11103011|United Hip System Conformity Stem, #11|006907|CE 2195|K183312|
+|PE11103201|United Hip System Conformity Stem, High Offset, #1|006907|CE 2195|K183312|
+|PE11103202|United Hip System Conformity Stem, High Offset, #2|006907|CE 2195|K183312|
+|PE11103203|United Hip System Conformity Stem, High Offset, #3|006907|CE 2195|K183312|
+|PE11103204|United Hip System Conformity Stem, High Offset, #4|006907|CE 2195|K183312|
+|PE11103205|United Hip System Conformity Stem, High Offset, #5|006907|CE 2195|K183312|
+|PE11103206|United Hip System Conformity Stem, High Offset, #6|006907|CE 2195|K183312|
+|PE11103207|United Hip System Conformity Stem, High Offset, #7|006907|CE 2195|K183312|
+|PE11103208|United Hip System Conformity Stem, High Offset, #8|006907|CE 2195|K183312|
+|PE11103209|United Hip System Conformity Stem, High Offset, #9|006907|CE 2195|K183312|
+|PE11103210|United Hip System Conformity Stem, High Offset, #10|006907|CE 2195|K183312|
+|PE11103211|United Hip System Conformity Stem, High Offset, #11|006907|CE 2195|K183312|
+|PE11105202|United Hip System Conformity Stem, Coxa Vara, Collared, #2|006907|CE 2195|K183312|
+|PE11105203|United Hip System Conformity Stem, Coxa Vara, Collared, #3|006907|CE 2195|K183312|
+|PE11105204|United Hip System Conformity Stem, Coxa Vara, Collared, #4|006907|CE 2195|K183312|
+|PE11105205|United Hip System Conformity Stem, Coxa Vara, Collared, #5|006907|CE 2195|K183312|
+|PE11105206|United Hip System Conformity Stem, Coxa Vara, Collared, #6|006907|CE 2195|K183312|
+|PE11105207|United Hip System Conformity Stem, Coxa Vara, Collared, #7|006907|CE 2195|K183312|
+|PE11105208|United Hip System Conformity Stem, Coxa Vara, Collared, #8|006907|CE 2195|K183312|
+|PE11105209|United Hip System Conformity Stem, Coxa Vara, Collared, #9|006907|CE 2195|K183312|
+|PE11105210|United Hip System Conformity Stem, Coxa Vara, Collared, #10|006907|CE 2195|K183312|
+|PE11105211|United Hip System Conformity Stem, Coxa Vara, Collared, #11|006907|CE 2195|K183312|
+|PE11107001|United Hip System Conformity Stem, Cemented, #1|006907|CE 2195|K191056|
+|PE11107002|United Hip System Conformity Stem, Cemented, #2|006907|CE 2195|K191056|
+|PE11107003|United Hip System Conformity Stem, Cemented, #3|006907|CE 2195|K191056|
+
+
+|品號|品名|TFDA|CE|FDA|
+|---|---|---|---|---|
+|PE11107004|United Hip System Conformity Stem, Cemented, #4|006907|CE 2195|K191056|
+|PE11107005|United Hip System Conformity Stem, Cemented, #5|006907|CE 2195|K191056|
+|PE11107006|United Hip System Conformity Stem, Cemented, #6|006907|CE 2195|K191056|
+|PE11107007|United Hip System Conformity Stem, Cemented, #7|006907|CE 2195|K191056|
+|PE11107008|United Hip System Conformity Stem, Cemented, #8|006907|CE 2195|K191056|
+|PE11107009|United Hip System Conformity Stem, Cemented, #9|006907|CE 2195|K191056|
+|PE11107010|United Hip System Conformity Stem, Cemented, #10|006907|CE 2195|K191056|
+|PE11107201|United Hip System Conformity Stem, Cemented, High offset, #1|006907|CE 2195|K191056|
+|PE11107202|United Hip System Conformity Stem, Cemented, High offset, #2|006907|CE 2195|K191056|
+|PE11107203|United Hip System Conformity Stem, Cemented, High offset, #3|006907|CE 2195|K191056|
+|PE11107204|United Hip System Conformity Stem, Cemented, High offset, #4|006907|CE 2195|K191056|
+|PE11107205|United Hip System Conformity Stem, Cemented, High offset, #5|006907|CE 2195|K191056|
+|PE11107206|United Hip System Conformity Stem, Cemented, High offset, #6|006907|CE 2195|K191056|
+|PE11107207|United Hip System Conformity Stem, Cemented, High offset, #7|006907|CE 2195|K191056|
+|PE11107208|United Hip System Conformity Stem, Cemented, High offset, #8|006907|CE 2195|K191056|
+|PE11107209|United Hip System Conformity Stem, Cemented, High offset, #9|006907|CE 2195|K191056|
+|PE11107210|United Hip System Conformity Stem, Cemented, High offset, #10|006907|CE 2195|K191056|
+
+
+備註 : 原企劃書只有
+
+- 1. Cementless standard HA-Fit stem (collarless)、
+- 2. Cementless standard HA-Fit stem (collared)、
+- 3. Cementless high-offset HA-Fit stem (collarless) 、
+- 4. Cementless high-offset HA-Fit stem (collared) 、
+- 5. Cementless coxa vara (high-offset) HA-Fit stem (collared)、
+
+
+- 6. Cemented standard HA-Fit stem (collarless)、
+- 7. Cemented high-offset HA-Fit stem (collarless)。 UPD 於 2018/7/19 修改企畫書，增加 3 支短頸式股骨柄設計需求。並 於 2021/6/30 再次修改企畫書，配合日本市場需求，增加 4 支短頸式 股骨柄設計需求。這 4 支短頸式股骨柄目前只申請日本 PMDA 認證， 暫無申請 TFDA/FDA/CE 認證之需求。
+
+
+本專案對應之器械開發品號清單如表 7 所示：
+
+- 表 7、本計畫器械之開發品號清單
+
+
+|品號|品名|
+|---|---|
+|PE9110-5010|Neck trial, STD, 135°|
+|PE9110-5020|Neck trial, high offset, 135°|
+|PE9110-5030|Neck trial, coxa vara, 125°|
+|PE9110-5040|Neck trial, short neck, 135°|
+|PE9110-5010-RC|Neck trial, STD, 135°|
+|PE9110-5020-RC|Neck trial, high offset, 135°|
+|PE9110-5030-RC|Neck trial, coxa vara, 125°|
+|PE9110-5040-RC|Neck trial, short neck, 135°|
+|PE9110-2001|Neck resection guide|
+|PE9110-2002|Neck template|
+|PE9110-2002-RA|Neck template|
+|PE9110-2003|Neck template ruler|
+|PE9110-4001|Femoral cutting chisel, modular|
+|PE9110-4101|Femoral cutting chisel, straight|
+|PE9110-6098|Starter broach|
+|PE9110-6001|Broach, #1|
+|PE9110-6002|Broach, #2|
+|PE9110-6003|Broach, #3|
+|PE9110-6004|Broach, #4|
+|PE9110-6005|Broach, #5|
+|PE9110-6006|Broach, #6|
+
+
+|品號|品名|
+|---|---|
+|PE9110-6007|Broach, #7|
+|PE9110-6008|Broach, #8|
+|PE9110-6009|Broach, #9|
+|PE9110-6010|Broach, #10|
+|PE9110-6011|Broach, #11|
+|PE9110-6001-RA|Sharp broach, #1|
+|PE9110-6002-RA|Sharp broach, #2|
+|PE9110-6003-RA|Sharp broach, #3|
+|PE9110-6004-RA|Sharp broach, #4|
+|PE9110-6005-RA|Sharp broach, #5|
+|PE9110-6006-RA|Sharp broach, #6|
+|PE9110-6007-RA|Sharp broach, #7|
+|PE9110-6008-RA|Sharp broach, #8|
+|PE9110-6009-RA|Sharp broach, #9|
+|PE9110-6010-RA|Sharp broach, #10|
+|PE9110-6011-RA|Sharp broach, #11|
+|PE9110-6001-RB|Sharp broach, #1|
+|PE9110-6002-RB|Sharp broach, #2|
+|PE9110-6003-RB|Sharp broach, #3|
+|PE9110-6004-RB|Sharp broach, #4|
+|PE9110-6005-RB|Sharp broach, #5|
+|PE9110-6006-RB|Sharp broach, #6|
+|PE9110-6007-RB|Sharp broach, #7|
+|PE9110-6008-RB|Sharp broach, #8|
+|PE9110-6009-RB|Sharp broach, #9|
+|PE9110-6010-RB|Sharp broach, #10|
+|PE9110-6011-RB|Sharp broach, #11|
+|PE9110-6001-RT|Sharp broach, #1|
+|PE9110-6002-RT|Sharp broach, #2|
+|PE9110-6003-RT|Sharp broach, #3|
+|PE9110-6004-RT|Sharp broach, #4|
+|PE9110-6005-RT|Sharp broach, #5|
+
+
+|品號|品名|
+|---|---|
+|PE9110-6006-RT|Sharp broach, #6|
+|PE9110-6007-RT|Sharp broach, #7|
+|PE9110-6008-RT|Sharp broach, #8|
+|PE9110-6009-RT|Sharp broach, #9|
+|PE9110-6010-RT|Sharp broach, #10|
+|PE9110-6011-RT|Sharp broach, #11|
+|PE9110-1101|Straight broach handle|
+|PE9110-1301|Offset broach handle|
+|PE9110-1501|Dual offset broach handle, left|
+|PE9110-1502|Dual offset broach handle, right|
+|PE9110-1900|Angled broach handle|
+|PE9110-1101-RA|Straight broach handle|
+|PE9110-1301-RA|Offset broach handle|
+|PE9110-1501-RA|Dual offset broach handle, left|
+|PE9110-1502-RA|Dual offset broach handle, right|
+|PE9110-1101-RB|Straight broach handle|
+|PE9110-1301-RB|Offset broach handle|
+|PE9110-1501-RB|Dual offset broach handle, left|
+|PE9110-1502-RB|Dual offset broach handle, right|
+|PE9110-1301-RT|Offset broach handle|
+|PE9110-3002|Calcar reamer, small|
+|PE9110-3003|Calcar reamer, large|
+|PE9110-7008|Canal sizer, Ø8mm|
+|PE9110-7010|Canal sizer, Ø10mm|
+|PE9110-7012|Canal sizer, Ø12mm|
+|PE9110-7014|Canal sizer, Ø14mm|
+|PE9110-7016|Canal sizer, Ø16mm|
+|PE9110-7018|Canal sizer, Ø18mm|
+|PE9110-1102|Restrictor inserter|
+|PE9110-1701|Stem extractor|
+|PE9110-8101|Conformity stem case|
+|PE9110-8102|Hip stem basic case|
+
+
+|品號|品名|
+|---|---|
+|PE9110-8103|Conformity MIS case|
+|PE9110-8104|Conformity sharp broach case, #1~#5|
+|PE9110-8105|Conformity sharp broach case, #6~#8|
+|PE9110-8301|Conformity femoral prep trials tray|
+|PE9110-8302|Conformity femoral prep tray|
+|PE9110-8303|Conformity straight/offset tray|
+|PE9110-8304|Conformity dual offset tray|
+|PE9110-8305|Conformity femoral prep straight/offset tray|
+|PE9110-8306|Conformity femoral prep dual offset tray|
+
+
+- 2. 產品成本檢討 企劃書中對股骨柄製造成本的估計為 5,600 元(表 8)。實際生產的平均成本 為 5,677 元，詳如表 9 所示：
+
+
+- 表 8、本計畫之估算製造成本
+
+|項目|金額|
+|---|---|
+|鍛件|1,500|
+|HA coating|1,800|
+|刀具+包裝|400|
+|加工+折舊|1,900|
+|小計|5,600|
+
+
+- 表 9、本計畫之實際加工成本
+
+
+|品號|品名|2023/8 庫存 單位成本|
+|---|---|---|
+|PE11101001|Conformity stem, collared, #1|5,416|
+|PE11101002|Conformity stem, collared, #2|4,882|
+|PE11101003|Conformity stem, collared, #3|4,862|
+|PE11101004|Conformity stem, collared, #4|4,811|
+|PE11101005|Conformity stem, collared, #5|4,864|
+|PE11101006|Conformity stem, collared, #6|5,822|
+
+
+|PE11101007|Conformity stem, collared, #7|5,224|
+|---|---|---|
+|PE11101008|Conformity stem, collared, #8|6,687|
+|PE11101009|Conformity stem, collared, #9|6,872|
+|PE11101010|Conformity stem, collared, #10|6,036|
+|PE11101011|Conformity stem, collared, #11|6,260|
+|PE11101201|Conformity stem, high offset, collared, #1|5,424|
+|PE11101202|Conformity stem, high offset, collared, #2|4,942|
+|PE11101203|Conformity stem, high offset, collared, #3|4,963|
+|PE11101204|Conformity stem, high offset, collared, #4|4,811|
+|PE11101205|Conformity stem, high offset, collared, #5|5,008|
+|PE11101206|Conformity stem, high offset, collared, #6|5,661|
+|PE11101207|Conformity stem, high offset, collared, #7|5,159|
+|PE11101208|Conformity stem, high offset, collared, #8|5,337|
+|PE11101209|Conformity stem, high offset, collared, #9|6,538|
+|PE11101210|Conformity stem, high offset, collared, #10|5,856|
+|PE11101211|Conformity stem, high offset, collared, #11|5,247|
+|PE11101402|Conformity stem, short neck, collared, #2|5,478|
+|PE11101403|Conformity stem, short neck, collared, #3|5,415|
+|PE11101404|Conformity stem, short neck, collared, #4|5,070|
+|PE11101405|Conformity stem, short neck, collared, #5|4,921|
+|PE11101406|Conformity stem, short neck, collared, #6|5,164|
+|PE11101407|Conformity stem, short neck, collared, #7|5,453|
+|PE11103001|Conformity stem, #1|5,984|
+|PE11103002|Conformity stem, #2|6,050|
+|PE11103003|Conformity stem, #3|5,373|
+|PE11103004|Conformity stem, #4|5,154|
+|PE11103005|Conformity stem, #5|5,284|
+|PE11103006|Conformity stem, #6|5,629|
+|PE11103007|Conformity stem, #7|6,728|
+|PE11103008|Conformity stem, #8|6,103|
+|PE11103009|Conformity stem, #9|6,355|
+|PE11103010|Conformity stem, #10|6,090|
+|PE11103011|Conformity stem, #11|6,410|
+
+
+|PE11103201|Conformity stem, high offset, #1|5,017|
+|---|---|---|
+|PE11103202|Conformity stem, high offset, #2|5,590|
+|PE11103203|Conformity stem, high offset, #3|5,346|
+|PE11103204|Conformity stem, high offset, #4|5,785|
+|PE11103205|Conformity stem, high offset, #5|5,723|
+|PE11103206|Conformity stem, high offset, #6|5,424|
+|PE11103207|Conformity stem, high offset, #7|5,385|
+|PE11103208|Conformity stem, high offset, #8|5,972|
+|PE11103209|Conformity stem, high offset, #9|5,958|
+|PE11103210|Conformity stem, high offset, #10|6,454|
+|PE11103211|Conformity stem, high offset, #11|7,414|
+|PE11105202|Conformity stem, coxa vara, collared, #2|5,568|
+|PE11105203|Conformity stem, coxa vara, collared, #3|5,160|
+|PE11105204|Conformity stem, coxa vara, collared, #4|4,963|
+|PE11105205|Conformity stem, coxa vara, collared, #5|7,844|
+|PE11105206|Conformity stem, coxa vara, collared, #6|6,819|
+|PE11105207|Conformity stem, coxa vara, collared, #7|7,452|
+|PE11105208|Conformity stem, coxa vara, collared, #8|3,846|
+|PE11105209|Conformity stem, coxa vara, collared, #9|6,517|
+|PE11105210|Conformity stem, coxa vara, collared, #10|5,699|
+|PE11107001|Conformity stem, cemented, #1|4,806|
+|PE11107002|Conformity stem, cemented, #2|4,896|
+|PE11107003|Conformity stem, cemented, #3|5,162|
+|PE11107004|Conformity stem, cemented, #4|4,838|
+|PE11107005|Conformity stem, cemented, #5|4,875|
+|PE11107006|Conformity stem, cemented, #6|5,113|
+|PE11107007|Conformity stem, cemented, #7|5,041|
+|PE11107008|Conformity stem, cemented, #8|4,819|
+|PE11107009|Conformity stem, cemented, #9|5,033|
+|PE11107201|Conformity stem, cemented, high offset, #1|4,891|
+|PE11107202|Conformity stem, cemented, high offset, #2|5,113|
+|PE11107203|Conformity stem, cemented, high offset, #3|4,820|
+|PE11107204|Conformity stem, cemented, high offset, #4|5,153|
+
+
+|PE11107205|Conformity stem, cemented, high offset, #5|5,173|
+|---|---|---|
+|PE11107206|Conformity stem, cemented, high offset, #6|6,801|
+|PE11107207|Conformity stem, cemented, high offset, #7|4,985|
+|PE11107208|Conformity stem, cemented, high offset, #8|6,764|
+|PE11107209|Conformity stem, cemented, high offset, #9|6,845|
+|PE11107210|Conformity stem, cemented, high offset, #10|6,611|
+|PE11101001|Conformity stem, collared, #1|5,416|
+|PE11101002|Conformity stem, collared, #2|4,882|
+|PE11101003|Conformity stem, collared, #3|4,862|
+|PE11101004|Conformity stem, collared, #4|4,811|
+|PE11101005|Conformity stem, collared, #5|4,864|
+|PE11101006|Conformity stem, collared, #6|5,822|
+|PE11101007|Conformity stem, collared, #7|5,224|
+|PE11101008|Conformity stem, collared, #8|6,687|
+|PE11101009|Conformity stem, collared, #9|6,872|
+|PE11101010|Conformity stem, collared, #10|6,036|
+|PE11101011|Conformity stem, collared, #11|6,260|
+|PE11101201|Conformity stem, high offset, collared, #1|5,424|
+
+
+比較表 8 與表 9 可以發現企劃書所預估的製造成本與實際之製造平均成 本接近。
+
+- 3. 法規要求檢討 本計畫在法規要求方面，並無特殊之要求。在臨床評估部分，分析報告是 UOC-RD-CR-17033。 本計畫開發之產品通過台灣衛生署許可認證，許可字號是衛署醫器製字第 006907 號。同時也通過 FDA 認證(K183312 : cementless type ; K191056 : cemented type)。CE 證號則由 SZUTEST(CE 2195)核發。
+- 4. 風險分析檢討 本計畫之風險管理計畫詳列於 UOC-RP-18023。風險管理報告詳列於
+
+
+- UOC-RM-18023。
+- 5. 測試結果檢討 本產品的測試結果均符合規範要求並具有等同或較已上市產品更佳的性能 表現，各項測試結果請參閱測試報告，測試報告清單詳表 10。
+
+
+- 表 10. Conformity stem 測試清單
+
+|Test|Report No.|
+|---|---|
+|Limulus Amebocyte Lysate Endotoxin test for Conformity Stem – Cementless type|UOC-RD-TR-18094|
+|Stem Fatigue Test for Cementless Type Conformity Stem|UOC-RD-TR-18095|
+|Neck Fatigue Test for Cementless Type Conformity Stem|UOC-RD-TR-18096|
+|Microstructure Test for Conformity Stem 優康股骨柄微結構測試|UOC-RD-TR-18097|
+|Limulus Amebocyte Lysate Endotoxin test for Conformity Stem – Cemented type|UOC-RD-TR-19002|
+|Usability Test for Conformity Stem System|UOC-RD-TR-19019|
+|Chemical Characterization Testing for Conformity stem|UOC-RD-TR-19034|
+
+
+此外，本專案開發中對產品進行多項分析，各項分析結果請參閱分析報 告，分析報告清單詳表 11。
+
+- 表 11. Conformity stem 分析清單
+
+
+|Analysis|Report No.|
+|---|---|
+|The Range of Motion of U2 Femoral head Collocates with U2 Bipolar Implant|UOC-RD-AN-16014|
+|FEM of impingement test of acetabular prostheses|UOC-RD-AN-16015|
+|The Range of Motion of Dual Mobility Cup|UOC-RD-AN-17017|
+|Finite Element Analysis on Stem Strength of Conformity Stem Cementless type 無骨水泥式優康股骨柄強度之有限元素分析|UOC-RD-AN-18022|
+|Finite Element Analysis on Neck Strength of Conformity Stem Cementless type 無骨水泥式優康股骨柄之股骨頸強度有限元素分析|UOC-RD-AN-18023|
+
+
+|Finite Element Analysis on Stem Strength of Conformity Stem Cemented type 骨水泥式優康股骨柄強度之有限元素分析|UOC-RD-AN-18030|
+|---|---|
+|Finite Element Analysis on Neck Strength of Conformity Stem Cemented type 骨水泥式優康股骨柄之股骨頸強度有限元素分析|UOC-RD-AN-18031|
+|Range of Motion Analysis of the Conformity Stem|UOC-RD-AN-18032|
+|Finite Element Analysis on Micro-Motion between Femoral Head and Conformity Stem 以有限元素法分析優康股骨柄與骨小球間微動量|UOC-RD-AN-19012|
+|Finite Element Analysis on Stem Strength of Conformity Stem, Short Neck, Collared type 優康短頸有領股骨柄強度之有限元素分析|UOC-RD-AN-21014|
+|Finite Element Analysis on Neck Strength of Conformity Stem, Short Neck, Collared type 優康短頸有領股骨頸強度之有限元素分析|UOC-RD-AN-21015|
+|The Range of Motion of UNITED Femoral Head|UOC-RD-AN-22010|
+|以有限元素分析評估骨水泥式優康股骨柄之骨柄強度 The Stem Strength Evaluation of Cemented type Conformity Stem by Finite Element Analysis|UOC-RD-AN-22014|
+|The Neck Strength Evaluation of Cemented type Conformity Stem by Finite Element Analysis|UOC-RD-AN-22015|
+
+
+五. 結論與建議
+
+本計畫於 2017 年 6 月通過企劃書，原計畫 2018 年 AAOS 年會前完成 上市審核，實際於 2017/12/5 召開專案啟動會議，確認產品規格及詳細時 間。本專案原本計畫開發七種形式的股骨柄，後來在 2018/7/19 修改企劃 書，增加 3 支短頸式股骨柄設計需求。並於 2021/6/30 再次修改企劃書，配 合日本市場需求，增加 4 支短頸式股骨柄設計需求，總計開發 81 支股骨柄。 其中，cementless type 股骨柄在 2019 年 8 月通過 FDA，cemented type 股骨柄在 2020 年 1 月通過 FDA，全系列股骨柄在 2020 年 7 月通過 TFDA， 在 2021 年 3 月通過 CE。前述 4 支增規之短頸式股骨柄目前只申請日本 PMDA 認證，暫無申請 TFDA/FDA/CE 認證之需求。
+
+整個專案的開發期間由於品項過多，導致開發計畫的時間過於冗長。 Cementless 有領式股骨柄及短頸式股骨柄於 2019/8/22 設計移轉。
+
+Cementless 無領式股骨柄於 2020/1/15 設計移轉。Cemented 股骨柄於 2020/7/24 設計移轉。最後增規之 4支短頸式股骨柄於 2022/2/1 設計移轉。
+
+企劃書預估的製造成本與實際加工之平均成本接近。整個專案的開發費 用 21,160,377 元，總金額與企劃書之預估費用 21,267,346 相近，但實際發 生項目互有增減。
+
+本計畫開發之產品自 2019 上市迄今(2023 年 8 月)，總計已經銷售 16,007 件，歷年銷售紀錄如表 12 所示，對比原企劃書推估之上市後銷售量 (見表 13)，本計畫開發產品之銷售優於預期。
+
+表 12、本計畫上市迄今之銷售紀錄 (2019~2023/8)
+
+|品項|2019|2020|2021|2022|2023|總計|
+|---|---|---|---|---|---|---|
+|PE11101001|36|8|37|63|55|199|
+|PE11101002|59|12|57|86|77|291|
+|PE11101003|67|37|122|171|141|538|
+|PE11101004|65|53|163|185|183|649|
+|PE11101005|61|39|130|181|192|603|
+|PE11101006|58|6|83|103|111|361|
+|PE11101007|59|4|55|55|60|233|
+|PE11101008|54|3|38|44|42|181|
+|PE11101009|52|3|34|41|29|159|
+|PE11101010|40|3|33|33|33|142|
+|PE11101011|36|3|33|33|23|128|
+|PE11101201|36|6|34|36|35|147|
+|PE11101202|50|4|45|48|41|188|
+|PE11101203|62|7|52|45|89|255|
+|PE11101204|67|7|64|74|86|298|
+|PE11101205|65|5|76|86|82|314|
+|PE11101206|66|5|62|78|44|255|
+|PE11101207|64|4|46|76|30|220|
+|PE11101208|60|3|38|36|42|179|
+|PE11101209|50|3|34|36|27|150|
+|PE11101210|35|3|33|31|29|131|
+
+
+|PE11101211|34|3|33|30|35|135|
+|---|---|---|---|---|---|---|
+|PE11101401|28|22|45|50|81|226|
+|PE11101402|36|10|56|74|93|269|
+|PE11101403|49|28|88|163|157|485|
+|PE11101404| | | |97|88|185|
+|PE11101405| | | |76|82|158|
+|PE11101406| | | |46|44|90|
+|PE11101407| | | |34|36|70|
+|PE11103001| |29|60|61|45|195|
+|PE11103002| |25|67|75|47|214|
+|PE11103003| |33|144|88|85|350|
+|PE11103004| |41|145|147|122|455|
+|PE11103005| |32|127|143|119|421|
+|PE11103006| |25|91|90|101|307|
+|PE11103007| |24|61|81|89|255|
+|PE11103008| |21|67|62|38|188|
+|PE11103009| |15|59|48|39|161|
+|PE11103010| |15|53|40|39|147|
+|PE11103011| |15|53|47|28|143|
+|PE11103201| |14|49|31|29|123|
+|PE11103202| |16|71|45|30|162|
+|PE11103203| |25|67|62|42|196|
+|PE11103204| |22|91|64|48|225|
+|PE11103205| |22|108|67|67|264|
+|PE11103206| |24|107|52|38|221|
+|PE11103207| |16|67|55|38|176|
+|PE11103208| |14|65|45|30|154|
+|PE11103209| |15|57|34|35|141|
+|PE11103210| |14|54|40|27|135|
+|PE11103211| |14|51|30|29|124|
+|PE11105202|30|14|32|35|39|150|
+|PE11105203|43|4|28|37|77|189|
+|PE11105204|45|24|33|49|66|217|
+
+
+|PE11105205|48|18|33|35|61|195|
+|---|---|---|---|---|---|---|
+|PE11105206|48|14|25|32|33|152|
+|PE11105207|48|13|22|32|33|148|
+|PE11105208|40|1|20|32|23|116|
+|PE11105209|35|1|20|29|26|111|
+|PE11105210|30|1|20|29|29|109|
+|PE11105211|30|1|20|21|38|110|
+|PE11107001| |9|42|27|36|114|
+|PE11107002| |12|29|39|57|137|
+|PE11107003| |12|39|55|57|163|
+|PE11107004| |12|48|54|76|190|
+|PE11107005| |12|40|61|76|189|
+|PE11107006| |11|33|58|45|147|
+|PE11107007| |10|30|47|42|129|
+|PE11107008| |7|34|41|42|124|
+|PE11107009| |7|32|35|33|107|
+|PE11107010| |7|30|30|36|103|
+|PE11107201| |8|27|32|45|112|
+|PE11107202| |9|25|35|32|101|
+|PE11107203| |12|25|38|39|114|
+|PE11107204| |12|34|36|47|129|
+|PE11107205| |12|36|33|56|137|
+|PE11107206| |10|30|42|45|127|
+|PE11107207| |7|33|35|32|107|
+|PE11107208| |7|32|28|33|100|
+|PE11107209| |7|32|25|31|95|
+|PE11107210| |7|29|23|30|89|
+|總計|1,686|1,033|4,118|4,623|4,547|16,007|
+
+
+表 13、本計畫企劃書之預估上市後銷售量
+
+![image 1](<P1707_Project Closing Report_v0_images/imageFile1.png>)
+
+本計畫於 2017 年 5 月由產品開發部提出企劃書，2019 年 8 月上市迄 今已超過 4 年，由於專案也已通過主要地區之認證並上市，故專案到此結束。
+
+### 附件、專案實際發生費用明細表
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/01/31|17,642|研發-消耗工具費-一般|O11 雜發製成品|
+|18/02/23|11,400|研發-消耗工具費-一般|SUS420J2 萬代鋼鐵 HAP1-180200054|
+|18/02/28|24,000|研發-消耗工具費-一般|銑削治具 明億鑫 HAP1-180200190|
+|18/02/28|19,546|研發-消耗工具費-一般|2018/2M 支援單當期結案費用|
+|18/02/28|2,421|研發-消耗工具費-一般|2018/2M 支援單當期結案費用|
+|18/02/28|142,578|研發-消耗工具費-一般|O11 雜發半成品|
+|18/02/28|115,357|研發-消耗工具費-一般|O11 雜發製成品|
+|18/03/22|45,000|研發-委外費用-一般|SGS MT50012 泡殼細胞毒性試驗|
+|18/03/22|15,000|研發-委外費用-一般|SGS MT50491 塑膠 PE 袋毒性試驗|
+|18/03/30|16,034|研發-委外費用-一般|DOT HAP1-180300325 TiNbN coating|
+|18/03/31|17,184|研發-消耗工具費-一般|O11 雜發間接材|
+|18/03/31|38,674|研發-消耗工具費-一般|2018/3M 支援單當期結案費用|
+|18/03/31|171,647|研發-消耗工具費-一般|O11 雜發製成品|
+|18/04/25|14,880|研發-消耗工具費-一般|鈦合金板(TL69124 試片)忠正|
+|18/04/27|24,000|研發-消耗工具費-一般|銑削治具 明億鑫 HAP6-180400031|
+|18/04/30|13,576|研發-消耗工具費-一般|2018/4M 支援單當期結案費用|
+|18/04/30|29,028|研發-消耗工具費-一般|O11 雜發半成品|
+|18/04/30|17,870|研發-消耗工具費-一般|O11 雜發間接材|
+|18/04/30|49,865|研發-消耗工具費-一般|O11 雜發製成品|
+|18/04/30|14,752|研發-消耗工具費-一般|2018/4M 支援單當期結案費用|
+|18/04/30|141,954|研發-消耗工具費-一般|O11 雜發製成品|
+|18/05/25|24,000|研發-消耗工具費-一般|銑削治具 明億鑫 HAP1-180500173|
+|18/05/29|15,000|研發-委外費用-一般|SGS MT50118_細胞毒性測試|
+|18/05/31|26,357|研發-消耗工具費-一般|2018/5M 支援單當期結案費用|
+|18/05/31|14,374|研發-消耗工具費-一般|O11 雜發間接材|
+|18/05/31|42,081|研發-消耗工具費-一般|O11 雜發製成品|
+|18/05/31|12,933|研發-消耗工具費-一般|2018/5M 支援單當期結案費用|
+|18/05/31|99,399|研發-消耗工具費-一般|2018/5M 支援單當期結案費用|
+|18/05/31|122,898|研發-消耗工具費-一般|O11 雜發製成品|
+|18/06/20|6,031|研發-消耗工具費-一般|鋼材 梧濟 HAP1-180600022|
+|18/06/25|4,400|研發-消耗工具費-一般|鎢鋼刀片 台灣鈷領 HAP1-180600145|
+|18/06/25|82,800|研發-消耗工具費-一般|TL26891_電漿噴塗固定治具 上益|
+|18/06/25|12,000|研發-消耗工具費-一般|TL26892_電漿噴塗固定治具 上益|
+|18/06/25|41,443|研發-委外費用-一般|Ca/P ratio test for HA coating 檢測|
+|18/06/28|4,000|研發-消耗工具費-一般|鑽尖型銑刀 倍士達 HAP1-180600261|
+|18/06/30|35,915|研發-消耗工具費-一般|O11 雜發製成品|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/06/30|5,059|研發-消耗工具費-一般|O11 雜發間接材|
+|18/06/30|10,203|研發-消耗工具費-一般|2018/6M 支援單當期結案費用|
+|18/06/30|51,168|研發-消耗工具費-一般|O11 雜發製成品|
+|18/06/30|30,570|研發-消耗工具費-一般|O11 雜發間接材|
+|18/07/27|497,250|研發-委外費用-一般|Solubility testing Lucideon GBP12100|
+|18/07/31|9,000|研發-消耗工具費-一般|鎢鋼型刀 台灣鈷領 HAP1-180700290|
+|18/07/31|45,995|研發-消耗工具費-一般|2018/7M 支援單當期結案費用|
+|18/07/31|10,614|研發-消耗工具費-一般|O11 雜發製成品|
+|18/07/31|4,196|研發-消耗工具費-一般|O11 雜發間接材|
+|18/07/31|96,332|研發-消耗工具費-一般|2018/7M 支援單當期結案費用|
+|18/07/31|63,580|研發-消耗工具費-一般|2018/7M 支援單當期結案費用|
+|18/07/31|43,039|研發-消耗工具費-一般|O11 雜發製成品|
+|18/08/29|3,624|研發-消耗工具費-一般|SUS420 梧濟 HAP1-180800174|
+|18/08/29|39,060|研發-委外費用-一般|鈦合金板 TL69124 磨耗試片 忠正|
+|18/08/31|20,416|研發-消耗工具費-一般|2018/8M 支援單當期結案費用|
+|18/08/31|4,899|研發-消耗工具費-一般|O11 雜發製成品|
+|18/08/31|36,557|研發-消耗工具費-一般|2018/8M 支援單當期結案費用|
+|18/08/31|168,168|研發-消耗工具費-一般|O11 雜發製成品|
+|18/09/17|9,000|研發-消耗工具費-一般|鎢鋼外 R 刀 台灣鈷領 HAP1-18090005|
+|18/09/17|23,082|研發-委外費用-一般|HA 粉測試費 MedicalG|
+|18/09/18|19,200|研發-消耗工具費-一般|TL27227(電漿噴塗製具支撐桿)|
+|18/09/26|59,037|研發-委外費用-一般|鍍膜遮罩 Eurocoating HAP1-180900144|
+|18/09/26|638|研發-消耗工具費-一般|沉頭鑽頭 聯昕 HAP1-180900161|
+|18/09/27|2,300|研發-消耗工具費-一般|MT50978 刀模費 汰良 HAP6-180900016|
+|18/09/27|2,300|研發-消耗工具費-一般|MT50979 刀模費 汰良 HAP6-180900016|
+|18/09/27|2,300|研發-消耗工具費-一般|MT50985 刀模費 汰良 HAP6-180900016|
+|18/09/27|1,000|研發-消耗工具費-一般|MT50986 刀模費 汰良 HAP6-180900016|
+|18/09/27|2,300|研發-消耗工具費-一般|MT50987 刀模費 汰良 HAP6-180900016|
+|18/09/28|169,597|研發-委外費用-一般|津-延續註冊 31,131,61 檢測費|
+|18/09/30|18,315|研發-消耗工具費-一般|2018/9M 支援單當期結案費用|
+|18/09/30|11,339|研發-消耗工具費-一般|O11 雜發製成品|
+|18/09/30|20,361|研發-消耗工具費-一般|O11 雜發製成品|
+|18/09/30|17,325|研發-消耗工具費-一般|O11 雜發製成品|
+|18/09/30|12,583|研發-消耗工具費-一般|O11 雜發間接材|
+|18/09/30|61,992|研發-消耗工具費-一般|O11 雜發製成品|
+|18/10/25|605|研發-消耗工具費-一般|鋼珠螺桿 昱暐 HAP1-181000078|
+|18/10/25|8,571|研發-消耗工具費-一般|Bone cement 博而美 HAP1-181000097|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/10/29|8,571|研發-消耗品|Bone cement 博而美 HAP1-181000249|
+|18/10/30|17,000|研發-委外費用-一般|鈦塗層(O/Fe/C/H/N)檢測 精剛|
+|18/10/30|3,048|研發-委外費用-一般|conformity stem 模具委外熱處理|
+|18/10/30|10,952|研發-消耗工具費-一般|試驗篩 益瀚 HAP1-181000282|
+|18/10/31|31,829|研發-消耗工具費-一般|2018/10M 支援單當期結案費用|
+|18/10/31|4,144|研發-消耗工具費-一般|O11 雜發製成品|
+|18/10/31|101,787|研發-消耗工具費-一般|O11 雜發製成品|
+|18/10/31|111,713|研發-消耗工具費-一般|O11 雜發製成品|
+|18/10/31|20,867|研發-消耗工具費-一般|O11 雜發器械成品|
+|18/10/31|254,073|研發-消耗工具費-一般|O11 雜發製成品|
+|18/11/16|9,144|研發-委外費用-一般|conformity stem 模具委外熱處理|
+|18/11/16|10,530|研發-消耗工具費-一般|MRBH230,R0.2x1x4x45 匯聚|
+|18/11/16|4,520|研發-消耗工具費-一般|MRBH230,R0.3x1x4x45 匯聚|
+|18/11/16|8,170|研發-消耗工具費-一般|MRBH230,R0.4x2x4x45 匯聚|
+|18/11/21|2,400|研發-消耗工具費-一般|TL13177,直角端銑刀把,Ø20x3 刃 FC90|
+|18/11/21|2,200|研發-消耗工具費-一般|TL13178 直角端銑刀把,Ø16x2 刃 FC90A|
+|18/11/21|12,460|研發-消耗工具費-一般|TL13181 威力夾頭刀柄,BT40-HPC20-90|
+|18/11/21|650|研發-消耗工具費-一般|TL15382,SD 筒夾,SD13-6.5D Ø6~6.5mm|
+|18/11/21|650|研發-消耗工具費-一般|TL15386,SD 筒夾,SD13-8.5D Ø8~8.5mm|
+|18/11/21|650|研發-消耗工具費-一般|TL15390,SD 筒夾,SD13-10.5D Ø10~10.5mm|
+|18/11/21|650|研發-消耗工具費-一般|TL15393,SD 筒夾,SD13-12D Ø11.5~12mm|
+|18/11/21|2,610|研發-消耗工具費-一般|TL15396,HEC 筒夾,HEC12-4,Ø4mm|
+|18/11/21|2,610|研發-消耗工具費-一般|TL15398,HEC 筒夾,HEC12-6,Ø6mm|
+|18/11/21|870|研發-消耗工具費-一般|TL15399,HEC 筒夾,HEC12-8,Ø8mm|
+|18/11/21|1,740|研發-消耗工具費-一般|TL15401,HEC 筒夾,HEC12-12,Ø12mm|
+|18/11/21|741|研發-消耗工具費-一般|TL15406,HPC 筒夾,HPC20-16 Ø16mm|
+|18/11/21|1,750|研發-消耗品|拉桿螺絲,P40T-1 晨鴻|
+|18/11/22|17,143|研發-消耗品|骨水泥 博而美 HAP1-181100029|
+|18/11/28|2,000|研發-消耗工具費-一般|刀片 TPGX080202L TN7860 吉實|
+|18/11/28|165|研發-消耗工具費-一般|拉頭 P40T-45°研磨 吉實|
+|18/11/28|1,540|研發-消耗工具費-一般|精密刀桿 BT40-AK1-70(100) 吉實|
+|18/11/28|11,550|研發-消耗工具費-一般|精搪頭 BSD-19 AK1(20-26) 吉實|
+|18/11/28|49,368|研發-消耗工具費-一般|BT40-UC6-90 刀片 晨鴻|
+|18/11/28|10,944|研發-消耗品|UC6-4 筒夾 晨鴻|
+|18/11/28|1,050|研發-消耗品|拉桿螺絲,P40T-1(45) 晨鴻|
+|18/11/29|10,700|模具設備成本|TL72133A_完成剪緣上模,C4 #4 明億|
+|18/11/29|12,200|模具設備成本|TL72134A_完成剪緣母模,C4 #4 明億|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/11/29|12,700|模具設備成本|TL72135A_完成剪緣下模,C4 #4 明億|
+|18/11/29|10,700|模具設備成本|TL72943A_完成剪緣上模(MT70430)|
+|18/11/29|12,200|模具設備成本|TL72944A_完成剪緣母模(MT70430)|
+|18/11/29|12,700|模具設備成本|TL72945A_完成剪緣下模(MT70430)|
+|18/11/29|10,700|模具設備成本|TL72153A_完成剪緣上模,C6 #6 明億|
+|18/11/29|12,000|模具設備成本|TL72154A_完成剪緣母模,C6 #6 明億|
+|18/11/29|12,700|模具設備成本|TL72155A_完成剪緣下模,C6 #6 明億|
+|18/11/29|10,700|模具設備成本|TL72138A_整形剪緣上模,C4 #4(MT7030|
+|18/11/29|12,000|模具設備成本|TL72139A_整形剪緣母模,C4 #4(MT7030|
+|18/11/29|12,700|模具設備成本|TL72140A_整形剪緣下模,C4 #4(MT7030|
+|18/11/29|10,700|模具設備成本|TL72548A_整形剪緣上模(MT70382)_新|
+|18/11/29|12,000|模具設備成本|TL72549A_整形剪緣母模(MT70382)_新|
+|18/11/29|12,700|模具設備成本|TL72550A_整形剪緣下模(MT70382)_新|
+|18/11/29|10,700|模具設備成本|TL72543A_完成剪緣上模(MT70382)_新|
+|18/11/29|12,000|模具設備成本|TL72544A_完成剪緣母模(MT70382)_新|
+|18/11/29|12,700|模具設備成本|TL72545A_完成剪緣下模(MT70382)_新|
+|18/11/29|10,700|模具設備成本|TL72143A_完成剪緣上模,C5 #5(MT7030|
+|18/11/29|12,000|模具設備成本|TL72144A_完成剪緣母模,C5 #5(MT7030|
+|18/11/29|12,700|模具設備成本|TL72145A_完成剪緣下模,C5 #5(MT7030|
+|18/11/29|10,700|模具設備成本|TL72148A_整形剪緣上模,C5 #5(MT7030|
+|18/11/29|12,000|模具設備成本|TL72149A_整形剪緣母模,C5 #5(MT7030|
+|18/11/29|12,700|模具設備成本|TL72150A_整形剪緣下模,C5 #5(MT7030|
+|18/11/29|10,700|模具設備成本|TL72948A_整形剪緣上模(MT70430)_新|
+|18/11/29|12,000|模具設備成本|TL72949A_整形剪緣母模(MT70430)_新|
+|18/11/29|12,700|模具設備成本|TL72950A_整形剪緣下模(MT70430)_新|
+|18/11/29|19,800|研發-消耗工具費-一般|圓鼻立銑刀 久大 HAP1-181100052|
+|18/11/29|980|研發-消耗工具費-一般|抗震立銑刀 久大 HAP1-181100052|
+|18/11/29|1,725|研發-消耗工具費-一般|球型立銑刀 久大 HAP1-181100052|
+|18/11/29|11,100|研發-消耗工具費-一般|POM 平板_黑 大德行 HAP1-181100053|
+|18/11/29|7,500|研發-委外費用-一般|台美-Conformity stem-Cementless|
+|18/11/30|285,359|研發-委外費用-一般|ENDOLAB corail stem neck fatigue test|
+|18/11/30|185,500|研發-委外費用-一般|SGS-Conformity stem fatigue test|
+|18/11/30|4,272|研發-消耗工具費-一般|鋼材 梧濟 HAP1-181100241|
+|18/11/30|676|研發-消耗工具費-一般|2083-銑 6-20x70x125|
+|18/11/30|700|研發-消耗工具費-一般|2083-銑 6-20x70x130|
+|18/11/30|724|研發-消耗工具費-一般|2083-銑 6-20x70x135|
+|18/11/30|724|研發-消耗工具費-一般|2083-銑 6-20x75x125|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/11/30|1,472|研發-消耗工具費-一般|2083-銑 6-20x75x130|
+|18/11/30|1,520|研發-消耗工具費-一般|2083-銑 6-20x75x135|
+|18/11/30|38,236|研發-消耗工具費-一般|鋼材 梧濟 HAP1-181100140|
+|18/11/30|145,290|研發-消耗工具費-一般|2018/11M 支援單當期結案費用|
+|18/11/30|17,241|研發-消耗工具費-一般|O11 雜發半成品|
+|18/11/30|4,390|研發-消耗工具費-一般|O11 雜發間接材|
+|18/11/30|55,656|研發-消耗工具費-一般|O11 雜發製成品|
+|18/12/18|15,375|研發-消耗工具費-一般|MRBH230,R0.2x1x4x45 銑刀 匯聚|
+|18/12/18|8,810|研發-消耗工具費-一般|MRBH230,R0.3x1x4x45 銑刀 匯聚|
+|18/12/18|3,980|研發-消耗工具費-一般|MRBH230,R0.4x2x4x45 銑刀 匯聚|
+|18/12/19|10,000|模具設備成本|TL72103A_完成剪緣上模,C1 #1(MT7030|
+|18/12/19|11,000|模具設備成本|TL72104A_完成剪緣母模,C1 #1(MT7030|
+|18/12/19|12,000|模具設備成本|TL72105A_完成剪緣下模,C1 #1(MT7030|
+|18/12/20|10,000|模具設備成本|TL72123A_完成剪緣上模,C3 #3(MT7030|
+|18/12/20|11,000|模具設備成本|TL72124A_完成剪緣母模,C3 #3(MT7030|
+|18/12/20|12,000|模具設備成本|TL72125A_完成剪緣下模,C3 #3(MT7030|
+|18/12/20|10,000|模具設備成本|TL72128A_整形剪緣上模,C3 #3(MT7030|
+|18/12/20|11,000|模具設備成本|TL72129A_整形剪緣母模,C3 #3(MT7030|
+|18/12/20|12,000|模具設備成本|TL72130A_整形剪緣下模,C3 #3(MT7030|
+|18/12/20|10,000|模具設備成本|TL72158A_整形剪緣上模,C6 #6(MT7030|
+|18/12/20|11,000|模具設備成本|TL72159A_整形剪緣母模,C6 #6(MT7030|
+|18/12/20|12,000|模具設備成本|TL72160A_整形剪緣下模,C6 #6(MT7030|
+|18/12/20|10,000|模具設備成本|TL72163A_完成剪緣上模,C7 #7(MT7030|
+|18/12/20|11,000|模具設備成本|TL72164A_完成剪緣母模,C7 #7(MT7030|
+|18/12/20|12,000|模具設備成本|TL72165A_完成剪緣下模,C7 #7(MT7030|
+|18/12/20|10,000|模具設備成本|TL72168A_整形剪緣上模,C7 #7(MT7030|
+|18/12/20|11,000|模具設備成本|TL72169A_整形剪緣母模,C7 #7(MT7030|
+|18/12/20|12,000|模具設備成本|TL72170A_整形剪緣下模,C7 #7(MT7030|
+|18/12/20|10,000|模具設備成本|TL72173A_完成剪緣上模,C8 #8(MT7030|
+|18/12/20|11,000|模具設備成本|TL72174A_完成剪緣母模,C8 #8(MT7030|
+|18/12/20|12,000|模具設備成本|TL72175A_完成剪緣下模,C8 #8(MT7030|
+|18/12/20|10,000|模具設備成本|TL72183A_完成剪緣上模,C9 #9(MT7030|
+|18/12/20|11,000|模具設備成本|TL72184A_完成剪緣母模,C9 #9(MT7030|
+|18/12/20|12,000|模具設備成本|TL72185A_完成剪緣下模,C9 #9(MT7030|
+|18/12/21|10,000|模具設備成本|TL72108A_整形剪緣上模,C1 #1(MT7030|
+|18/12/21|11,000|模具設備成本|TL72109A_整形剪緣母模,C1 #1(MT7030|
+|18/12/21|12,000|模具設備成本|TL72110A_整形剪緣下模,C1 #1(MT7030|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/12/21|10,000|模具設備成本|TL72113A_完成剪緣上模,C2 #2(MT7030|
+|18/12/21|11,000|模具設備成本|TL72114A_完成剪緣母模,C2 #2(MT7030|
+|18/12/21|12,000|模具設備成本|TL72115A_完成剪緣下模,C2 #2(MT7030|
+|18/12/21|10,000|模具設備成本|TL72118A_整形剪緣上模,C2 #2(MT7030|
+|18/12/21|11,000|模具設備成本|TL72119A_整形剪緣母模,C2 #2(MT7030|
+|18/12/21|12,000|模具設備成本|TL72120A_整形剪緣下模,C2 #2(MT7030|
+|18/12/21|10,000|模具設備成本|TL72178A_整形剪緣上模,C8 #8(MT7030|
+|18/12/21|11,000|模具設備成本|TL72179A_整形剪緣母模,C8 #8(MT7030|
+|18/12/21|12,000|模具設備成本|TL72180A_整形剪緣下模,C8 #8(MT7030|
+|18/12/21|10,000|模具設備成本|TL72188A_整形剪緣上模,C9 #9(MT7030|
+|18/12/21|11,000|模具設備成本|TL72189A_整形剪緣母模,C9 #9(MT7030|
+|18/12/21|12,000|模具設備成本|TL72190A_整形剪緣下模,C9 #9(MT7030|
+|18/12/25|15,840|研發-消耗工具費-一般|導套 20d*30(d1)*D35*L40 軫盛|
+|18/12/25|63,140|研發-消耗工具費-一般|導套 25d*35(d1)*D40*L74 軫盛|
+|18/12/25|26,180|研發-消耗工具費-一般|導柱 D30*d25*L110 軫盛|
+|18/12/26|95,769|研發-委外費用-一般|PE11103201 Eurocoating HAP1-181200114|
+|18/12/26|3,554|研發-消耗工具費-一般|T6 鋁板 奇鋒 HAP1-181200153|
+|18/12/26|10,000|模具設備成本|TL72193A_完成剪緣上模,C10 #10(MT70|
+|18/12/26|11,000|模具設備成本|TL72194A_完成剪緣母模,C10 #10(MT70|
+|18/12/26|12,000|模具設備成本|TL72195A_完成剪緣下模,C10 #10(MT70|
+|18/12/26|10,000|模具設備成本|TL72198A_整形剪緣上模,C10 #10(MT70|
+|18/12/26|11,000|模具設備成本|TL72199A_整形剪緣母模,C10 #10(MT70|
+|18/12/26|12,000|模具設備成本|TL72200A_整形剪緣下模,C10 #10(MT70|
+|18/12/26|10,000|模具設備成本|TL72203A_完成剪緣上模,C11 #11(MT70|
+|18/12/26|11,000|模具設備成本|TL72204A_完成剪緣母模,C11 #11(MT70|
+|18/12/26|12,000|模具設備成本|TL72205A_完成剪緣下模,C11 #11(MT70|
+|18/12/26|10,000|模具設備成本|TL72208A_整形剪緣上模,C11 #11(MT70|
+|18/12/26|11,000|模具設備成本|TL72209A_整形剪緣母模,C11 #11(MT70|
+|18/12/26|12,000|模具設備成本|TL72210A_整形剪緣下模,C11 #11(MT70|
+|18/12/26|10,000|模具設備成本|TL72213A_完成剪緣上模,CH1 #1(MT703|
+|18/12/26|11,000|模具設備成本|TL72214A_完成剪緣母模,CH1 #1(MT703|
+|18/12/26|12,000|模具設備成本|TL72215A_完成剪緣下模,CH1 #1(MT703|
+|18/12/26|10,000|模具設備成本|TL72218A_整形剪緣上模,CH1 #1(MT703|
+|18/12/26|11,000|模具設備成本|TL72219A_整形剪緣母模,CH1 #1(MT703|
+|18/12/26|12,000|模具設備成本|TL72220A_整形剪緣下模,CH1 #1(MT703|
+|18/12/26|10,000|模具設備成本|TL72223A_完成剪緣上模,CH2 #2(MT703|
+|18/12/26|11,000|模具設備成本|TL72224A_完成剪緣母模,CH2 #2(MT703|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|18/12/26|12,000|模具設備成本|TL72225A_完成剪緣下模,CH2 #2(MT703|
+|18/12/26|10,000|模具設備成本|TL72228A_整形剪緣上模,CH2 #2(MT703|
+|18/12/26|11,000|模具設備成本|TL72229A_整形剪緣母模,CH2 #2(MT703|
+|18/12/26|12,000|模具設備成本|TL72230A_整形剪緣下模,CH2 #2(MT703|
+|18/12/29|26,400|研發-消耗工具費-一般|鎢鋼刀片 台灣鈷領 HAP1-181200249|
+|18/12/31|42,858|研發-消耗工具費-一般|O11 雜發半成品|
+|18/12/31|4,763|研發-消耗工具費-一般|O11 雜發製成品|
+|18/12/31|11,081|研發-消耗工具費-一般|O11 雜發間接材|
+|18/12/31|46,708|研發-消耗工具費-一般|O11 雜發半成品|
+|18/12/31|10,508|研發-消耗工具費-一般|O11 雜發製成品|
+|18/12/31|48,985|研發-消耗工具費-一般|201812 研發專案資本化|
+|19/01/18|1,345|研發-消耗工具費-一般|不鏽鋼板 樟華 HAP1-190100028|
+|19/01/23|24,250|研發-消耗工具費-一般|MRBH230,R0.2x1x4x45 銑刀 匯聚|
+|19/01/23|16,660|研發-消耗工具費-一般|MRBH230,R0.3x1x4x45 銑刀 匯聚|
+|19/01/23|18,825|研發-消耗工具費-一般|MRBH230,R0.4x2x4x45 銑刀 匯聚|
+|19/01/23|240|研發-消耗品|導柱,D30*d25*120L 軫盛|
+|19/01/23|254|研發-消耗品|導柱,D30*d25*130L 軫盛|
+|19/01/23|550|研發-消耗工具費-一般|PE11101004_shell_l 名晉|
+|19/01/23|550|研發-消耗工具費-一般|PE11101004_shell_r 名晉|
+|19/01/23|1,170|研發-消耗工具費-一般|PE11101004_type3 名晉|
+|19/01/23|1,240|研發-消耗工具費-一般|PE11101004_type3_collared_L 名晉|
+|19/01/23|1,240|研發-消耗工具費-一般|PE11101004_type3_collared_R 名晉|
+|19/01/23|730|研發-消耗工具費-一般|PE11101004_type3_rotary_pin 名晉|
+|19/01/25|10,000|模具設備成本|TL72233A_完成剪緣上模,CH3 #3(MT703|
+|19/01/25|11,000|模具設備成本|TL72234A_完成剪緣母模,CH3 #3(MT703|
+|19/01/25|12,000|模具設備成本|TL72235A_完成剪緣下模,CH3 #3(MT703|
+|19/01/25|10,000|模具設備成本|TL72248A_整形剪緣上模,CH4 #4(MT703|
+|19/01/25|11,000|模具設備成本|TL72249A_整形剪緣母模,CH4 #4(MT703|
+|19/01/25|12,000|模具設備成本|TL72250A_整形剪緣下模,CH4 #4(MT703|
+|19/01/25|10,000|模具設備成本|TL72258A_整形剪緣上模,CH5 #5(MT703|
+|19/01/25|11,000|模具設備成本|TL72259A_整形剪緣母模,CH5 #5(MT703|
+|19/01/25|12,000|模具設備成本|TL72260A_整形剪緣下模,CH5 #5(MT703|
+|19/01/25|10,000|模具設備成本|TL72263A_完成剪緣上模,CH6 #6(MT703|
+|19/01/25|11,000|模具設備成本|TL72264A_完成剪緣母模,CH6 #6(MT703|
+|19/01/25|12,000|模具設備成本|TL72265A_完成剪緣下模,CH6 #6(MT703|
+|19/01/25|10,000|模具設備成本|TL72268A_整形剪緣上模,CH6 #6(MT703|
+|19/01/25|11,000|模具設備成本|TL72269A_整形剪緣母模,CH6 #6(MT703|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/01/25|12,000|模具設備成本|TL72270A_整形剪緣下模,CH6 #6(MT703|
+|19/01/25|10,000|模具設備成本|TL72273A_完成剪緣上模,CH7 #7(MT703|
+|19/01/25|11,000|模具設備成本|TL72274A_完成剪緣母模,CH7 #7(MT703|
+|19/01/25|12,000|模具設備成本|TL72275A_完成剪緣下模,CH7 #7(MT703|
+|19/01/25|10,000|模具設備成本|TL72278A_整形剪緣上模,CH7 #7(MT703|
+|19/01/25|11,000|模具設備成本|TL72279A_整形剪緣母模,CH7 #7(MT703|
+|19/01/25|12,000|模具設備成本|TL72280A_整形剪緣下模,CH7 #7(MT703|
+|19/01/25|10,000|模具設備成本|TL72283A_完成剪緣上模,CH8 #8(MT703|
+|19/01/25|11,000|模具設備成本|TL72284A_完成剪緣母模,CH8 #8(MT703|
+|19/01/25|12,000|模具設備成本|TL72285A_完成剪緣下模,CH8 #8(MT703|
+|19/01/25|10,000|模具設備成本|TL72288A_整形剪緣上模,CH8 #8(MT703|
+|19/01/25|11,000|模具設備成本|TL72289A_整形剪緣母模,CH8 #8(MT703|
+|19/01/25|12,000|模具設備成本|TL72290A_整形剪緣下模,CH8 #8(MT703|
+|19/01/25|10,000|模具設備成本|TL72293A_完成剪緣上模,CH9 #9(MT703|
+|19/01/25|11,000|模具設備成本|TL72294A_完成剪緣母模,CH9 #9(MT703|
+|19/01/25|12,000|模具設備成本|TL72295A_完成剪緣下模,CH9 #9(MT703|
+|19/01/25|10,000|模具設備成本|TL72298A_整形剪緣上模,CH9 #9(MT703|
+|19/01/25|11,000|模具設備成本|TL72299A_整形剪緣母模,CH9 #9(MT703|
+|19/01/25|12,000|模具設備成本|TL72300A_整形剪緣下模,CH9 #9(MT703|
+|19/01/25|10,000|模具設備成本|TL72303A_完成剪緣上模,CH10 #10(MT7|
+|19/01/25|11,000|模具設備成本|TL72304A_完成剪緣母模,CH10 #10(MT7|
+|19/01/25|12,000|模具設備成本|TL72305A_完成剪緣下模,CH10 #10(MT7|
+|19/01/25|10,000|模具設備成本|TL72308A_整形剪緣上模,CH10 #10(MT7|
+|19/01/25|11,000|模具設備成本|TL72309A_整形剪緣母模,CH10 #10(MT7|
+|19/01/25|12,000|模具設備成本|TL72310A_整形剪緣下模,CH10 #10(MT7|
+|19/01/25|10,000|模具設備成本|TL72238A_整形剪緣上模,CH3 #3(MT703|
+|19/01/25|11,000|模具設備成本|TL72239A_整形剪緣母模,CH3 #3(MT703|
+|19/01/25|12,000|模具設備成本|TL72240A_整形剪緣下模,CH3 #3(MT703|
+|19/01/25|10,000|模具設備成本|TL72243A_完成剪緣上模,CH4 #4(MT703|
+|19/01/25|11,000|模具設備成本|TL72244A_完成剪緣母模,CH4 #4(MT703|
+|19/01/25|12,000|模具設備成本|TL72245A_完成剪緣下模,CH4 #4(MT703|
+|19/01/25|10,000|模具設備成本|TL72253A_完成剪緣上模,CH5 #5(MT703|
+|19/01/25|11,000|模具設備成本|TL72254A_完成剪緣母模,CH5 #5(MT703|
+|19/01/25|12,000|模具設備成本|TL72255A_完成剪緣下模,CH5 #5(MT703|
+|19/01/25|10,000|模具設備成本|TL72553A_完成剪緣上模(MT70383)_新|
+|19/01/25|11,000|模具設備成本|TL72554A_完成剪緣母模(MT70383)_新|
+|19/01/25|12,000|模具設備成本|TL72555A_完成剪緣下模(MT70383)_新|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/01/25|10,000|模具設備成本|TL72558A_整形剪緣上模(MT70383)_新|
+|19/01/25|11,000|模具設備成本|TL72559A_整形剪緣母模(MT70383)_新|
+|19/01/25|12,000|模具設備成本|TL72560A_整形剪緣下模(MT70383)_新|
+|19/01/25|10,000|模具設備成本|TL72563A_完成剪緣上模(MT70384)_新|
+|19/01/25|11,000|模具設備成本|TL72564A_完成剪緣母模(MT70384)_新|
+|19/01/25|12,000|模具設備成本|TL72565A_完成剪緣下模(MT70384)_新|
+|19/01/25|10,000|模具設備成本|TL72568A_整形剪緣上模(MT70384)_新|
+|19/01/25|11,000|模具設備成本|TL72569A_整形剪緣母模(MT70384)_新|
+|19/01/25|12,000|模具設備成本|TL72570A_整形剪緣下模(MT70384)_新|
+|19/01/25|10,000|模具設備成本|TL72573A_完成剪緣上模(MT70385)_新|
+|19/01/25|11,000|模具設備成本|TL72574A_完成剪緣母模(MT70385)_新|
+|19/01/25|12,000|模具設備成本|TL72575A_完成剪緣下模(MT70385)_新|
+|19/01/25|10,000|模具設備成本|TL72578A_整形剪緣上模(MT70385)_新|
+|19/01/25|11,000|模具設備成本|TL72579A_整形剪緣母模(MT70385)_新|
+|19/01/25|12,000|模具設備成本|TL72580A_整形剪緣下模(MT70385)_新|
+|19/01/25|10,000|模具設備成本|TL72583A_完成剪緣上模(MT70386)_新|
+|19/01/25|11,000|模具設備成本|TL72584A_完成剪緣母模(MT70386)_新|
+|19/01/25|12,000|模具設備成本|TL72585A_完成剪緣下模(MT70386)_新|
+|19/01/25|10,000|模具設備成本|TL72588A_整形剪緣上模(MT70386)_新|
+|19/01/25|11,000|模具設備成本|TL72589A_整形剪緣母模(MT70386)_新|
+|19/01/25|12,000|模具設備成本|TL72590A_整形剪緣下模(MT70386)_新|
+|19/01/25|10,000|模具設備成本|TL72593A_完成剪緣上模(MT70387)_新|
+|19/01/25|11,000|模具設備成本|TL72594A_完成剪緣母模(MT70387)_新|
+|19/01/25|12,000|模具設備成本|TL72595A_完成剪緣下模(MT70387)_新|
+|19/01/25|10,000|模具設備成本|TL72598A_整形剪緣上模(MT70387)_新|
+|19/01/25|11,000|模具設備成本|TL72599A_整形剪緣母模(MT70387)_新|
+|19/01/25|12,000|模具設備成本|TL72600A_整形剪緣下模(MT70387)_新|
+|19/01/25|2,800|研發-消耗工具費-一般|PE 平板 大德行 HAP1-190100062|
+|19/01/29|10,000|模具設備成本|TL72603A_完成剪緣上模(MT70388)|
+|19/01/29|11,000|模具設備成本|TL72604A_完成剪緣母模(MT70388)|
+|19/01/29|12,000|模具設備成本|TL72605A_完成剪緣下模(MT70388)|
+|19/01/29|10,000|模具設備成本|TL72608A_整形剪緣上模(MT70388)|
+|19/01/29|11,000|模具設備成本|TL72609A_整形剪緣母模(MT70388)|
+|19/01/29|12,000|模具設備成本|TL72610A_整形剪緣下模(MT70388)|
+|19/01/29|10,000|模具設備成本|TL72618A_整形剪緣上模(MT70389)|
+|19/01/29|11,000|模具設備成本|TL72619A_整形剪緣母模(MT70389)|
+|19/01/29|12,000|模具設備成本|TL72620A_整形剪緣下模(MT70389)|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/01/29|10,000|模具設備成本|TL72623A_完成剪緣上模(MT70390)|
+|19/01/29|11,000|模具設備成本|TL72624A_完成剪緣母模(MT70390)|
+|19/01/29|12,000|模具設備成本|TL72625A_完成剪緣下模(MT70390)|
+|19/01/29|10,000|模具設備成本|TL72628A_整形剪緣上模(MT70390)|
+|19/01/29|11,000|模具設備成本|TL72629A_整形剪緣母模(MT70390)|
+|19/01/29|12,000|模具設備成本|TL72630A_整形剪緣下模(MT70390)|
+|19/01/29|10,000|模具設備成本|TL72633A_完成剪緣上模(MT70391)|
+|19/01/29|11,000|模具設備成本|TL72634A_完成剪緣母模(MT70391)|
+|19/01/29|12,000|模具設備成本|TL72635A_完成剪緣下模(MT70391)|
+|19/01/29|10,000|模具設備成本|TL72638A_整形剪緣上模(MT70391)|
+|19/01/29|11,000|模具設備成本|TL72639A_整形剪緣母模(MT70391)|
+|19/01/29|12,000|模具設備成本|TL72640A_整形剪緣下模(MT70391)|
+|19/01/31|5,360|研發-消耗工具費-一般|導柱 D25x130L 壓入部 65mm 軫盛|
+|19/01/31|10,960|研發-消耗工具費-一般|PE11101004 噴塗夾具 名晉|
+|19/01/31|17,340|研發-消耗工具費-一般|PE11101005 噴塗夾具 名晉|
+|19/01/31|2,190|研發-消耗工具費-一般|United_rotary_pin 名晉|
+|19/01/31|330|研發-消耗工具費-一般|POM 平板 大德行 HAP6-190100013|
+|19/01/31|44,280|研發-消耗工具費-一般|2019/1M 支援單當期結案費用|
+|19/01/31|56,506|研發-消耗工具費-一般|O11 雜發半成品|
+|19/01/31|18,652|研發-消耗工具費-一般|O11 雜發直接材|
+|19/01/31|4,886|研發-消耗工具費-一般|O11 雜發製成品|
+|19/01/31|10,062|研發-消耗工具費-一般|O11 雜發間接材|
+|19/01/31|20,824|研發-消耗工具費-一般|2019/1M 支援單當期結案費用|
+|19/01/31|14,364|研發-消耗工具費-一般|O11 雜發半成品|
+|19/01/31|28,378|研發-消耗工具費-一般|O11 雜發製成品|
+|19/02/01|339,926|研發-雜項費用|FDA_Conformity Stem (Cementless and Shor|
+|19/02/26|10,000|模具設備成本|TL72613A_完成剪緣上模(MT70389)|
+|19/02/26|11,000|模具設備成本|TL72614A_完成剪緣母模(MT70389)|
+|19/02/26|12,000|模具設備成本|TL72615A_完成剪緣下模(MT70389)|
+|19/02/26|10,000|模具設備成本|TL72723A_完成剪緣上模(MT70395|
+|19/02/26|11,000|模具設備成本|TL72724A_完成剪緣母模(MT70395)|
+|19/02/26|12,000|模具設備成本|TL72725A_完成剪緣下模(MT70395)|
+|19/02/26|10,000|模具設備成本|TL72728A_整形剪緣上模(MT70395)|
+|19/02/26|11,000|模具設備成本|TL72729A_整形剪緣母模(MT70395)|
+|19/02/26|12,000|模具設備成本|TL72730A_整形剪緣下模(MT70395)|
+|19/02/26|10,000|模具設備成本|TL72733A_完成剪緣上模(MT70396)|
+|19/02/26|11,000|模具設備成本|TL72734A_完成剪緣母模(MT70396)|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/02/26|12,000|模具設備成本|TL72735A_完成剪緣下模(MT70396)|
+|19/02/26|10,000|模具設備成本|TL72738A_整形剪緣上模(MT70396)|
+|19/02/26|11,000|模具設備成本|TL72739A_整形剪緣母模(MT70396)|
+|19/02/26|12,000|模具設備成本|TL72740A_整形剪緣下模(MT70396)|
+|19/02/26|10,000|模具設備成本|TL72743A_完成剪緣上模(MT70397)|
+|19/02/26|11,000|模具設備成本|TL72744A_完成剪緣母模(MT70397)|
+|19/02/26|12,000|模具設備成本|TL72745A_完成剪緣下模(MT70397)|
+|19/02/26|10,000|模具設備成本|TL72748A_整形剪緣上模(MT70397)|
+|19/02/26|11,000|模具設備成本|TL72749A_整形剪緣母模(MT70397)|
+|19/02/26|12,000|模具設備成本|TL72750A_整形剪緣下模(MT70397)|
+|19/02/28|32,268|研發-消耗工具費-一般|O11 雜發半成品|
+|19/02/28|9,326|研發-消耗工具費-一般|O11 雜發直接材|
+|19/02/28|4,955|研發-消耗工具費-一般|O11 雜發製成品|
+|19/02/28|14,265|研發-消耗工具費-一般|2019/2M 支援單當期結案費用|
+|19/03/01|22,260|研發-消耗工具費-一般|201901-02 研發支援單調整|
+|19/03/01|5,896|研發-消耗工具費-一般|201901-02 研發支援單調整|
+|19/03/13|600|研發-消耗品|刀座延伸環 B.BSD19-050 吉實|
+|19/03/13|1,000|研發-消耗品|延長桿 BSD19-20L 吉實|
+|19/03/13|4,400|研發-消耗品|導柱 D25x130L 壓入部 65mm 軫盛|
+|19/03/20|2,500|研發-委外費用-一般|HA coating 155um 化學分析 台灣檢|
+|19/03/26|42,857|研發-消耗品|bone cement 博而美 HAP1-190300038|
+|19/03/28|7,051|研發-委外費用-一般|(F) File (data, analysis, synthesis, pho|
+|19/03/28|13,606|研發-委外費用-一般|Determination phases (F)- Ca/P- cristall|
+|19/03/28|1,856|研發-委外費用-一般|Samples destruction|
+|19/03/28|6,040|研發-消耗工具費-一般|SUS420J2 萬代鋼鐵 HAP1-190300235|
+|19/03/28|8,800|研發-消耗工具費-一般|T 型刀 台灣鈷領 HAP1-190300239|
+|19/03/29|5,600|研發-消耗工具費-一般|成型銑刀 有立 HAP1-190300145|
+|19/03/31|67,034|研發-消耗工具費-一般|2018 支援單費用-會計師調整|
+|19/03/31|17,732|研發-消耗工具費-一般|2018 支援單費用-會計師調整|
+|19/03/31|733|研發-消耗工具費-一般|2018 支援單費用-會計師調整|
+|19/03/31|62,142|研發-委外費用-一般|2018 專案資本化-會計師調整|
+|19/03/31|128,880|研發-消耗工具費-一般|2018 專案資本化-會計師調整|
+|19/03/31|269,976|研發-消耗工具費-一般|2018 專案資本化-會計師調整|
+|19/03/31|629,727|研發-委外費用-一般|2018 專案資本化-會計師調整|
+|19/03/31|428,202|研發-消耗工具費-一般|2018 專案資本化-會計師調整|
+|19/03/31|169,597|研發-委外費用-一般|2018 專案資本化-會計師調整|
+|19/03/31|1,105,561|研發-消耗工具費-一般|2018 專案資本化-會計師調整|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/03/31|102,570|研發-消耗工具費-一般|2018 專案資本化-會計師調整|
+|19/03/31|5,965|研發-消耗工具費-一般|2019/3M 支援單當期結案費用|
+|19/03/31|149,334|研發-消耗工具費-一般|O11 雜發半成品|
+|19/03/31|14,676|研發-消耗工具費-一般|O11 雜發直接材|
+|19/03/31|288,697|研發-消耗工具費-一般|O11 雜發製成品|
+|19/03/31|7,900|研發-消耗工具費-一般|2019/3M 支援單當期結案費用|
+|19/03/31|11,351|研發-消耗工具費-一般|O11 雜發製成品|
+|19/03/31|880|研發-消耗工具費-一般|O11 雜發間接材|
+|19/03/31|32,712|研發-消耗工具費-一般|2019/3M 支援單當期結案費用|
+|19/03/31|85,696|研發-消耗工具費-一般|O11 雜發製成品|
+|19/03/31|3,052|研發-消耗工具費-一般|201903 研發資本化-支援單迴轉|
+|19/03/31|3,099|研發-消耗工具費-一般|201903 研發資本化-支援單迴轉|
+|19/03/31|11,742|研發-消耗工具費-一般|201903 研發資本化-支援單迴轉|
+|19/04/11|19,400|研發-消耗工具費-一般|MRBH230,R0.2x1x4x45 銑刀 匯聚|
+|19/04/11|12,495|研發-消耗工具費-一般|MRBH230,R0.3x1x4x45 銑刀 匯聚|
+|19/04/11|11,295|研發-消耗工具費-一般|MRBH230,R0.4x2x4x45 銑刀 匯聚|
+|19/04/11|6,440|研發-消耗工具費-一般|導柱 D30*d25*110L 軫盛|
+|19/04/11|12,900|研發-消耗品|鑽頭,圖號:7803305 大寶精密|
+|19/04/11|17,360|研發-消耗品|鑽頭,圖號:7803393 大寶精密|
+|19/04/11|3,300|研發-消耗品|鑽頭刀片,圖號:7823067 大寶精密|
+|19/04/11|3,900|研發-消耗品|鑽頭刀片,圖號:7823097 大寶精密|
+|19/04/17|15,900|研發-消耗工具費-一般|中心出水側固式,BBT40 菱鵬|
+|19/04/22|7,500|研發-委外費用-一般|台美 Conformity stem 內毒素測試|
+|19/04/29|10,000|模具設備成本|TL72753A_完成剪緣上模(MT70401)_新|
+|19/04/29|11,000|模具設備成本|TL72754A_完成剪緣母模(MT70401)_新|
+|19/04/29|12,000|模具設備成本|TL72755A_完成剪緣下模(MT70401)_新|
+|19/04/29|10,000|模具設備成本|TL72758A_整形剪緣上模(MT70401)_新|
+|19/04/29|11,000|模具設備成本|TL72759A_整形剪緣母模(MT70401)_新|
+|19/04/29|12,000|模具設備成本|TL72760A_整形剪緣下模(MT70401)_新|
+|19/04/29|10,000|模具設備成本|TL72763A_完成剪緣上模(MT70402)_新|
+|19/04/29|11,000|模具設備成本|TL72764A_完成剪緣母模(MT70402)_新|
+|19/04/29|12,000|模具設備成本|TL72765A_完成剪緣下模(MT70402)_新|
+|19/04/29|10,000|模具設備成本|TL72768A_整形剪緣上模(MT70402)_新|
+|19/04/29|11,000|模具設備成本|TL72769A_整形剪緣母模(MT70402)_新|
+|19/04/29|12,000|模具設備成本|TL72770A_整形剪緣下模(MT70402)_新|
+|19/04/29|10,000|模具設備成本|TL72773A_完成剪緣上模(MT70403)_新|
+|19/04/29|11,000|模具設備成本|TL72774A_完成剪緣母模(MT70403)_新|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/04/29|12,000|模具設備成本|TL72775A_完成剪緣下模(MT70403)_新|
+|19/04/29|10,000|模具設備成本|TL72778A_整形剪緣上模(MT70403)_新|
+|19/04/29|11,000|模具設備成本|TL72779A_整形剪緣母模(MT70403)_新|
+|19/04/29|12,000|模具設備成本|TL72780A_整形剪緣下模(MT70403)_新|
+|19/04/29|10,000|模具設備成本|TL72783A_完成剪緣上模(MT70404)_新|
+|19/04/29|11,000|模具設備成本|TL72784A_完成剪緣母模(MT70404)_新|
+|19/04/29|12,000|模具設備成本|TL72785A_完成剪緣下模(MT70404)_新|
+|19/04/29|10,000|模具設備成本|TL72788A_整形剪緣上模(MT70404)_新|
+|19/04/29|11,000|模具設備成本|TL72789A_整形剪緣母模(MT70404)_新|
+|19/04/29|12,000|模具設備成本|TL72790A_整形剪緣下模(MT70404)_新|
+|19/04/29|10,000|模具設備成本|TL72793A_完成剪緣上模(MT70405)_新|
+|19/04/29|11,000|模具設備成本|TL72794A_完成剪緣母模(MT70405)_新|
+|19/04/29|12,000|模具設備成本|TL72795A_完成剪緣下模(MT70405)_新|
+|19/04/29|10,000|模具設備成本|TL72798A_整形剪緣上模(MT70405)_新|
+|19/04/29|11,000|模具設備成本|TL72799A_整形剪緣母模(MT70405)_新|
+|19/04/29|12,000|模具設備成本|TL72800A_整形剪緣下模(MT70405)_新|
+|19/04/29|10,000|模具設備成本|TL72803A_完成剪緣上模(MT70406)_新|
+|19/04/29|11,000|模具設備成本|TL72804A_完成剪緣母模(MT70406)_新|
+|19/04/29|12,000|模具設備成本|TL72805A_完成剪緣下模(MT70406)_新|
+|19/04/29|10,000|模具設備成本|TL72808A_整形剪緣上模(MT70406)_新|
+|19/04/29|11,000|模具設備成本|TL72809A_整形剪緣母模(MT70406)_新|
+|19/04/29|12,000|模具設備成本|TL72810A_整形剪緣下模(MT70406)_新|
+|19/04/29|10,000|模具設備成本|TL72813A_完成剪緣上模(MT70407)_新|
+|19/04/29|11,000|模具設備成本|TL72814A_完成剪緣母模(MT70407)_新|
+|19/04/29|12,000|模具設備成本|TL72815A_完成剪緣下模(MT70407)_新|
+|19/04/29|10,000|模具設備成本|TL72818A_整形剪緣上模(MT70407)_新|
+|19/04/29|11,000|模具設備成本|TL72819A_整形剪緣母模(MT70407)_新|
+|19/04/29|12,000|模具設備成本|TL72820A_整形剪緣下模(MT70407)_新|
+|19/04/29|10,000|模具設備成本|TL72823A_完成剪緣上模(MT70408)_新|
+|19/04/29|11,000|模具設備成本|TL72824A_完成剪緣母模(MT70408)_新|
+|19/04/29|12,000|模具設備成本|TL72825A_完成剪緣下模(MT70408)_新|
+|19/04/29|10,000|模具設備成本|TL72828A_整形剪緣上模(MT70408)_新|
+|19/04/29|11,000|模具設備成本|TL72829A_整形剪緣母模(MT70408)_新|
+|19/04/29|12,000|模具設備成本|TL72830A_整形剪緣下模(MT70408)_新|
+|19/04/29|10,000|模具設備成本|TL72833A_完成剪緣上模(MT70409)_新|
+|19/04/29|11,000|模具設備成本|TL72834A_完成剪緣母模(MT70409)_新|
+|19/04/29|12,000|模具設備成本|TL72835A_完成剪緣下模(MT70409)_新|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/04/29|10,000|模具設備成本|TL72838A_整形剪緣上模(MT70409)_新|
+|19/04/29|11,000|模具設備成本|TL72839A_整形剪緣母模(MT70409)_新|
+|19/04/29|12,000|模具設備成本|TL72840A_整形剪緣下模(MT70409)_新|
+|19/04/30|426|研發-消耗工具費-一般|MT50979 汰良 HAP1-190400236|
+|19/04/30|7,328|研發-消耗工具費-一般|O11 雜發其他存貨|
+|19/04/30|43,539|研發-消耗工具費-一般|O11 雜發半成品|
+|19/04/30|68,984|研發-消耗工具費-一般|O11 雜發製成品|
+|19/04/30|12,281|研發-消耗工具費-一般|O11 雜發製成品|
+|19/04/30|2,870|研發-消耗工具費-一般|O11 雜發間接材|
+|19/04/30|45,419|研發-消耗工具費-一般|O11 雜發製成品|
+|19/05/17|10,000|模具設備成本|TL72853A_完成剪緣上模(MT70421)_新|
+|19/05/17|11,000|模具設備成本|TL72854A_完成剪緣母模(MT70421)_新|
+|19/05/17|12,000|模具設備成本|TL72855A_完成剪緣下模(MT70421)_新|
+|19/05/17|10,000|模具設備成本|TL72858A_整形剪緣上模(MT70421)_新|
+|19/05/17|11,000|模具設備成本|TL72859A_整形剪緣母模(MT70421)_新|
+|19/05/17|12,000|模具設備成本|TL72860A_整形剪緣下模(MT70421)_新|
+|19/05/17|10,000|模具設備成本|TL72863A_完成剪緣上模(MT70422)_新|
+|19/05/17|11,000|模具設備成本|TL72864A_完成剪緣母模(MT70422)_新|
+|19/05/17|12,000|模具設備成本|TL72865A_完成剪緣下模(MT70422)_新|
+|19/05/17|10,000|模具設備成本|TL72868A_整形剪緣上模(MT70422)_新|
+|19/05/17|11,000|模具設備成本|TL72869A_整形剪緣母模(MT70422)_新|
+|19/05/17|12,000|模具設備成本|TL72870A_整形剪緣下模(MT70422)_新|
+|19/05/17|10,000|模具設備成本|TL72873A_完成剪緣上模(MT70423)_新|
+|19/05/17|11,000|模具設備成本|TL72874A_完成剪緣母模(MT70423)_新|
+|19/05/17|12,000|模具設備成本|TL72875A_完成剪緣下模(MT70423)_新|
+|19/05/17|10,000|模具設備成本|TL72878A_整形剪緣上模(MT70423)_新|
+|19/05/17|11,000|模具設備成本|TL72879A_整形剪緣母模(MT70423)_新|
+|19/05/17|12,000|模具設備成本|TL72880A_整形剪緣下模(MT70423)_新|
+|19/05/17|10,000|模具設備成本|TL72883A_完成剪緣上模(MT70424)_新|
+|19/05/17|11,000|模具設備成本|TL72884A_完成剪緣母模(MT70424)_新|
+|19/05/17|12,000|模具設備成本|TL72885A_完成剪緣下模(MT70424)_新|
+|19/05/17|10,000|模具設備成本|TL72888A_整形剪緣上模(MT70424)_新|
+|19/05/17|11,000|模具設備成本|TL72889A_整形剪緣母模(MT70424)_新|
+|19/05/17|12,000|模具設備成本|TL72890A_整形剪緣下模(MT70424)_新|
+|19/05/17|10,000|模具設備成本|TL72893A_完成剪緣上模(MT70425)_新|
+|19/05/17|11,000|模具設備成本|TL72894A_完成剪緣母模(MT70425)_新|
+|19/05/17|12,000|模具設備成本|TL72895A_完成剪緣下模(MT70425)_新|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/05/17|10,000|模具設備成本|TL72898A_整形剪緣上模(MT70425)_新|
+|19/05/17|11,000|模具設備成本|TL72899A_整形剪緣母模(MT70425)_新|
+|19/05/17|12,000|模具設備成本|TL72900A_整形剪緣下模(MT70425)_新|
+|19/05/17|10,000|模具設備成本|TL72843A_完成剪緣上模(MT70410)_新|
+|19/05/17|11,000|模具設備成本|TL72844A_完成剪緣母模(MT70410)_新|
+|19/05/17|12,000|模具設備成本|TL72845A_完成剪緣下模(MT70410)_新|
+|19/05/17|10,000|模具設備成本|TL72848A_整形剪緣上模(MT70410)_新|
+|19/05/17|11,000|模具設備成本|TL72849A_整形剪緣母模(MT70410)_新|
+|19/05/17|12,000|模具設備成本|TL72850A_整形剪緣下模(MT70410)_新|
+|19/05/17|10,000|模具設備成本|TL72903A_完成剪緣上模(MT70426)_新|
+|19/05/17|11,000|模具設備成本|TL72904A_完成剪緣母模(MT70426)_新|
+|19/05/17|12,000|模具設備成本|TL72905A_完成剪緣下模(MT70426)_新|
+|19/05/17|10,000|模具設備成本|TL72908A_整形剪緣上模(MT70426)_新|
+|19/05/17|11,000|模具設備成本|TL72909A_整形剪緣母模(MT70426)_新|
+|19/05/17|12,000|模具設備成本|TL72910A_整形剪緣下模(MT70426)_新|
+|19/05/17|10,000|模具設備成本|TL72913A_完成剪緣上模(MT70427)_新|
+|19/05/17|11,000|模具設備成本|TL72914A_完成剪緣母模(MT70427)_新|
+|19/05/17|12,000|模具設備成本|TL72915A_完成剪緣下模(MT70427)_新|
+|19/05/17|10,000|模具設備成本|TL72918A_整形剪緣上模(MT70427)_新|
+|19/05/17|11,000|模具設備成本|TL72919A_整形剪緣母模(MT70427)_新|
+|19/05/17|12,000|模具設備成本|TL72920A_整形剪緣下模(MT70427)_新|
+|19/05/17|10,000|模具設備成本|TL72923A_完成剪緣上模(MT70428)_新|
+|19/05/17|11,000|模具設備成本|TL72924A_完成剪緣母模(MT70428)_新|
+|19/05/17|12,000|模具設備成本|TL72925A_完成剪緣下模(MT70428)_新|
+|19/05/17|10,000|模具設備成本|TL72928A_整形剪緣上模(MT70428)_新|
+|19/05/17|11,000|模具設備成本|TL72929A_整形剪緣母模(MT70428)_新|
+|19/05/17|12,000|模具設備成本|TL72930A_整形剪緣下模(MT70428)_新|
+|19/05/17|10,000|模具設備成本|TL72933A_完成剪緣上模(MT70429)_新|
+|19/05/17|11,000|模具設備成本|TL72934A_完成剪緣母模(MT70429)_新|
+|19/05/17|12,000|模具設備成本|TL72935A_完成剪緣下模(MT70429)_新|
+|19/05/17|10,000|模具設備成本|TL72938A_整形剪緣上模(MT70429)_新|
+|19/05/17|11,000|模具設備成本|TL72939A_整形剪緣母模(MT70429)_新|
+|19/05/17|12,000|模具設備成本|TL72940A_整形剪緣下模(MT70429)_新|
+|19/05/22|3,300|研發-消耗工具費-一般|快鑽刀片,7823067 大寶|
+|19/05/22|2,000|研發-消耗工具費-一般|刀片 TPGX080202L TN7860 吉實|
+|19/05/22|3,900|研發-消耗工具費-一般|快鑽刀片,7823097 大寶|
+|19/05/23|2,980|研發-消耗工具費-一般|螺桿 昱暐 HAP1-190500046|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/05/24|3,680|研發-消耗工具費-一般|導柱 D30*d25*110L 軫盛|
+|19/05/28|550|研發-消耗工具費-一般|鑽石磨棒 許嘉文 HAP2-190500164|
+|19/05/29|18,840|研發-消耗工具費-一般|研磨重工銑刀 久大 HAP1-190500003|
+|19/05/29|5,000|研發-消耗工具費-一般|端銑刀 久大 HAP1-190500192|
+|19/05/30|6,200|研發-消耗工具費-一般|圓鼻銑刀 久大 HAP1-190500209|
+|19/05/31|11,000|研發-消耗工具費-一般|外 R 刀 台灣鈷領 HAP1-190500122|
+|19/05/31|25,503|研發-消耗工具費-一般|O11 雜發半成品|
+|19/05/31|18,652|研發-消耗工具費-一般|O11 雜發直接材|
+|19/05/31|412,819|研發-消耗工具費-一般|O11 雜發製成品|
+|19/05/31|8,111|研發-消耗工具費-一般|O11 雜發間接材|
+|19/06/19|4,600|研發-消耗工具費-一般|導套 25d*35(d1)*D40*L79 軫盛|
+|19/06/26|2,000|研發-消耗工具費-一般|搪孔刀片；刀片 TPGX080202L 吉實|
+|19/06/26|34,000|研發-消耗工具費-一般|外 R 刀 台灣鈷領 HAP1-190600059|
+|19/06/26|45,600|研發-消耗工具費-一般|銑刀 有立 HAP1-190600098|
+|19/06/30|50,871|研發-消耗工具費-一般|2019/6M 支援單當期結案費用|
+|19/06/30|48,550|研發-消耗工具費-一般|O11 雜發其他存貨|
+|19/06/30|33,331|研發-消耗工具費-一般|O11 雜發半成品|
+|19/06/30|317,671|研發-消耗工具費-一般|O11 雜發製成品|
+|19/06/30|23,366|研發-消耗工具費-一般|201906 研發資本化-支援單迴轉|
+|19/07/22|280,000|研發-委外費用-一般|亮宇 Conformity stem ISO 10993-1|
+|19/07/31|5,380|研發-消耗工具費-一般|2019/7M 支援單當期結案費用|
+|19/07/31|43,531|研發-消耗工具費-一般|O11 雜發其他存貨|
+|19/07/31|118,083|研發-消耗工具費-一般|O11 雜發半成品|
+|19/07/31|9,265|研發-消耗工具費-一般|O11 雜發直接材|
+|19/07/31|275,204|研發-消耗工具費-一般|O11 雜發製成品|
+|19/07/31|7,354|研發-消耗工具費-一般|O11 雜發間接材|
+|19/07/31|3,992|研發-消耗工具費-一般|201907 研發資本化-支援單迴轉|
+|19/08/13|110|研發-消耗品|螺絲,B.BSD.HC1.19 吉實|
+|19/08/13|110|研發-消耗品|螺絲,B.BSD.HC1.19.2 吉實|
+|19/08/13|165|研發-消耗品|螺絲,B.BSD.M2.0*5.5 吉實|
+|19/08/13|30|研發-消耗品|螺絲,X.0855-M04MP070-O050 吉實|
+|19/08/29|90,000|研發-委外費用-一般|亮宇 Conformity stem 毒理評估|
+|19/08/29|22,000|研發-消耗工具費-一般|板材 萬代鋼鐵 HAP1-190800147|
+|19/08/31|6,581|研發-消耗工具費-一般|O11 雜發半成品|
+|19/08/31|6,869|研發-消耗工具費-一般|O11 雜發製成品|
+|19/08/31|410|研發-消耗工具費-一般|O11 雜發間接材|
+|19/09/23|25,000|研發-雜項費用|TFDA_查驗登記_Conformity Stem|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/09/26|50,343|研發-委外費用-一般|Determination Ca/Pby XRD on Hydroxyapati|
+|19/09/26|61,103|研發-委外費用-一般|Determination phases and Cristallinityby|
+|19/09/26|3,268|研發-委外費用-一般|Reports MedicalG|
+|19/09/26|8,485|研發-委外費用-一般|Samples destruction MedicalG|
+|19/09/30|96,329|研發-消耗工具費-一般|O11 雜發半成品|
+|19/09/30|5,582|研發-消耗工具費-一般|O11 雜發製成品|
+|19/09/30|4,680|研發-消耗工具費-一般|O11 雜發間接材|
+|19/09/30|22,260|研發-消耗工具費-一般|201903 研發資本化-支援單調整|
+|19/09/30|5,896|研發-消耗工具費-一般|201903 研發資本化-支援單調整|
+|19/10/25|10,800|研發-消耗工具費-一般|雷射模板 乙壬廣告 HAP1-191000083|
+|19/10/31|13,000|研發-委外費用-一般|通業技研 掃描&逆向建模|
+|19/10/31|56,538|研發-消耗工具費-一般|O11 雜發半成品|
+|19/10/31|148,935|研發-消耗工具費-一般|O11 雜發製成品|
+|19/10/31|4,861|研發-消耗工具費-一般|O11 雜發間接材|
+|19/10/31|179|研發-消耗工具費-一般|2019/10M 支援單當期結案費用|
+|19/10/31|27,615|研發-消耗工具費-一般|O11 雜發其他存貨|
+|19/10/31|4,111|研發-消耗工具費-一般|O11 雜發直接材|
+|19/10/31|80|研發-消耗工具費-一般|201910 研發資本化-支援單迴轉|
+|19/11/29|26,780|研發-消耗工具費-一般|SUS420J2 萬代鋼鐵 HAP1-191100101|
+|19/11/29|6,600|研發-消耗工具費-一般|雷射模板 乙壬廣告 HAP1-191100166|
+|19/11/29|6,600|研發-消耗工具費-一般|POM 平板 大德行 HAP1-191100189|
+|19/11/30|17,805|研發-消耗工具費-一般|O11 雜發其他存貨|
+|19/11/30|2,737|研發-消耗工具費-一般|O11 雜發半成品|
+|19/11/30|171,589|研發-消耗工具費-一般|O11 雜發半成品|
+|19/11/30|26,710|研發-消耗工具費-一般|O11 雜發製成品|
+|19/11/30|7,043|研發-消耗工具費-一般|O11 雜發間接材|
+|19/11/30|16,208|研發-消耗工具費-一般|2019/11M 支援單當期結案費用|
+|19/11/30|5,702|研發-消耗工具費-一般|201911 研發資本化-支援單迴轉|
+|19/12/30|3,000|研發-委外費用-一般|台灣檢驗 靜態拉伸測試|
+|19/12/30|6,000|研發-委外費用-一般|麥思科技 代驗檢測費 HAP1-191200|
+|19/12/30|21,600|研發-委外費用-一般|麥思科技 應變規 HAP1-191200059|
+|19/12/30|52,000|研發-委外費用-一般|麥思科技 應變規(拉伸測試棒)|
+|19/12/30|15,000|研發-委外費用-一般|麥思科技-代測費用|
+|19/12/31|338,338|研發-雜項費用|FDA 新案_Conformity Stem (Cemented type|
+|19/12/31|13,961|研發-消耗工具費-一般|2019/12M 支援單當期結案費用|
+|19/12/31|25,780|研發-消耗工具費-一般|O 雜發其他存貨 P1707 消耗工具費|
+|19/12/31|66,641|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|19/12/31|3,020|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|19/12/31|11,624|研發-消耗工具費-一般|201912 研發資本化-支援單迴轉|
+|20/01/16|17,471|研發-委外費用-一般|ASTM F 1160 f= 20Hz. n=1 0.1 ENDOLAB|
+|20/01/16|16,234|研發-委外費用-一般|ASTM F1160 Bending fatigue ENDOLAB|
+|20/01/16|5,393|研發-委外費用-一般|EndoLab testing service ENDOLAB|
+|20/01/16|15,820|研發-委外費用-一般|tensile and shear sample ENDOLAB|
+|20/01/31|3,000|研發-委外費用-一般|SGS CoCrMo 棒材拉伸強度試驗|
+|20/01/31|25,277|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|20/01/31|1,435|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|20/02/28|22,549|研發-消耗工具費-一般|O 雜發其他存貨 P1707 消耗工具費|
+|20/03/26|380|研發-消耗工具費-一般|SF550A-2BESM-R0.2-L50-M1 承鴻貿易|
+|20/03/26|380|研發-消耗工具費-一般|SF550A-2BESM-R0.3-L50-M2 承鴻貿易|
+|20/04/22|330|研發-消耗品|螺絲,B.BSD.HC1.19 吉實|
+|20/04/29|4,320|研發-消耗工具費-一般|POM 平板 大德行 HAP1-200400018|
+|20/04/30|5,240|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|20/04/30|29,322|研發-消耗工具費-一般|2020/4M 支援單當期結案費用|
+|20/05/28|2,400|研發-消耗工具費-一般|POM 平板 大德行 HAP1-200500039|
+|20/05/28|1,550|研發-消耗工具費-一般|SUS420J2 萬代鋼鐵 HAP1-200500122|
+|20/05/31|7,315|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|20/06/19|3,105|研發-消耗工具費-一般|銑刀 建昌 HAP1-200600017|
+|20/06/19|1,450|研發-消耗工具費-一般|SUS420J2 萬代鋼鐵 HAP1-200600020|
+|20/07/29|652,064|研發-委外費用-一般|HAMRI 植入拔出試驗 jpy2328800|
+|20/07/30|4,800|研發-消耗工具費-一般|銑刀 建昌 HAP1-200700062|
+|20/08/05|240,550|研發-雜項費用|SZUTEST CE 審查費用(50%) eur7075|
+|20/08/12|243,875|研發-雜項費用|SZUTEST CE 審查費用 eur7075|
+|20/08/21|1,500|研發-雜項費用|TFDA_領證_006907_ conformity stem|
+|20/10/31|19,150|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|20/10/31|1,900|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|20/11/30|19,710|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|20/12/31|7,980|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|21/03/17|2,407,011|研發-雜項費用|SZUTEST CE 審查費用-conformity stem|
+|21/03/31|1,981|研發-消耗工具費-一般|O 雜發半成品 P1707 消耗工具費|
+|21/03/31|23,354|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/04/30|21,634|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/05/31|18,931|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/06/30|5,725|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/08/31|734|研發-消耗工具費-一般|O 雜發半成品 P1707 消耗工具費|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|21/08/31|1,722|研發-消耗工具費-一般|O 雜發半成品 P1707 消耗工具費|
+|21/08/31|16,642|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/08/31|6,600|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|21/09/28|360|研發-消耗工具費-一般|POM 平板(黑)40x50x65mm|
+|21/09/30|4,400|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|21/10/05|700|研發-消耗工具費-一般|不鏽鋼 420 31x18x24(mm)|
+|21/10/05|1,125|研發-消耗工具費-一般|不鏽鋼 420 43x18x24(mm)|
+|21/10/14|180,000|研發-委外費用-一般|USTAR II Stem fatigue (30mm segment)|
+|21/10/15|3,300|研發-消耗工具費-一般|S220 直刃銑牙刀 M10*P1.5*5.9*6D*3T 新|
+|21/10/25|3,000|研發-消耗工具費-一般|SUS420 板材-140*75*20|
+|21/10/25|1,040|研發-消耗工具費-一般|SUS420 板材-145*80*20|
+|21/10/25|2,120|研發-消耗工具費-一般|SUS420 板材-150*80*20|
+|21/10/25|600|研發-消耗工具費-一般|不鏽鋼 420-43x18x27(mm)|
+|21/10/28|11,300|模具設備成本|TL73076A_完成剪緣上模(MT70315)|
+|21/10/28|12,800|模具設備成本|TL73077A_完成剪緣母模(MT70315)|
+|21/10/28|13,300|模具設備成本|TL73078A_完成剪緣下模(MT70315)|
+|21/10/28|11,300|模具設備成本|TL73066A_完成剪緣上模(MT70314)|
+|21/10/28|12,800|模具設備成本|TL73067A_完成剪緣母模(MT70314)|
+|21/10/28|13,300|模具設備成本|TL73068A_完成剪緣下模(MT70314)|
+|21/10/28|11,300|模具設備成本|TL73071A_整形剪緣上模(MT70314)|
+|21/10/28|12,800|模具設備成本|TL73072A_整形剪緣母模(MT70314)|
+|21/10/28|13,300|模具設備成本|TL73073A_整形剪緣下模(MT70314)|
+|21/10/28|1,716|研發-消耗工具費-一般|球刀-P6B-0404|
+|21/10/28|1,854|研發-消耗工具費-一般|球刀-P6B-0604|
+|21/10/28|3,480|研發-消耗工具費-一般|球刀-P6B-0804|
+|21/10/28|3,300|研發-消耗工具費-一般|銑刀-P6QE-1204-ZR|
+|21/10/29|11,300|模具設備成本|TL73086A_完成剪緣上模(MT70316)_新|
+|21/10/29|12,800|模具設備成本|TL73087A_完成剪緣母模(MT70316)_新|
+|21/10/29|13,300|模具設備成本|TL73088A_完成剪緣下模(MT70316)_新|
+|21/10/29|11,300|模具設備成本|TL73091A_整形剪緣上模(MT70316)_新|
+|21/10/29|12,800|模具設備成本|TL73092A_整形剪緣母模(MT70316)_新|
+|21/10/29|13,300|模具設備成本|TL73093A_整形剪緣下模(MT70316)_新|
+|21/10/31|4,339|研發-消耗工具費-一般|O 雜發半成品 P1707 消耗工具費|
+|21/10/31|11,537|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/10/31|6,020|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|21/11/12|118|研發-消耗工具費-一般|M6 內六角螺絲牙長 20mm(白鐵)|
+|21/11/12|252|研發-消耗工具費-一般|M6 內六角螺絲牙長 25mm(白鐵)|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|21/11/12|2,400|研發-消耗工具費-一般|弓形支架 9616006(8MM*前端 4MM)|
+|21/11/23|11,300|模具設備成本|TL73081A_整形剪緣上模(MT70315)_新|
+|21/11/23|12,800|模具設備成本|TL73082A_整形剪緣母模(MT70315)_新|
+|21/11/23|13,300|模具設備成本|TL73083A_整形剪緣下模(MT70315)_新|
+|21/11/25|60|研發-消耗工具費-一般|氣動六角棒 H5|
+|21/11/30|9,658|研發-消耗工具費-一般|O 雜發半成品 P1707 消耗工具費|
+|21/11/30|14,072|研發-消耗工具費-一般|O 雜發半成品 P1707 消耗工具費|
+|21/11/30|5,732|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費|
+|21/11/30|31,542|研發-消耗工具費-一般|O 雜發間接材 P1707 消耗工具費|
+|21/12/06|10,800|研發-消耗工具費-一般|PT 平面型動向鋼珠螺桿 PT16B / H15|
+|21/12/10|1,200|研發-消耗工具費-一般|POM 平板(黑)-30×50×65mm|
+|21/12/10|60|研發-消耗工具費-一般|氣動六角棒 H3|
+|21/12/10|60|研發-消耗工具費-一般|氣動六角棒 H4|
+|21/12/10|60|研發-消耗工具費-一般|氣動六角棒 H6|
+|21/12/17|1,250|研發-消耗工具費-一般|TL72958 修改 R 角到 0.2+鍍層|
+|21/12/17|1,400|研發-消耗工具費-一般|TL72958 修改 R 角到 0.2|
+|21/12/23|975|研發-消耗工具費-一般|不鏽鋼 420-31x18x25(mm)|
+|21/12/23|2,800|研發-消耗工具費-一般|不鏽鋼 420-39x18x30(mm)|
+|21/12/31|12,253|研發-消耗工具費-一般|2021/12M 支援單當期結案費用|
+|21/12/31|6,212|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費-一|
+|22/01/14|650|研發-消耗工具費-一般|不鏽鋼 420-31x18x25(mm)|
+|22/01/14|3,500|研發-消耗工具費-一般|不鏽鋼 420-39x18x30(mm)|
+|22/01/26|3,700|研發-消耗工具費-一般|M10x1.5 鎢鋼銑牙刀刃徑 5.9 刃長 15|
+|22/02/24|78,800|研發-委外費用-一般|99.39.1028.540.10 (Rational ball heads)|
+|22/02/28|71,511|研發-消耗工具費-一般|2022/2M 支援單當期結案費用|
+|22/02/28|5,208|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費-一|
+|22/09/23|1,170|研發-消耗工具費-一般|不鏽鋼 420-30x18x25(mm)|
+|22/09/23|700|研發-消耗工具費-一般|不鏽鋼 420-39x18x28(mm)|
+|22/09/23|1,680|研發-消耗工具費-一般|不鏽鋼 420-39x18x30(mm)|
+|22/09/30|5,524|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費-一|
+|22/11/30|16,886|研發-消耗工具費-一般|O 雜發製成品 P1707 消耗工具費-一|
+|22/12/31|9,437|研發-消耗工具費-一般|O 雜發其他存貨 P1707 消耗工具費-|
+|22/12/31|39,990|研發-消耗工具費-一般|2022/12M 支援單當期結案費用|
+|23/01/31|225|研發-消耗工具費-一般|O 雜發其他存貨 P1707 消耗工具費-|
+|23/02/28|16,322|研發-消耗工具費-一般|O 雜發其他存貨 P1707 消耗工具費-|
+|23/03/31|10,080|研發-消耗工具費-一般|PT 平面型動向鋼珠螺桿-PT16B / H1|
+|23/03/31|9,823|研發-消耗工具費-一般|O 雜發其他存貨 P1707 消耗工具費-|
+
+
+|傳票日期|借方金額|科目名稱|摘要|
+|---|---|---|---|
+|23/03/31|9,929|研發-消耗工具費-一般|O 雜發直接材 P1707 消耗工具費-一|
+|23/04/26|206|研發-消耗工具費-一般|M6 內六角螺絲牙長 20mm(白鐵)|
+|23/04/26|206|研發-消耗工具費-一般|M6 內六角螺絲牙長 25mm(白鐵)|
+|23/04/26|84|研發-消耗工具費-一般|M8x1.25 55L|
+|總計| |21,340,377| |
+
+

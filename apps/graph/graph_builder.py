@@ -59,12 +59,36 @@ def build_graph_from_mongo(client) -> dict:
             _write(client, _merge_attended_by, meeting_id, attendee)
             relation_counts["ATTENDED_BY"] += 1
 
+        _persist_keyword_mentions(
+            client=client,
+            owner_kind="meeting",
+            owner_id=meeting_id,
+            field="meeting_name",
+            text=meeting.get("meeting_name"),
+            node_counts=node_counts,
+            relation_counts=relation_counts,
+        )
+
         for item in items_by_meeting_id.get(meeting_id, []):
             item_id = item.get("item_id")
             _write(client, _merge_meeting_item, item)
             node_counts["MeetingItem"] += 1
             _write(client, _merge_has_item, meeting_id, item_id)
             relation_counts["HAS_ITEM"] += 1
+
+            planned_date = _valid_text(item.get("planned_date"))
+            if planned_date:
+                _write(client, _merge_date, planned_date, "planned")
+                node_counts["Date"] += 1
+                _write(client, _merge_has_planned_date, item_id, planned_date)
+                relation_counts["HAS_PLANNED_DATE"] += 1
+
+            completed_date = _valid_text(item.get("actual_completed_date"))
+            if completed_date:
+                _write(client, _merge_date, completed_date, "completed")
+                node_counts["Date"] += 1
+                _write(client, _merge_has_completed_date, item_id, completed_date)
+                relation_counts["HAS_COMPLETED_DATE"] += 1
 
             owner = str(item.get("owner") or "").strip()
             if owner and owner.lower() not in {"--", "na", "n/a", "none", "null"}:
@@ -73,27 +97,19 @@ def build_graph_from_mongo(client) -> dict:
                 _write(client, _merge_responsible_by, item_id, owner)
                 relation_counts["RESPONSIBLE_BY"] += 1
 
-            entities = extract_keyword_entities(item.get("content"))
             keyword_names = []
-
-            for keyword in entities["keywords"]:
-                _write(client, _merge_keyword, keyword["name"], keyword["type"])
-                node_counts["Keyword"] += 1
-                _write(client, _merge_mentions_keyword, item_id, keyword["name"])
-                relation_counts["MENTIONS"] += 1
-                keyword_names.append(keyword["name"])
-
-            for product in entities["products"]:
-                _write(client, _merge_product, product)
-                node_counts["Product"] += 1
-                _write(client, _merge_mentions_product, item_id, product)
-                relation_counts["MENTIONS_PRODUCT"] += 1
-
-            for regulation in entities["regulations"]:
-                _write(client, _merge_regulation, regulation)
-                node_counts["Regulation"] += 1
-                _write(client, _merge_mentions_regulation, item_id, regulation)
-                relation_counts["MENTIONS_REGULATION"] += 1
+            for field in ("content", "tracking_result"):
+                keyword_names.extend(
+                    _persist_keyword_mentions(
+                        client=client,
+                        owner_kind="item",
+                        owner_id=item_id,
+                        field=field,
+                        text=item.get(field),
+                        node_counts=node_counts,
+                        relation_counts=relation_counts,
+                    )
+                )
 
             unique_keywords = sorted(set(keyword_names))
             for left, right in combinations(unique_keywords, 2):
@@ -130,6 +146,48 @@ def _write(client, callback, *args):
     if getattr(client, "available", False):
         return client.execute_write(callback, *args)
     return callback(None, *args)
+
+
+def _persist_keyword_mentions(client, owner_kind, owner_id, field, text, node_counts, relation_counts):
+    if not owner_id or not _valid_text(text):
+        return []
+
+    entities = extract_keyword_entities(text)
+    keyword_names = []
+
+    for keyword in entities["keywords"]:
+        _write(client, _merge_keyword, keyword["name"], keyword["type"])
+        node_counts["Keyword"] += 1
+        if owner_kind == "meeting":
+            _write(client, _merge_meeting_mentions_keyword, owner_id, keyword["name"], field)
+        else:
+            _write(client, _merge_mentions_keyword, owner_id, keyword["name"], field)
+        relation_counts["MENTIONS"] += 1
+        keyword_names.append(keyword["name"])
+
+    if owner_kind == "item" and field == "content":
+        for product in entities["products"]:
+            _write(client, _merge_product, product)
+            node_counts["Product"] += 1
+            _write(client, _merge_mentions_product, owner_id, product)
+            relation_counts["MENTIONS_PRODUCT"] += 1
+
+        for regulation in entities["regulations"]:
+            _write(client, _merge_regulation, regulation)
+            node_counts["Regulation"] += 1
+            _write(client, _merge_mentions_regulation, owner_id, regulation)
+            relation_counts["MENTIONS_REGULATION"] += 1
+
+    return keyword_names
+
+
+def _valid_text(value):
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.lower() in {"--", "na", "n/a", "none", "null"}:
+        return None
+    return text
 
 
 def _merge_document(tx, document_id, original_filename):
@@ -169,10 +227,28 @@ def _merge_meeting_item(tx, item):
     )
 
 
+def _merge_date(tx, date_value, date_type):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_DATE, date_value=date_value, date_type=date_type)
+
+
 def _merge_has_item(tx, meeting_id, item_id):
     if tx is None:
         return None
     tx.run(cq.MERGE_HAS_ITEM, meeting_id=meeting_id, item_id=item_id)
+
+
+def _merge_has_planned_date(tx, item_id, date_value):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_HAS_PLANNED_DATE, item_id=item_id, date_value=date_value)
+
+
+def _merge_has_completed_date(tx, item_id, date_value):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_HAS_COMPLETED_DATE, item_id=item_id, date_value=date_value)
 
 
 def _merge_person(tx, name):
@@ -235,10 +311,21 @@ def _merge_regulation(tx, name):
     tx.run(cq.MERGE_REGULATION, name=name)
 
 
-def _merge_mentions_keyword(tx, item_id, keyword_name):
+def _merge_mentions_keyword(tx, item_id, keyword_name, field):
     if tx is None:
         return None
-    tx.run(cq.MERGE_MENTIONS_KEYWORD, item_id=item_id, keyword_name=keyword_name)
+    tx.run(cq.MERGE_MENTIONS_KEYWORD, item_id=item_id, keyword_name=keyword_name, field=field)
+
+
+def _merge_meeting_mentions_keyword(tx, meeting_id, keyword_name, field):
+    if tx is None:
+        return None
+    tx.run(
+        cq.MERGE_MEETING_MENTIONS_KEYWORD,
+        meeting_id=meeting_id,
+        keyword_name=keyword_name,
+        field=field,
+    )
 
 
 def _merge_mentions_product(tx, item_id, product_name):

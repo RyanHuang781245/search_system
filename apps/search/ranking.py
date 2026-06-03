@@ -32,6 +32,38 @@ STRUCTURE_WEIGHTS = {
 }
 
 BLANK_OWNER_VALUES = {"", "--", "na", "n/a", "none", "null"}
+TASK_INTENT_TERMS = {
+    "owner",
+    "responsible",
+    "assignee",
+    "person in charge",
+    "due",
+    "deadline",
+    "planned",
+    "completed",
+    "completion",
+    "unfinished",
+    "pending",
+    "overdue",
+    "tracking",
+    "follow-up",
+    "follow up",
+    "負責",
+    "負責人",
+    "權責",
+    "預計",
+    "日期",
+    "期限",
+    "完成",
+    "完成日",
+    "實際完成",
+    "未完成",
+    "逾期",
+    "追蹤",
+    "結果",
+    "待辦",
+    "任務",
+}
 
 
 def score_meeting_metadata(meeting: dict, query: str) -> dict:
@@ -70,7 +102,7 @@ def score_item(item: dict, query: str) -> dict:
                 keyword_score += weight
                 structure_score += STRUCTURE_WEIGHTS.get(field, 0)
 
-    task_score = score_task(item)
+    task_score = score_task(item, query)
 
     return {
         "keyword_score": float(keyword_score),
@@ -80,7 +112,10 @@ def score_item(item: dict, query: str) -> dict:
     }
 
 
-def score_task(item: dict) -> float:
+def score_task(item: dict, query: str = "") -> float:
+    if not has_task_intent(query):
+        return 0.0
+
     score = 0.0
     if has_owner_value(item.get("owner")):
         score += 2
@@ -91,6 +126,13 @@ def score_task(item: dict) -> float:
     if not has_value(item.get("tracking_result")):
         score += 1
     return score
+
+
+def has_task_intent(query: str | None) -> bool:
+    normalized_query = str(query or "").strip().lower()
+    if not normalized_query:
+        return False
+    return any(term in normalized_query for term in TASK_INTENT_TERMS)
 
 
 def score_recency(meeting_date_value: str | None, now: date | None = None) -> float:

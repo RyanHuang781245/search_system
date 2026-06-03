@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/", include("apps.meetings.urls")),
     path("api/", include("apps.graph.urls")),
     path("api/", include("apps.search.urls")),
+    path("api/", include("apps.vector.urls")),
 ]

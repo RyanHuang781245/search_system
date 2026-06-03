@@ -157,7 +157,7 @@ class MeetingMinutesAPITestCase(APISimpleTestCase):
         self.assertEqual(len(self.meeting_items_collection.documents), 4)
 
         stored_meeting = self.meeting_minutes_collection.documents[0]
-        self.assertEqual(stored_meeting["meeting_name"], "P1812 Coformity stem器械進度 會議")
+        self.assertEqual(stored_meeting["meeting_name"], "P1812 Coformity stem器械進度會議")
         self.assertEqual(stored_meeting["location"], "台北會議室TP_A")
         self.assertEqual(stored_meeting["status"], "parsed")
         self.assertEqual(stored_meeting["page_count"], 1)

@@ -99,6 +99,7 @@ def _extract_metadata(raw_text, page_count):
         readable_text,
         r"出\s*席\s*人\s*員\s*:\s*(.+?)\s*項\s*次",
         default="",
+        clean=False,
     )
     attendees = _split_attendees(attendees_text)
 
@@ -374,6 +375,7 @@ def _normalize_text(value):
 
 def _clean_text(value):
     text = re.sub(r"\s+", " ", str(value or "")).strip()
+    text = _repair_cjk_spacing(text)
     return text or None
 
 
@@ -389,11 +391,14 @@ def _normalize_readable_text(value):
     return text
 
 
-def _search_value(text, pattern, default=None):
+def _search_value(text, pattern, default=None, clean=True):
     match = re.search(pattern, text, re.S)
     if not match:
         return default
-    return _clean_text(match.group(1))
+    value = match.group(1)
+    if not clean:
+        return str(value or "").strip()
+    return _clean_text(value)
 
 
 def _search_groups(text, pattern):
@@ -410,12 +415,47 @@ def _format_time(hour, minute):
 
 
 def _split_attendees(attendees_text):
-    cleaned = _clean_text(attendees_text)
+    raw_text = str(attendees_text or "").strip()
+    if not raw_text:
+        return []
+
+    normalized = raw_text.replace("\n", " ")
+    normalized = normalized.replace("、", ",").replace("，", ",")
+
+    attendees = []
+    seen = set()
+    for segment in normalized.split(","):
+        for name in _split_attendee_segment(segment):
+            if name and name not in seen:
+                seen.add(name)
+                attendees.append(name)
+    return attendees
+
+
+def _split_attendee_segment(segment):
+    cleaned = re.sub(r"\s+", " ", str(segment or "")).strip()
     if not cleaned:
         return []
-    normalized = cleaned.replace("、", ",").replace("，", ",")
-    attendees = [name.strip() for name in normalized.split(",") if name.strip()]
-    return attendees
+
+    parts = cleaned.split(" ")
+    if len(parts) == 2 and all(_is_cjk_token(part) for part in parts):
+        if len(parts[0]) >= 2 and len(parts[1]) >= 2:
+            return [_clean_attendee_name(part) for part in parts]
+        return [_clean_attendee_name("".join(parts))]
+
+    return [_clean_attendee_name(cleaned)]
+
+
+def _clean_attendee_name(name):
+    return _repair_cjk_spacing(re.sub(r"\s+", " ", str(name or "")).strip())
+
+
+def _repair_cjk_spacing(text):
+    return re.sub(r"(?<=[\u3400-\u9fff])\s+(?=[\u3400-\u9fff])", "", text)
+
+
+def _is_cjk_token(value):
+    return re.fullmatch(r"[\u3400-\u9fff]+", str(value or "")) is not None
 
 
 def _normalize_item_no(value):

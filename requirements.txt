@@ -4,3 +4,5 @@ pymongo
 python-dotenv
 PyMuPDF
 neo4j
+qdrant-client
+requests

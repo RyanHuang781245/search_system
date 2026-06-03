@@ -2,8 +2,30 @@ from datetime import datetime, timezone as dt_timezone
 from unittest.mock import patch
 
 from django.urls import reverse
+from django.test import SimpleTestCase
 from rest_framework import status
 from rest_framework.test import APISimpleTestCase
+
+from .ranking import has_task_intent, score_item
+
+
+class SearchRankingTestCase(SimpleTestCase):
+    def test_task_score_only_applies_to_task_intent_queries(self):
+        item = {
+            "content": "FDA submission discussion",
+            "owner": "Alice",
+            "planned_date": "2018-04-20",
+            "actual_completed_date": None,
+            "tracking_result": None,
+        }
+
+        topic_score = score_item(item, "FDA")
+        task_score = score_item(item, "未完成追蹤")
+
+        self.assertFalse(has_task_intent("FDA"))
+        self.assertTrue(has_task_intent("未完成追蹤"))
+        self.assertEqual(topic_score["task_score"], 0.0)
+        self.assertEqual(task_score["task_score"], 7.0)
 
 
 class FakeCursor:
@@ -124,16 +146,16 @@ class SearchAPITestCase(APISimpleTestCase):
         self.assertEqual(response.data["data"]["total"], 2)
 
         result = response.data["data"]["results"][0]
-        self.assertEqual(result["meeting_id"], "meet_003")
+        self.assertEqual(result["meeting_id"], "meet_001")
         self.assertGreater(result["final_score"], 0)
         self.assertEqual(result["score_detail"]["keyword_score"], 8.0)
         self.assertEqual(result["score_detail"]["structure_score"], 4.0)
-        self.assertEqual(result["score_detail"]["task_score"], 7.0)
+        self.assertEqual(result["score_detail"]["task_score"], 0.0)
         self.assertEqual(result["score_detail"]["feedback_score"], 0.0)
         self.assertIn("item_content", result["matched_fields"])
         self.assertEqual(result["matched_snippets"][0]["field"], "content")
         self.assertIn("<mark>FDA</mark>", result["matched_snippets"][0]["snippet"])
-        self.assertEqual(result["matched_items"][0]["item_id"], "item_005")
+        self.assertEqual(result["matched_items"][0]["item_id"], "item_003")
         self.assertEqual(result["matched_items"][0]["score_detail"]["keyword_score"], 8.0)
         self.assertEqual(result["matched_items"][0]["score_detail"]["structure_score"], 4.0)
 
@@ -141,7 +163,7 @@ class SearchAPITestCase(APISimpleTestCase):
         search_log = self.search_logs_collection.documents[0]
         self.assertEqual(search_log["query"], "FDA")
         self.assertEqual(search_log["result_count"], 2)
-        self.assertEqual(search_log["result_meeting_ids"][0], "meet_003")
+        self.assertEqual(search_log["result_meeting_ids"][0], "meet_001")
 
     def test_search_supports_item_state_filters_and_owner_filter(self):
         response = self.client.get(

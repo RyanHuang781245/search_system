@@ -45,6 +45,7 @@ def search_graph(client, query: str, limit: int = 50) -> dict:
                 "item_no": row.get("item_no"),
                 "content": row.get("content"),
                 "matched_keyword": matched_keyword,
+                "matched_field": row.get("matched_field"),
                 "match_type": match_type,
                 "graph_score": graph_score,
             }

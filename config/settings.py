@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "apps.meetings",
     "apps.graph",
     "apps.search.apps.SearchConfig",
+    "apps.vector",
 ]
 
 MIDDLEWARE = [
@@ -67,6 +68,15 @@ NEO4J_URI = os.getenv("NEO4J_URI", "")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
+
+QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
+QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "meeting_items")
+QDRANT_VECTOR_DIMENSION = int(os.getenv("QDRANT_VECTOR_DIMENSION", "768"))
+
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost")
+OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
+OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 
 UPLOAD_ROOT = BASE_DIR / "uploads"
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024

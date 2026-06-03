@@ -24,10 +24,26 @@ SET i.item_no = $item_no,
     i.actual_completed_date = $actual_completed_date
 """
 
+MERGE_DATE = """
+MERGE (d:Date {date_value: $date_value, date_type: $date_type})
+"""
+
 MERGE_HAS_ITEM = """
 MATCH (m:Meeting {meeting_id: $meeting_id})
 MATCH (i:MeetingItem {item_id: $item_id})
 MERGE (m)-[:HAS_ITEM]->(i)
+"""
+
+MERGE_HAS_PLANNED_DATE = """
+MATCH (i:MeetingItem {item_id: $item_id})
+MATCH (d:Date {date_value: $date_value, date_type: 'planned'})
+MERGE (i)-[:HAS_PLANNED_DATE]->(d)
+"""
+
+MERGE_HAS_COMPLETED_DATE = """
+MATCH (i:MeetingItem {item_id: $item_id})
+MATCH (d:Date {date_value: $date_value, date_type: 'completed'})
+MERGE (i)-[:HAS_COMPLETED_DATE]->(d)
 """
 
 MERGE_PERSON = """
@@ -84,7 +100,15 @@ MERGE (r:Regulation {name: $name})
 MERGE_MENTIONS_KEYWORD = """
 MATCH (i:MeetingItem {item_id: $item_id})
 MATCH (k:Keyword {name: $keyword_name})
-MERGE (i)-[:MENTIONS]->(k)
+MERGE (i)-[r:MENTIONS {field: $field}]->(k)
+SET r.field = $field
+"""
+
+MERGE_MEETING_MENTIONS_KEYWORD = """
+MATCH (m:Meeting {meeting_id: $meeting_id})
+MATCH (k:Keyword {name: $keyword_name})
+MERGE (m)-[r:MENTIONS {field: $field}]->(k)
+SET r.field = $field
 """
 
 MERGE_MENTIONS_PRODUCT = """
@@ -120,7 +144,7 @@ LIMIT $limit
 """
 
 QUERY_GRAPH_SEARCH = """
-MATCH (item:MeetingItem)-[:MENTIONS]->(keyword:Keyword)
+MATCH (item:MeetingItem)-[mention:MENTIONS]->(keyword:Keyword)
 WHERE toUpper(keyword.name) IN $keywords
 MATCH (meeting:Meeting)-[:HAS_ITEM]->(item)
 RETURN meeting.meeting_id AS meeting_id,
@@ -130,5 +154,19 @@ RETURN meeting.meeting_id AS meeting_id,
        item.item_no AS item_no,
        item.content AS content,
        keyword.name AS matched_keyword,
-       keyword.type AS keyword_type
+       keyword.type AS keyword_type,
+       mention.field AS matched_field
+UNION
+MATCH (meeting:Meeting)-[mention:MENTIONS]->(keyword:Keyword)
+WHERE toUpper(keyword.name) IN $keywords
+MATCH (meeting)-[:HAS_ITEM]->(item:MeetingItem)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       keyword.name AS matched_keyword,
+       keyword.type AS keyword_type,
+       mention.field AS matched_field
 """

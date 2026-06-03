@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APISimpleTestCase
 
+from .graph_builder import build_graph_from_mongo
 from .keyword_extractor import extract_keyword_entities
 from .graph_search import fetch_related_keywords, search_graph
 
@@ -82,11 +83,85 @@ class KeywordExtractorTestCase(SimpleTestCase):
         self.assertEqual(payload["regulations"], ["FDA", "TFDA"])
 
 
+class GraphBuilderTestCase(SimpleTestCase):
+    def test_build_graph_persists_dates_and_field_aware_mentions(self):
+        meeting = {
+            "document_id": "doc_001",
+            "meeting_id": "meeting_001",
+            "meeting_name": "FDA 標籤確認會議",
+            "meeting_date": "2018-04-03",
+            "responsible_unit": "UR3",
+            "chairperson": "倪仲達",
+            "recorder": "倪仲達",
+            "attendees": ["陳文全"],
+        }
+        item = {
+            "item_id": "item_001",
+            "meeting_id": "meeting_001",
+            "item_no": "01",
+            "content": "請UPD確認FDA標籤測試需求",
+            "owner": "陳文全",
+            "planned_date": "2018-04-20",
+            "actual_completed_date": "2018-04-21",
+            "tracking_result": "送件完成",
+        }
+        client = _CapturingGraphClient()
+
+        with patch("apps.graph.graph_builder.get_meeting_minutes_collection", return_value=_FakeCollection([meeting])), patch(
+            "apps.graph.graph_builder.get_meeting_items_collection", return_value=_FakeCollection([item])
+        ):
+            summary = build_graph_from_mongo(client)
+
+        self.assertEqual(summary["node_counts"]["Date"], 2)
+        self.assertEqual(summary["relationship_counts"]["HAS_PLANNED_DATE"], 1)
+        self.assertEqual(summary["relationship_counts"]["HAS_COMPLETED_DATE"], 1)
+        self.assertGreaterEqual(summary["relationship_counts"]["MENTIONS"], 3)
+
+        date_params = [entry["params"] for entry in client.runs if "Date" in entry["query"]]
+        self.assertIn({"date_value": "2018-04-20", "date_type": "planned"}, date_params)
+        self.assertIn({"date_value": "2018-04-21", "date_type": "completed"}, date_params)
+
+        mention_fields = {
+            entry["params"].get("field")
+            for entry in client.runs
+            if "MENTIONS" in entry["query"] and entry["params"].get("field")
+        }
+        self.assertIn("meeting_name", mention_fields)
+        self.assertIn("content", mention_fields)
+        self.assertIn("tracking_result", mention_fields)
+
+
 class _FakeGraphClient:
     available = True
 
     def execute_read(self, callback, *args):
         return callback(_FakeTx(), *args)
+
+
+class _FakeCollection:
+    def __init__(self, documents):
+        self.documents = documents
+
+    def find(self, *_args, **_kwargs):
+        return list(self.documents)
+
+
+class _CapturingGraphClient:
+    available = True
+
+    def __init__(self):
+        self.runs = []
+
+    def execute_write(self, callback, *args):
+        return callback(_CapturingTx(self.runs), *args)
+
+
+class _CapturingTx:
+    def __init__(self, runs):
+        self.runs = runs
+
+    def run(self, query, **params):
+        self.runs.append({"query": query, "params": params})
 
 
 class _FakeTx:
@@ -102,7 +177,7 @@ class _FakeTx:
                 ]
             return []
 
-        if "MATCH (item:MeetingItem)-[:MENTIONS]->(keyword:Keyword)" in query and "FDA" in normalized_keywords:
+        if "MATCH (item:MeetingItem)-[mention:MENTIONS]->(keyword:Keyword)" in query and "FDA" in normalized_keywords:
             return [
                 {
                     "meeting_id": "meet_001",
@@ -113,6 +188,7 @@ class _FakeTx:
                     "content": "提到 TFDA 與 FDA",
                     "matched_keyword": "TFDA",
                     "keyword_type": "abbreviation",
+                    "matched_field": "content",
                 }
             ]
         return []

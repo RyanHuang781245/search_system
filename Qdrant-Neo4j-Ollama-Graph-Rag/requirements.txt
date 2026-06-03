@@ -1,0 +1,7 @@
+neo4j-graphrag[qdrant]
+python-dotenv
+pydantic
+openai
+requests
+typing-extensions
+spacy
