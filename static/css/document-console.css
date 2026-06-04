@@ -930,6 +930,75 @@ body {
     font-size: 0.84rem;
 }
 
+.operation-log,
+.answer-panel {
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    padding: 0.95rem;
+    min-height: 96px;
+    word-break: break-word;
+}
+
+.keyword-result-list,
+.result-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.keyword-result-card {
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    padding: 0.85rem 0.95rem;
+}
+
+.keyword-name {
+    color: var(--text-main);
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+    word-break: break-word;
+}
+
+.keyword-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.45rem;
+}
+
+.keyword-method {
+    display: inline-flex;
+    max-width: 100%;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    padding: 0.24rem 0.62rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.graph-limit-input {
+    max-width: 86px;
+}
+
+.answer-title {
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 0.75rem;
+}
+
+.answer-body {
+    color: var(--text-main);
+    line-height: 1.65;
+    font-size: 0.94rem;
+}
+
 @media (max-width: 1120px) {
     .hero-panel {
         padding: 1.5rem;

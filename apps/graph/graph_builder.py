@@ -159,9 +159,25 @@ def _persist_keyword_mentions(client, owner_kind, owner_id, field, text, node_co
         _write(client, _merge_keyword, keyword["name"], keyword["type"])
         node_counts["Keyword"] += 1
         if owner_kind == "meeting":
-            _write(client, _merge_meeting_mentions_keyword, owner_id, keyword["name"], field)
+            _write(
+                client,
+                _merge_meeting_mentions_keyword,
+                owner_id,
+                keyword["name"],
+                field,
+                keyword.get("score", 0),
+                keyword.get("method", "unknown"),
+            )
         else:
-            _write(client, _merge_mentions_keyword, owner_id, keyword["name"], field)
+            _write(
+                client,
+                _merge_mentions_keyword,
+                owner_id,
+                keyword["name"],
+                field,
+                keyword.get("score", 0),
+                keyword.get("method", "unknown"),
+            )
         relation_counts["MENTIONS"] += 1
         keyword_names.append(keyword["name"])
 
@@ -311,13 +327,20 @@ def _merge_regulation(tx, name):
     tx.run(cq.MERGE_REGULATION, name=name)
 
 
-def _merge_mentions_keyword(tx, item_id, keyword_name, field):
+def _merge_mentions_keyword(tx, item_id, keyword_name, field, score, method):
     if tx is None:
         return None
-    tx.run(cq.MERGE_MENTIONS_KEYWORD, item_id=item_id, keyword_name=keyword_name, field=field)
+    tx.run(
+        cq.MERGE_MENTIONS_KEYWORD,
+        item_id=item_id,
+        keyword_name=keyword_name,
+        field=field,
+        score=score,
+        method=method,
+    )
 
 
-def _merge_meeting_mentions_keyword(tx, meeting_id, keyword_name, field):
+def _merge_meeting_mentions_keyword(tx, meeting_id, keyword_name, field, score, method):
     if tx is None:
         return None
     tx.run(
@@ -325,6 +348,8 @@ def _merge_meeting_mentions_keyword(tx, meeting_id, keyword_name, field):
         meeting_id=meeting_id,
         keyword_name=keyword_name,
         field=field,
+        score=score,
+        method=method,
     )
 
 

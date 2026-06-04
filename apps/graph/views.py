@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .keyword_extractor import extract_keyword_entities
 from .services import build_graph, get_related_keywords, graph_search_query
 
 
@@ -43,3 +44,20 @@ class GraphSearchView(APIView):
         except ValueError:
             return error_response("limit must be a valid integer.")
         return success_response(data=graph_search_query(query, limit=limit))
+
+
+class KeywordExtractView(APIView):
+    def post(self, request):
+        text = str(request.data.get("text", "")).strip()
+        if not text:
+            return error_response("text is required.")
+
+        try:
+            max_keywords = max(int(request.data.get("max_keywords", 12)), 1)
+        except ValueError:
+            return error_response("max_keywords must be a valid integer.")
+
+        data = extract_keyword_entities(text, max_keywords=max_keywords)
+        data["text"] = text
+        data["keyword_count"] = len(data.get("keywords", []))
+        return success_response(data=data)

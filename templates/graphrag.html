@@ -1,0 +1,180 @@
+{% extends "base_console.html" %}
+{% load static %}
+
+{% block title %}GraphRAG 控制台 | 企業會議記錄 GraphRAG 系統{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div>
+        <div class="page-kicker">Stage 4</div>
+        <h1 class="page-title">GraphRAG 控制台</h1>
+        <p class="page-text mb-0">索引、關鍵字、圖譜、向量與問答的整合操作介面。</p>
+    </div>
+    <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
+        <i data-lucide="refresh-cw"></i>
+    </button>
+</div>
+
+<div class="row g-4 align-items-start">
+    <div class="col-xl-4 col-lg-5">
+        <section class="app-card mb-4">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="workflow"></i>
+                    索引操作
+                </h2>
+                <span class="small text-muted">MongoDB -> Neo4j / Qdrant</span>
+            </div>
+            <div class="app-card-body">
+                <div class="d-grid gap-3">
+                    <button id="build-graph-button" class="btn btn-primary btn-primary-custom" type="button">
+                        <i data-lucide="share-2"></i>
+                        <span>建立 Neo4j 圖譜</span>
+                    </button>
+
+                    <div class="input-group">
+                        <span class="input-group-text">Batch</span>
+                        <input id="vector-batch-size" class="form-control" type="number" min="1" value="64">
+                        <button id="reindex-vector-button" class="btn btn-outline-primary" type="button">
+                            <i data-lucide="database-zap"></i>
+                            <span>重建 Qdrant 索引</span>
+                        </button>
+                    </div>
+
+                    <div id="index-status" class="operation-log">尚未執行索引操作。</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="app-card">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="tags"></i>
+                    關鍵字抽取
+                </h2>
+                <span class="small text-muted">keyword preview</span>
+            </div>
+            <div class="app-card-body">
+                <form id="keyword-form" class="d-grid gap-3">
+                    <textarea
+                        id="keyword-text"
+                        class="form-control"
+                        rows="6"
+                        placeholder="Hydroxyapatite coating 製程需評估內毒素與 impingement 風險，並確認 FDA 標籤送件需求。"
+                    ></textarea>
+                    <div class="input-group">
+                        <span class="input-group-text">Top K</span>
+                        <input id="keyword-max" class="form-control" type="number" min="1" value="12">
+                        <button id="keyword-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                            <i data-lucide="sparkles"></i>
+                            <span>抽取</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="keyword-results" class="keyword-result-list mt-4"></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-4 col-lg-7">
+        <section class="app-card mb-4">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="git-fork"></i>
+                    Graph 檢索
+                </h2>
+                <span class="small text-muted">Neo4j</span>
+            </div>
+            <div class="app-card-body">
+                <form id="graph-search-form" class="d-grid gap-3">
+                    <div class="input-group">
+                        <input id="graph-query" class="form-control" type="text" placeholder="FDA">
+                        <input id="graph-limit" class="form-control graph-limit-input" type="number" min="1" value="10">
+                        <button id="graph-search-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                            <i data-lucide="search"></i>
+                        </button>
+                    </div>
+                </form>
+                <div id="graph-results" class="result-list mt-4"></div>
+            </div>
+        </section>
+
+        <section class="app-card">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="radar"></i>
+                    Vector 檢索
+                </h2>
+                <span class="small text-muted">Qdrant</span>
+            </div>
+            <div class="app-card-body">
+                <form id="vector-search-form" class="d-grid gap-3">
+                    <div class="input-group">
+                        <input id="vector-query" class="form-control" type="text" placeholder="標籤送件要誰負責？">
+                        <input id="vector-limit" class="form-control graph-limit-input" type="number" min="1" value="10">
+                        <button id="vector-search-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                            <i data-lucide="search"></i>
+                        </button>
+                    </div>
+                </form>
+                <div id="vector-results" class="result-list mt-4"></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-4">
+        <section class="app-card">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="message-square-text"></i>
+                    GraphRAG 問答
+                </h2>
+                <span class="small text-muted">Ollama</span>
+            </div>
+            <div class="app-card-body">
+                <form id="ask-form" class="d-grid gap-3">
+                    <textarea
+                        id="ask-question"
+                        class="form-control"
+                        rows="5"
+                        placeholder="FDA 相關的送件或標籤事項有哪些？"
+                    ></textarea>
+                    <div class="input-group">
+                        <span class="input-group-text">Limit</span>
+                        <input id="ask-limit" class="form-control" type="number" min="1" value="5">
+                        <button id="ask-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                            <i data-lucide="send"></i>
+                            <span>詢問</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="answer-panel" class="answer-panel mt-4">
+                    <div class="text-muted small">尚未送出問題。</div>
+                </div>
+
+                <details class="preview-section mt-4">
+                    <summary class="preview-section-head">
+                        <span>Sources</span>
+                        <span id="source-count" class="badge text-bg-light border">0</span>
+                    </summary>
+                    <div id="source-list" class="related-list mt-3"></div>
+                </details>
+
+                <details class="preview-section">
+                    <summary class="preview-section-head">
+                        <span>Warnings</span>
+                        <span id="warning-count" class="badge text-bg-light border">0</span>
+                    </summary>
+                    <div id="warning-list" class="related-list mt-3"></div>
+                </details>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/graphrag-page.js' %}?v=20260604-graphrag-console-1"></script>
+{% endblock %}

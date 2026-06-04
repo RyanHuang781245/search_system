@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.test import APISimpleTestCase
 
 from .graph_builder import build_graph_from_mongo
-from .keyword_extractor import extract_keyword_entities
 from .graph_search import fetch_related_keywords, search_graph
+from .keyword_extractor import extract_keyword_entities
 
 
 class GraphAPITestCase(APISimpleTestCase):
@@ -68,19 +68,47 @@ class GraphAPITestCase(APISimpleTestCase):
         self.assertEqual(response.data["data"]["expanded_keywords"], ["TFDA", "CFDA"])
         self.assertEqual(response.data["data"]["results"][0]["graph_score"], 3.0)
 
+    def test_keyword_extract_endpoint_returns_scores_and_methods(self):
+        response = self.client.post(
+            reverse("graph-keyword-extract"),
+            {
+                "text": "Hydroxyapatite coating requires FDA label review and impingement risk evaluation.",
+                "max_keywords": 8,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        keyword_names = [item["name"] for item in response.data["data"]["keywords"]]
+        self.assertIn("FDA", keyword_names)
+        self.assertTrue(
+            any(name == "Hydroxyapatite coating" or name == "Hydroxyapatite" for name in keyword_names)
+        )
+        self.assertTrue(all("score" in item and "method" in item for item in response.data["data"]["keywords"]))
+
 
 class KeywordExtractorTestCase(SimpleTestCase):
     def test_extract_keyword_entities_detects_regulation_product_and_chinese_terms(self):
-        payload = extract_keyword_entities("Conformity stem 產品預計申請地區為 FDA、TFDA，並完成測試與送件。")
+        payload = extract_keyword_entities("Conformity stem 申請地區包含 FDA 與 TFDA，請確認標籤測試與送件需求。")
 
         keyword_names = [item["name"] for item in payload["keywords"]]
         self.assertIn("Conformity stem", keyword_names)
         self.assertIn("FDA", keyword_names)
         self.assertIn("TFDA", keyword_names)
-        self.assertIn("測試", keyword_names)
+        self.assertIn("標籤", keyword_names)
         self.assertIn("送件", keyword_names)
         self.assertEqual(payload["products"], ["Conformity stem"])
         self.assertEqual(payload["regulations"], ["FDA", "TFDA"])
+
+    def test_extract_keyword_entities_finds_new_terms_without_seed_list(self):
+        payload = extract_keyword_entities("Hydroxyapatite coating 製程需評估內毒素與impingement風險。")
+
+        keyword_names = [item["name"] for item in payload["keywords"]]
+        self.assertTrue(
+            any(name == "Hydroxyapatite coating" or name == "Hydroxyapatite" for name in keyword_names)
+        )
+        self.assertTrue(any("內毒素" in name or "impingement" in name.lower() for name in keyword_names))
+        self.assertTrue(all("score" in item and "method" in item for item in payload["keywords"]))
 
 
 class GraphBuilderTestCase(SimpleTestCase):
@@ -121,14 +149,16 @@ class GraphBuilderTestCase(SimpleTestCase):
         self.assertIn({"date_value": "2018-04-20", "date_type": "planned"}, date_params)
         self.assertIn({"date_value": "2018-04-21", "date_type": "completed"}, date_params)
 
-        mention_fields = {
-            entry["params"].get("field")
+        mention_params = [
+            entry["params"]
             for entry in client.runs
             if "MENTIONS" in entry["query"] and entry["params"].get("field")
-        }
+        ]
+        mention_fields = {params["field"] for params in mention_params}
         self.assertIn("meeting_name", mention_fields)
         self.assertIn("content", mention_fields)
         self.assertIn("tracking_result", mention_fields)
+        self.assertTrue(all("score" in params and "method" in params for params in mention_params))
 
 
 class _FakeGraphClient:
@@ -189,6 +219,8 @@ class _FakeTx:
                     "matched_keyword": "TFDA",
                     "keyword_type": "abbreviation",
                     "matched_field": "content",
+                    "keyword_score": 1.0,
+                    "keyword_method": "domain_abbreviation",
                 }
             ]
         return []
@@ -206,4 +238,5 @@ class GraphSearchTestCase(SimpleTestCase):
 
         self.assertEqual(payload["expanded_keywords"], ["TFDA", "CFDA"])
         self.assertEqual(payload["results"][0]["matched_keyword"], "TFDA")
+        self.assertEqual(payload["results"][0]["keyword_method"], "domain_abbreviation")
         self.assertGreater(payload["results"][0]["graph_score"], 0)

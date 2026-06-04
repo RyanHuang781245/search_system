@@ -101,14 +101,18 @@ MERGE_MENTIONS_KEYWORD = """
 MATCH (i:MeetingItem {item_id: $item_id})
 MATCH (k:Keyword {name: $keyword_name})
 MERGE (i)-[r:MENTIONS {field: $field}]->(k)
-SET r.field = $field
+SET r.field = $field,
+    r.score = $score,
+    r.method = $method
 """
 
 MERGE_MEETING_MENTIONS_KEYWORD = """
 MATCH (m:Meeting {meeting_id: $meeting_id})
 MATCH (k:Keyword {name: $keyword_name})
 MERGE (m)-[r:MENTIONS {field: $field}]->(k)
-SET r.field = $field
+SET r.field = $field,
+    r.score = $score,
+    r.method = $method
 """
 
 MERGE_MENTIONS_PRODUCT = """
@@ -155,7 +159,9 @@ RETURN meeting.meeting_id AS meeting_id,
        item.content AS content,
        keyword.name AS matched_keyword,
        keyword.type AS keyword_type,
-       mention.field AS matched_field
+       mention.field AS matched_field,
+       mention.score AS keyword_score,
+       mention.method AS keyword_method
 UNION
 MATCH (meeting:Meeting)-[mention:MENTIONS]->(keyword:Keyword)
 WHERE toUpper(keyword.name) IN $keywords
@@ -168,5 +174,7 @@ RETURN meeting.meeting_id AS meeting_id,
        item.content AS content,
        keyword.name AS matched_keyword,
        keyword.type AS keyword_type,
-       mention.field AS matched_field
+       mention.field AS matched_field,
+       mention.score AS keyword_score,
+       mention.method AS keyword_method
 """

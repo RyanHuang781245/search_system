@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "apps.graph",
     "apps.search.apps.SearchConfig",
     "apps.vector",
+    "apps.graphrag",
 ]
 
 MIDDLEWARE = [
@@ -77,6 +78,7 @@ QDRANT_VECTOR_DIMENSION = int(os.getenv("QDRANT_VECTOR_DIMENSION", "768"))
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost")
 OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
+OLLAMA_INFERENCE_MODEL = os.getenv("OLLAMA_INFERENCE_MODEL", "qwen2.5:3b")
 
 UPLOAD_ROOT = BASE_DIR / "uploads"
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024

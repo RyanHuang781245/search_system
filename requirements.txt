@@ -6,3 +6,4 @@ PyMuPDF
 neo4j
 qdrant-client
 requests
+jieba
