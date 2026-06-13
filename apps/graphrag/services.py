@@ -112,7 +112,7 @@ def _safe_graph_search(graph_searcher, question: str, limit: int) -> dict:
 def collect_ranked_item_ids(semantic_results: list[dict], graph_results: list[dict]) -> list[str]:
     ranked_ids = []
     seen = set()
-    for result in [*semantic_results, *graph_results]:
+    for result in [*graph_results, *semantic_results]:
         item_id = result.get("item_id")
         if item_id and item_id not in seen:
             seen.add(item_id)
@@ -181,6 +181,7 @@ def format_structured_item(meeting: dict, item: dict) -> dict:
 def build_graph_context(graph_results: list[dict], limit: int = 10) -> dict:
     paths = []
     seen = set()
+    graph_builder = EvidenceGraphBuilder()
     for result in graph_results:
         path = format_graph_path(result)
         if path in seen:
@@ -191,18 +192,137 @@ def build_graph_context(graph_results: list[dict], limit: int = 10) -> dict:
                 "meeting_id": result.get("meeting_id"),
                 "item_id": result.get("item_id"),
                 "matched_keyword": result.get("matched_keyword"),
+                "matched_relation": result.get("matched_relation"),
+                "matched_entity": result.get("matched_entity"),
                 "matched_field": result.get("matched_field"),
                 "match_type": result.get("match_type"),
+                "intent": result.get("intent"),
                 "graph_score": result.get("graph_score"),
                 "path": path,
             }
         )
+        graph_builder.add_result(result)
         if len(paths) >= limit:
             break
-    return {"paths": paths}
+    return {
+        "paths": paths,
+        "nodes": graph_builder.nodes(),
+        "edges": graph_builder.edges(),
+    }
+
+
+class EvidenceGraphBuilder:
+    def __init__(self):
+        self._nodes = {}
+        self._edges = {}
+
+    def add_result(self, result: dict) -> None:
+        meeting_id = result.get("meeting_id")
+        item_id = result.get("item_id")
+        if not meeting_id and not item_id:
+            return
+
+        if meeting_id:
+            self.add_node(
+                node_type="Meeting",
+                value=meeting_id,
+                label=result.get("meeting_name") or meeting_id,
+                title=result.get("meeting_name") or meeting_id,
+            )
+        if item_id:
+            self.add_node(
+                node_type="MeetingItem",
+                value=item_id,
+                label=result.get("item_no") or item_id,
+                title=result.get("content") or item_id,
+            )
+        if meeting_id and item_id:
+            self.add_edge("Meeting", meeting_id, "MeetingItem", item_id, "HAS_ITEM")
+
+        relation = result.get("matched_relation") or "MENTIONS"
+        if relation == "MENTIONS":
+            keyword = result.get("matched_keyword") or result.get("matched_entity")
+            if keyword and item_id:
+                self.add_node("Keyword", keyword, keyword, keyword)
+                self.add_edge("MeetingItem", item_id, "Keyword", keyword, "MENTIONS")
+            return
+
+        entity = result.get("matched_entity")
+        if not entity:
+            return
+
+        entity_type = entity_type_for_relation(relation)
+        self.add_node(entity_type, entity, entity, entity)
+        if relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY", "BELONGS_TO_UNIT"} and meeting_id:
+            self.add_edge("Meeting", meeting_id, entity_type, entity, relation)
+        elif item_id:
+            self.add_edge("MeetingItem", item_id, entity_type, entity, relation)
+
+    def add_node(self, node_type: str, value, label, title) -> None:
+        node_id = make_graph_node_id(node_type, value)
+        if node_id in self._nodes:
+            return
+        self._nodes[node_id] = {
+            "id": node_id,
+            "type": node_type,
+            "label": str(label or value or node_type),
+            "title": str(title or label or value or node_type),
+        }
+
+    def add_edge(self, source_type: str, source_value, target_type: str, target_value, label: str) -> None:
+        source = make_graph_node_id(source_type, source_value)
+        target = make_graph_node_id(target_type, target_value)
+        edge_id = f"{source}->{label}->{target}"
+        if edge_id in self._edges:
+            return
+        self._edges[edge_id] = {
+            "id": edge_id,
+            "source": source,
+            "target": target,
+            "label": label,
+        }
+
+    def nodes(self) -> list[dict]:
+        return list(self._nodes.values())
+
+    def edges(self) -> list[dict]:
+        return list(self._edges.values())
+
+
+def make_graph_node_id(node_type: str, value) -> str:
+    return f"{node_type}:{str(value or '').strip()}"
+
+
+def entity_type_for_relation(relation: str) -> str:
+    return {
+        "RESPONSIBLE_BY": "Person",
+        "ATTENDED_BY": "Person",
+        "CHAIRED_BY": "Person",
+        "RECORDED_BY": "Person",
+        "BELONGS_TO_UNIT": "Unit",
+        "HAS_PLANNED_DATE": "Date",
+        "HAS_COMPLETED_DATE": "Date",
+        "MENTIONS_PRODUCT": "Product",
+        "MENTIONS_REGULATION": "Regulation",
+    }.get(relation, "Entity")
 
 
 def format_graph_path(result: dict) -> str:
+    relation = result.get("matched_relation")
+    if relation and relation != "MENTIONS":
+        entity = result.get("matched_entity") or "unknown_entity"
+        meeting_id = result.get("meeting_id") or "unknown_meeting"
+        item_id = result.get("item_id") or "unknown_item"
+        if relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY", "BELONGS_TO_UNIT"}:
+            return (
+                f"Meeting({meeting_id})-[:{relation}]->Entity({entity}); "
+                f"Meeting({meeting_id})-[:HAS_ITEM]->MeetingItem({item_id})"
+            )
+        return (
+            f"Meeting({meeting_id})-[:HAS_ITEM]->MeetingItem({item_id})"
+            f"-[:{relation}]->Entity({entity})"
+        )
+
     field = result.get("matched_field") or "unknown_field"
     keyword = result.get("matched_keyword") or "unknown_keyword"
     meeting_id = result.get("meeting_id") or "unknown_meeting"

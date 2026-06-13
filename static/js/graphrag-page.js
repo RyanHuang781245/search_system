@@ -1,5 +1,15 @@
 const elements = {
     refreshButton: document.getElementById("refresh-button"),
+    advancedToggle: document.getElementById("advanced-toggle"),
+    advancedClose: document.getElementById("advanced-close"),
+    advancedPanel: document.getElementById("advanced-panel"),
+    advancedBackdrop: document.getElementById("advanced-backdrop"),
+    graphFitButton: document.getElementById("graph-fit-button"),
+    graphLayoutButton: document.getElementById("graph-layout-button"),
+    graphZoomInButton: document.getElementById("graph-zoom-in-button"),
+    graphZoomOutButton: document.getElementById("graph-zoom-out-button"),
+    graphLayoutSelect: document.getElementById("graph-layout-select"),
+    graphLabelToggle: document.getElementById("graph-label-toggle"),
     toastElement: document.getElementById("status-toast"),
     toastBody: document.getElementById("status-toast-body"),
     buildGraphButton: document.getElementById("build-graph-button"),
@@ -26,6 +36,11 @@ const elements = {
     askLimit: document.getElementById("ask-limit"),
     askSubmit: document.getElementById("ask-submit"),
     answerPanel: document.getElementById("answer-panel"),
+    answerReader: document.getElementById("answer-reader"),
+    answerReaderBackdrop: document.getElementById("answer-reader-backdrop"),
+    answerReaderClose: document.getElementById("answer-reader-close"),
+    answerReaderQuestion: document.getElementById("answer-reader-question"),
+    answerReaderBody: document.getElementById("answer-reader-body"),
     sourceCount: document.getElementById("source-count"),
     sourceList: document.getElementById("source-list"),
     warningCount: document.getElementById("warning-count"),
@@ -33,6 +48,10 @@ const elements = {
 };
 
 const toast = new bootstrap.Toast(elements.toastElement, { delay: 2800 });
+let evidenceCy = null;
+let evidenceGraphData = { nodes: [], edges: [] };
+let graphLabelsVisible = false;
+let currentAnswerData = null;
 
 init();
 
@@ -43,6 +62,7 @@ function init() {
     renderVectorResults([]);
     renderSources([]);
     renderWarnings([]);
+    renderEvidenceGraph({ nodes: [], edges: [] });
     renderIcons();
 }
 
@@ -53,11 +73,120 @@ function bindEvents() {
     });
 
     elements.buildGraphButton?.addEventListener("click", handleBuildGraph);
+    elements.advancedToggle?.addEventListener("click", openAdvancedPanel);
+    elements.advancedClose?.addEventListener("click", closeAdvancedPanel);
+    elements.advancedBackdrop?.addEventListener("click", closeAdvancedPanel);
+    elements.graphFitButton?.addEventListener("click", fitEvidenceGraph);
+    elements.graphLayoutButton?.addEventListener("click", relayoutEvidenceGraph);
+    elements.graphZoomInButton?.addEventListener("click", () => zoomEvidenceGraph(1.18));
+    elements.graphZoomOutButton?.addEventListener("click", () => zoomEvidenceGraph(0.84));
+    elements.graphLayoutSelect?.addEventListener("change", relayoutEvidenceGraph);
+    elements.graphLabelToggle?.addEventListener("click", toggleGraphLabels);
+    elements.answerPanel?.addEventListener("click", handleAnswerPanelClick);
+    elements.answerReaderBody?.addEventListener("click", handleAnswerNodeClick);
+    elements.answerReaderClose?.addEventListener("click", closeAnswerReader);
+    elements.answerReaderBackdrop?.addEventListener("click", closeAnswerReader);
+    document.addEventListener("keydown", handleDocumentKeydown);
     elements.reindexVectorButton?.addEventListener("click", handleReindexVector);
     elements.keywordForm?.addEventListener("submit", handleExtractKeywords);
     elements.graphSearchForm?.addEventListener("submit", handleGraphSearch);
     elements.vectorSearchForm?.addEventListener("submit", handleVectorSearch);
     elements.askForm?.addEventListener("submit", handleAsk);
+}
+
+function openAdvancedPanel() {
+    elements.advancedPanel?.classList.remove("d-none");
+    elements.advancedBackdrop?.classList.remove("d-none");
+    elements.advancedPanel?.setAttribute("aria-hidden", "false");
+}
+
+function closeAdvancedPanel() {
+    elements.advancedPanel?.classList.add("d-none");
+    elements.advancedBackdrop?.classList.add("d-none");
+    elements.advancedPanel?.setAttribute("aria-hidden", "true");
+}
+
+function handleAnswerPanelClick(event) {
+    const readerTrigger = event.target.closest("[data-answer-reader-open]");
+    if (readerTrigger) {
+        event.preventDefault();
+        openAnswerReader();
+        return;
+    }
+    handleAnswerNodeClick(event);
+}
+
+function openAnswerReader() {
+    if (!currentAnswerData || !elements.answerReader || !elements.answerReaderBody) {
+        return;
+    }
+    const graph = currentAnswerData.contexts?.graph || {};
+    if (elements.answerReaderQuestion) {
+        elements.answerReaderQuestion.textContent = currentAnswerData.question || "-";
+    }
+    elements.answerReaderBody.innerHTML = renderMarkdownAnswer(currentAnswerData.answer || "-", graph.nodes || []);
+    elements.answerReaderBackdrop?.classList.remove("d-none");
+    elements.answerReader.classList.remove("d-none");
+    elements.answerReader.setAttribute("aria-hidden", "false");
+    document.body.classList.add("answer-reader-opened");
+    renderIcons();
+}
+
+function closeAnswerReader() {
+    elements.answerReaderBackdrop?.classList.add("d-none");
+    elements.answerReader?.classList.add("d-none");
+    elements.answerReader?.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("answer-reader-opened");
+}
+
+function handleDocumentKeydown(event) {
+    if (event.key === "Escape" && !elements.answerReader?.classList.contains("d-none")) {
+        closeAnswerReader();
+    }
+}
+
+function fitEvidenceGraph() {
+    if (evidenceCy) {
+        evidenceCy.fit(undefined, 44);
+        evidenceCy.center();
+    }
+}
+
+function relayoutEvidenceGraph() {
+    if (!evidenceCy) {
+        return;
+    }
+    evidenceCy.layout(makeEvidenceLayout(true)).run();
+}
+
+function zoomEvidenceGraph(factor) {
+    if (!evidenceCy) {
+        return;
+    }
+    evidenceCy.zoom({
+        level: evidenceCy.zoom() * factor,
+        renderedPosition: {
+            x: evidenceCy.width() / 2,
+            y: evidenceCy.height() / 2,
+        },
+    });
+}
+
+function toggleGraphLabels() {
+    graphLabelsVisible = !graphLabelsVisible;
+    elements.graphLabelToggle?.classList.toggle("active", graphLabelsVisible);
+    if (evidenceCy) {
+        evidenceCy.edges().toggleClass("labels-hidden", !graphLabelsVisible);
+    }
+}
+
+function handleAnswerNodeClick(event) {
+    const trigger = event.target.closest("[data-graph-node-id]");
+    if (!trigger) {
+        return;
+    }
+    event.preventDefault();
+    focusGraphNode(trigger.dataset.graphNodeId);
 }
 
 async function handleBuildGraph() {
@@ -184,6 +313,7 @@ async function handleAsk(event) {
     elements.answerPanel.innerHTML = renderLoadingInline("正在產生 GraphRAG 回答...");
     renderSources([]);
     renderWarnings([]);
+    renderEvidenceGraph({ nodes: [], edges: [] });
 
     try {
         const result = await fetchJson("/api/graphrag/ask/", {
@@ -192,6 +322,7 @@ async function handleAsk(event) {
             body: JSON.stringify({ question, limit }),
         });
         const data = result.data || {};
+        renderEvidenceGraph(data.contexts?.graph || {});
         renderAnswer(data);
         renderSources(data.sources || []);
         renderWarnings(data.warnings || []);
@@ -277,15 +408,501 @@ function renderVectorResults(results) {
 }
 
 function renderAnswer(data) {
+    currentAnswerData = data;
+    const graph = data.contexts?.graph || {};
     elements.answerPanel.innerHTML = `
-        <div class="answer-title">${escapeHtml(data.question || "-")}</div>
-        <div class="answer-body">${escapeHtml(data.answer || "-").replaceAll("\n", "<br>")}</div>
+        <div class="answer-title-row">
+            <div class="answer-title">${escapeHtml(data.question || "-")}</div>
+            <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-answer-reader-open title="展開閱讀">
+                <i data-lucide="maximize-2"></i>
+                <span>閱讀</span>
+            </button>
+        </div>
+        <div class="answer-body">${renderMarkdownAnswer(data.answer || "-", graph.nodes || [])}</div>
         <div class="score-grid score-grid-inline mt-3">
             <div class="score-pill"><span class="score-pill-label">Structured</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.structured?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">Graph</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.graph?.paths?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">Semantic</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.semantic?.length || 0))}</span></div>
         </div>
     `;
+}
+
+function renderEvidenceGraph(graph) {
+    const graphElement = document.getElementById("evidence-graph");
+    const emptyElement = document.getElementById("evidence-graph-empty");
+    const countElement = document.getElementById("evidence-graph-count");
+    const legendElement = document.getElementById("graph-legend");
+    const detailElement = document.getElementById("graph-detail-panel");
+    const nodes = graph.nodes || [];
+    const edges = graph.edges || [];
+    evidenceGraphData = { nodes, edges };
+    if (countElement) {
+        countElement.textContent = String(nodes.length);
+    }
+
+    if (evidenceCy) {
+        evidenceCy.destroy();
+        evidenceCy = null;
+    }
+    if (detailElement) {
+        detailElement.classList.add("d-none");
+        detailElement.innerHTML = "";
+    }
+
+    if (!graphElement || !emptyElement) {
+        return;
+    }
+
+    if (!nodes.length || !edges.length) {
+        graphElement.classList.add("d-none");
+        emptyElement.classList.remove("d-none");
+        emptyElement.textContent = "No graph evidence for this answer.";
+        renderGraphLegend([], legendElement);
+        return;
+    }
+
+    if (!window.cytoscape) {
+        graphElement.classList.add("d-none");
+        emptyElement.classList.remove("d-none");
+        emptyElement.textContent = "Cytoscape.js is not available.";
+        renderGraphLegend([], legendElement);
+        return;
+    }
+
+    emptyElement.classList.add("d-none");
+    graphElement.classList.remove("d-none");
+    renderGraphLegend(nodes, legendElement);
+
+    evidenceCy = cytoscape({
+        container: graphElement,
+        elements: [
+            ...nodes.map((node) => ({
+                data: {
+                    id: node.id,
+                    label: node.label || node.id,
+                    title: node.title || node.label || node.id,
+                    type: node.type || "Entity",
+                },
+            })),
+            ...edges.map((edge) => ({
+                data: {
+                    id: edge.id,
+                    source: edge.source,
+                    target: edge.target,
+                    label: edge.label || "",
+                    title: `${edge.source} -[${edge.label || ""}]-> ${edge.target}`,
+                },
+            })),
+        ],
+        style: [
+            {
+                selector: "node",
+                style: {
+                    "background-color": "#64748b",
+                    "border-color": "#0f172a",
+                    "border-width": 1.5,
+                    "color": "#f8fafc",
+                    "font-size": 10,
+                    "font-weight": 800,
+                    "label": "data(label)",
+                    "text-background-opacity": 0,
+                    "text-max-width": 92,
+                    "text-outline-color": "#111827",
+                    "text-outline-width": 2,
+                    "text-valign": "center",
+                    "text-wrap": "wrap",
+                    "width": 38,
+                    "height": 38,
+                },
+            },
+            {
+                selector: 'node[type = "Meeting"]',
+                style: {
+                    "background-color": "#4f7dd4",
+                    "shape": "round-rectangle",
+                    "width": 72,
+                    "height": 42,
+                    "font-size": 9,
+                },
+            },
+            {
+                selector: 'node[type = "MeetingItem"]',
+                style: {
+                    "background-color": "#22c55e",
+                    "shape": "round-rectangle",
+                    "width": 58,
+                    "height": 42,
+                    "font-size": 11,
+                },
+            },
+            { selector: 'node[type = "Person"]', style: { "background-color": "#ef4444", "width": 42, "height": 42 } },
+            {
+                selector: 'node[type = "Keyword"]',
+                style: {
+                    "background-color": "#f59e0b",
+                    "shape": "ellipse",
+                    "width": 34,
+                    "height": 34,
+                    "font-size": 9,
+                    "text-valign": "bottom",
+                    "text-margin-y": 4,
+                },
+            },
+            { selector: 'node[type = "Product"]', style: { "background-color": "#a855f7", "shape": "hexagon" } },
+            { selector: 'node[type = "Regulation"]', style: { "background-color": "#f97316", "shape": "hexagon" } },
+            { selector: 'node[type = "Date"]', style: { "background-color": "#14b8a6", "shape": "tag", "width": 48 } },
+            {
+                selector: "edge",
+                style: {
+                    "curve-style": "bezier",
+                    "line-color": "#94a3b8",
+                    "target-arrow-color": "#94a3b8",
+                    "target-arrow-shape": "triangle",
+                    "opacity": 0.64,
+                    "width": 1.5,
+                    "label": "data(label)",
+                    "font-size": 9,
+                    "color": "#e5e7eb",
+                    "text-background-color": "#20242c",
+                    "text-background-opacity": 0.85,
+                    "text-background-padding": 2,
+                    "text-rotation": "autorotate",
+                },
+            },
+            {
+                selector: ".faded",
+                style: {
+                    "opacity": 0.12,
+                    "text-opacity": 0.12,
+                },
+            },
+            {
+                selector: "node.selected",
+                style: {
+                    "border-color": "#f8fafc",
+                    "border-width": 4,
+                    "underlay-color": "#60a5fa",
+                    "underlay-opacity": 0.24,
+                    "underlay-padding": 8,
+                    "z-index": 10,
+                },
+            },
+            {
+                selector: "edge.selected",
+                style: {
+                    "line-color": "#f8fafc",
+                    "target-arrow-color": "#f8fafc",
+                    "width": 4,
+                    "opacity": 1,
+                    "label": "data(label)",
+                    "z-index": 10,
+                },
+            },
+            {
+                selector: "edge.labels-hidden",
+                style: {
+                    "label": "",
+                    "text-opacity": 0,
+                },
+            },
+            {
+                selector: "edge.selected.labels-hidden",
+                style: {
+                    "label": "data(label)",
+                    "text-opacity": 1,
+                },
+            },
+        ],
+        layout: makeEvidenceLayout(false),
+        minZoom: 0.35,
+        maxZoom: 1.8,
+        wheelSensitivity: 0.18,
+    });
+    evidenceCy.edges().toggleClass("labels-hidden", !graphLabelsVisible);
+
+    bindEvidenceGraphInteractions(evidenceCy, detailElement);
+}
+
+function makeEvidenceLayout(animate) {
+    const selectedLayout = elements.graphLayoutSelect?.value || "cose";
+    if (selectedLayout === "breadthfirst") {
+        return {
+            name: "breadthfirst",
+            animate,
+            fit: true,
+            padding: 44,
+            directed: true,
+            spacingFactor: 1.25,
+        };
+    }
+    if (selectedLayout === "circle") {
+        return {
+            name: "circle",
+            animate,
+            fit: true,
+            padding: 44,
+        };
+    }
+    return {
+        name: "cose",
+        animate,
+        fit: true,
+        padding: 44,
+        nodeRepulsion: 9000,
+        idealEdgeLength: 120,
+    };
+}
+
+function bindEvidenceGraphInteractions(cy, detailElement) {
+    cy.on("mouseover", "node", (event) => highlightNeighborhood(cy, event.target));
+    cy.on("mouseout", "node", () => clearGraphHighlight(cy));
+    cy.on("tap", "node", (event) => {
+        selectGraphElement(cy, event.target);
+        renderGraphDetail(detailElement, {
+            heading: event.target.data("label"),
+            type: event.target.data("type"),
+            rows: {
+                id: event.target.id(),
+                title: event.target.data("title"),
+            },
+        });
+    });
+    cy.on("tap", "edge", (event) => {
+        selectGraphElement(cy, event.target);
+        renderGraphDetail(detailElement, {
+            heading: event.target.data("label"),
+            type: "Relationship",
+            rows: {
+                source: event.target.data("source"),
+                target: event.target.data("target"),
+                relation: event.target.data("label"),
+            },
+        });
+    });
+    cy.on("tap", (event) => {
+        if (event.target === cy) {
+            clearGraphHighlight(cy);
+            detailElement?.classList.add("d-none");
+        }
+    });
+}
+
+function highlightNeighborhood(cy, node) {
+    const neighborhood = node.closedNeighborhood();
+    cy.elements().addClass("faded");
+    neighborhood.removeClass("faded");
+    node.connectedEdges().addClass("selected");
+}
+
+function clearGraphHighlight(cy) {
+    cy.elements().removeClass("faded selected");
+}
+
+function selectGraphElement(cy, element) {
+    cy.elements().removeClass("selected");
+    element.addClass("selected");
+    if (element.group && element.group() === "nodes") {
+        element.connectedEdges().addClass("selected");
+    }
+}
+
+function focusGraphNode(nodeId) {
+    if (!evidenceCy || !nodeId) {
+        return;
+    }
+    const node = evidenceCy.getElementById(nodeId);
+    if (!node.length) {
+        return;
+    }
+    clearGraphHighlight(evidenceCy);
+    selectGraphElement(evidenceCy, node);
+    highlightNeighborhood(evidenceCy, node);
+    evidenceCy.animate(
+        {
+            center: { eles: node },
+            zoom: Math.max(evidenceCy.zoom(), 1.15),
+        },
+        { duration: 260 }
+    );
+    renderGraphDetail(document.getElementById("graph-detail-panel"), {
+        heading: node.data("label"),
+        type: node.data("type"),
+        rows: {
+            id: node.id(),
+            title: node.data("title"),
+        },
+    });
+}
+
+function renderGraphDetail(container, detail) {
+    if (!container) {
+        return;
+    }
+    container.classList.remove("d-none");
+    container.innerHTML = `
+        <div class="graph-detail-head">
+            <span>${escapeHtml(detail.type || "Detail")}</span>
+            <button class="btn btn-light btn-sm border" type="button" data-graph-detail-close>
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="graph-detail-title">${escapeHtml(detail.heading || "-")}</div>
+        <div class="graph-detail-list">
+            ${Object.entries(detail.rows || {}).map(([key, value]) => `
+                <div class="graph-detail-row">
+                    <strong>${escapeHtml(key)}</strong>
+                    <span>${escapeHtml(value || "-")}</span>
+                </div>
+            `).join("")}
+        </div>
+    `;
+    container.querySelector("[data-graph-detail-close]")?.addEventListener("click", () => {
+        container.classList.add("d-none");
+    });
+    renderIcons();
+}
+
+function renderGraphLegend(nodes, container) {
+    if (!container) {
+        return;
+    }
+    const types = [...new Set(nodes.map((node) => node.type || "Entity"))];
+    if (!types.length) {
+        container.innerHTML = "";
+        return;
+    }
+    container.innerHTML = types.map((type) => `
+        <span class="graph-legend-item" data-legend-type="${escapeHtml(type)}">
+            <span class="graph-legend-dot"></span>
+            ${escapeHtml(type)}
+        </span>
+    `).join("");
+}
+
+function renderMarkdownAnswer(answer, graphNodes) {
+    const source = String(answer || "-");
+    const markdownHtml = window.marked
+        ? marked.parse(source, { breaks: true, gfm: true })
+        : escapeHtml(source).replaceAll("\n", "<br>");
+    const cleanHtml = window.DOMPurify
+        ? DOMPurify.sanitize(markdownHtml, {
+            ALLOWED_TAGS: [
+                "p", "br", "strong", "em", "ul", "ol", "li", "code", "pre",
+                "blockquote", "hr", "table", "thead", "tbody", "tr", "th", "td",
+                "h1", "h2", "h3", "h4", "a",
+            ],
+            ALLOWED_ATTR: ["href", "title", "target", "rel"],
+        })
+        : markdownHtml;
+    return linkGraphTermsInHtml(cleanHtml, graphNodes);
+}
+
+function linkGraphTermsInHtml(html, graphNodes) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const terms = buildGraphLinkTerms(graphNodes);
+    if (!terms.length) {
+        return template.innerHTML;
+    }
+    linkTermsInNode(template.content, terms);
+    return template.innerHTML;
+}
+
+function linkTermsInNode(root, terms) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent || ["CODE", "PRE", "SCRIPT", "STYLE", "BUTTON", "A"].includes(parent.tagName)) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+        },
+    });
+    const textNodes = [];
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+    for (const textNode of textNodes) {
+        const fragment = linkTermsInText(textNode.nodeValue || "", terms);
+        if (fragment) {
+            textNode.replaceWith(fragment);
+        }
+    }
+}
+
+function linkTermsInText(text, terms) {
+    let cursor = 0;
+    const matches = [];
+    while (cursor < text.length) {
+        const match = findNextGraphTerm(text, terms, cursor);
+        if (!match) {
+            break;
+        }
+        matches.push(match);
+        cursor = match.index + match.text.length;
+    }
+    if (!matches.length) {
+        return null;
+    }
+    const fragment = document.createDocumentFragment();
+    let lastIndex = 0;
+    for (const match of matches) {
+        if (match.index > lastIndex) {
+            fragment.append(document.createTextNode(text.slice(lastIndex, match.index)));
+        }
+        const button = document.createElement("button");
+        button.className = "answer-node-link";
+        button.type = "button";
+        button.dataset.graphNodeId = match.nodeId;
+        button.textContent = match.text;
+        fragment.append(button);
+        lastIndex = match.index + match.text.length;
+    }
+    if (lastIndex < text.length) {
+        fragment.append(document.createTextNode(text.slice(lastIndex)));
+    }
+    return fragment;
+}
+
+function findNextGraphTerm(text, terms, startIndex) {
+    let best = null;
+    for (const term of terms) {
+        const index = text.indexOf(term.text, startIndex);
+        if (index < 0 || !isGraphTermBoundary(text, index, term.text.length)) {
+            continue;
+        }
+        if (!best || index < best.index || (index === best.index && term.text.length > best.text.length)) {
+            best = { ...term, index };
+        }
+    }
+    return best;
+}
+
+function isGraphTermBoundary(text, index, length) {
+    const before = index > 0 ? text[index - 1] : "";
+    const after = index + length < text.length ? text[index + length] : "";
+    return !/[A-Za-z0-9_:-]/.test(before) && !/[A-Za-z0-9_:-]/.test(after);
+}
+
+function buildGraphLinkTerms(graphNodes) {
+    const seen = new Set();
+    const terms = [];
+    for (const node of graphNodes || []) {
+        for (const value of [node.id, graphNodeValue(node.id), node.label]) {
+            const text = String(value || "").trim();
+            if (text.length < 2 || seen.has(text)) {
+                continue;
+            }
+            seen.add(text);
+            terms.push({ text, nodeId: node.id });
+        }
+    }
+    return terms.sort((left, right) => right.text.length - left.text.length);
+}
+
+function graphNodeValue(nodeId) {
+    const parts = String(nodeId || "").split(":");
+    return parts.length > 1 ? parts.slice(1).join(":") : nodeId;
 }
 
 function renderSources(sources) {

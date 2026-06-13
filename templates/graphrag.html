@@ -1,23 +1,120 @@
 {% extends "base_console.html" %}
 {% load static %}
 
-{% block title %}GraphRAG 控制台 | 企業會議記錄 GraphRAG 系統{% endblock %}
+{% block title %}GraphRAG 問答 | 企業會議記錄 GraphRAG 系統{% endblock %}
 
 {% block content %}
-<div class="page-header mb-4">
-    <div>
-        <div class="page-kicker">Stage 4</div>
-        <h1 class="page-title">GraphRAG 控制台</h1>
-        <p class="page-text mb-0">索引、關鍵字、圖譜、向量與問答的整合操作介面。</p>
-    </div>
-    <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
-        <i data-lucide="refresh-cw"></i>
-    </button>
+<div class="graphrag-workspace">
+    <section class="graphrag-chat-panel">
+        <div class="graphrag-panel-head">
+            <div>
+                <div class="page-kicker">GraphRAG</div>
+                <h1 class="graphrag-title">問答視窗</h1>
+            </div>
+            <div class="graphrag-head-actions">
+                <button id="advanced-toggle" class="btn btn-light btn-sm border" type="button">
+                    <i data-lucide="sliders-horizontal"></i>
+                    <span>進階</span>
+                </button>
+                <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+            </div>
+        </div>
+
+        <form id="ask-form" class="d-grid gap-3">
+            <textarea
+                id="ask-question"
+                class="form-control"
+                rows="5"
+                placeholder="例如：FDA 相關項目有哪些？Carol 負責哪些項目？"
+            ></textarea>
+            <div class="input-group">
+                <span class="input-group-text">Limit</span>
+                <input id="ask-limit" class="form-control" type="number" min="1" value="5">
+                <button id="ask-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                    <i data-lucide="send"></i>
+                    <span>詢問</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="answer-panel" class="answer-panel mt-3">
+            <div class="text-muted small">尚未送出問題。</div>
+        </div>
+
+        <div class="graphrag-meta-panel">
+            <details class="preview-section">
+                <summary class="preview-section-head">
+                    <span>Sources</span>
+                    <span id="source-count" class="badge text-bg-light border">0</span>
+                </summary>
+                <div id="source-list" class="related-list mt-3"></div>
+            </details>
+
+            <details class="preview-section">
+                <summary class="preview-section-head">
+                    <span>Warnings</span>
+                    <span id="warning-count" class="badge text-bg-light border">0</span>
+                </summary>
+                <div id="warning-list" class="related-list mt-3"></div>
+            </details>
+        </div>
+    </section>
+
+    <section class="graphrag-graph-panel">
+        <div class="graphrag-graph-head">
+            <div>
+                <div class="page-kicker">Evidence Graph</div>
+                <h2 class="graphrag-graph-title">本次回答依據的圖譜關聯</h2>
+            </div>
+            <div class="graph-toolbar">
+                <select id="graph-layout-select" class="form-select form-select-sm graph-layout-select" title="Layout">
+                    <option value="cose">Cose</option>
+                    <option value="breadthfirst">Tree</option>
+                    <option value="circle">Circle</option>
+                </select>
+                <button id="graph-label-toggle" class="btn btn-light btn-sm border" type="button" title="Toggle relation labels">
+                    <i data-lucide="tag"></i>
+                </button>
+                <button id="graph-fit-button" class="btn btn-light btn-sm border" type="button" title="Fit to view">
+                    <i data-lucide="scan"></i>
+                </button>
+                <button id="graph-layout-button" class="btn btn-light btn-sm border" type="button" title="Re-layout">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+                <button id="graph-zoom-in-button" class="btn btn-light btn-sm border" type="button" title="Zoom in">
+                    <i data-lucide="zoom-in"></i>
+                </button>
+                <button id="graph-zoom-out-button" class="btn btn-light btn-sm border" type="button" title="Zoom out">
+                    <i data-lucide="zoom-out"></i>
+                </button>
+                <span id="evidence-graph-count" class="badge text-bg-light border">0</span>
+            </div>
+        </div>
+        <div id="graph-legend" class="graph-legend"></div>
+        <div id="evidence-graph-empty" class="graph-empty-state">
+            送出問題後，這裡會顯示 GraphRAG 使用到的會議、項目、關鍵字與關係。
+        </div>
+        <div id="evidence-graph" class="evidence-graph-shell d-none"></div>
+        <aside id="graph-detail-panel" class="graph-detail-panel d-none"></aside>
+    </section>
 </div>
 
-<div class="row g-4 align-items-start">
-    <div class="col-xl-4 col-lg-5">
-        <section class="app-card mb-4">
+<div id="advanced-backdrop" class="advanced-backdrop d-none"></div>
+<aside id="advanced-panel" class="advanced-console-panel d-none" aria-hidden="true">
+    <div class="advanced-panel-head">
+        <div>
+            <div class="page-kicker">Advanced</div>
+            <h2 class="advanced-panel-title">進階檢索與索引工具</h2>
+        </div>
+        <button id="advanced-close" class="btn btn-light btn-sm border" type="button" aria-label="關閉進階工具">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+
+    <div class="advanced-tool-stack">
+        <section class="app-card">
             <div class="app-card-header">
                 <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
                     <i data-lucide="workflow"></i>
@@ -59,8 +156,8 @@
                     <textarea
                         id="keyword-text"
                         class="form-control"
-                        rows="6"
-                        placeholder="Hydroxyapatite coating 製程需評估內毒素與 impingement 風險，並確認 FDA 標籤送件需求。"
+                        rows="4"
+                        placeholder="Hydroxyapatite coating requires FDA label review and impingement risk evaluation."
                     ></textarea>
                     <div class="input-group">
                         <span class="input-group-text">Top K</span>
@@ -71,14 +168,11 @@
                         </button>
                     </div>
                 </form>
-
                 <div id="keyword-results" class="keyword-result-list mt-4"></div>
             </div>
         </section>
-    </div>
 
-    <div class="col-xl-4 col-lg-7">
-        <section class="app-card mb-4">
+        <section class="app-card">
             <div class="app-card-header">
                 <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
                     <i data-lucide="git-fork"></i>
@@ -122,59 +216,26 @@
             </div>
         </section>
     </div>
+</aside>
 
-    <div class="col-xl-4">
-        <section class="app-card">
-            <div class="app-card-header">
-                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
-                    <i data-lucide="message-square-text"></i>
-                    GraphRAG 問答
-                </h2>
-                <span class="small text-muted">Ollama</span>
-            </div>
-            <div class="app-card-body">
-                <form id="ask-form" class="d-grid gap-3">
-                    <textarea
-                        id="ask-question"
-                        class="form-control"
-                        rows="5"
-                        placeholder="FDA 相關的送件或標籤事項有哪些？"
-                    ></textarea>
-                    <div class="input-group">
-                        <span class="input-group-text">Limit</span>
-                        <input id="ask-limit" class="form-control" type="number" min="1" value="5">
-                        <button id="ask-submit" class="btn btn-primary btn-primary-custom" type="submit">
-                            <i data-lucide="send"></i>
-                            <span>詢問</span>
-                        </button>
-                    </div>
-                </form>
-
-                <div id="answer-panel" class="answer-panel mt-4">
-                    <div class="text-muted small">尚未送出問題。</div>
-                </div>
-
-                <details class="preview-section mt-4">
-                    <summary class="preview-section-head">
-                        <span>Sources</span>
-                        <span id="source-count" class="badge text-bg-light border">0</span>
-                    </summary>
-                    <div id="source-list" class="related-list mt-3"></div>
-                </details>
-
-                <details class="preview-section">
-                    <summary class="preview-section-head">
-                        <span>Warnings</span>
-                        <span id="warning-count" class="badge text-bg-light border">0</span>
-                    </summary>
-                    <div id="warning-list" class="related-list mt-3"></div>
-                </details>
-            </div>
-        </section>
+<div id="answer-reader-backdrop" class="answer-reader-backdrop d-none"></div>
+<aside id="answer-reader" class="answer-reader d-none" aria-hidden="true" aria-label="Answer reading mode">
+    <div class="answer-reader-head">
+        <div>
+            <div class="page-kicker">Reading Mode</div>
+            <h2 id="answer-reader-question" class="answer-reader-title">-</h2>
+        </div>
+        <button id="answer-reader-close" class="btn btn-light btn-sm border" type="button" aria-label="Close reading mode">
+            <i data-lucide="x"></i>
+        </button>
     </div>
-</div>
+    <div id="answer-reader-body" class="answer-body answer-reader-body"></div>
+</aside>
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'js/graphrag-page.js' %}?v=20260604-graphrag-console-1"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
+<script src="{% static 'js/graphrag-page.js' %}?v=20260613-reader-1"></script>
 {% endblock %}

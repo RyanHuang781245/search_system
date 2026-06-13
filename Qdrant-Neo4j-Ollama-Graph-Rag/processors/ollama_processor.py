@@ -12,7 +12,7 @@ load_dotenv()
 
 # Use the new environment variable names for Ollama
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost")
-OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "11434"))
+OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "10000"))
 OLLAMA_BASE_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}"
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 OLLAMA_INFERENCE_MODEL = os.getenv("OLLAMA_INFERENCE_MODEL", "qwen2.5:3b")

@@ -85,7 +85,121 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(payload["contexts"]["structured"][0]["item_id"], "item_001")
         self.assertEqual(payload["contexts"]["semantic"][0]["semantic_score"], 0.91)
         self.assertIn("Keyword(FDA)", payload["contexts"]["graph"]["paths"][0]["path"])
+        self.assertTrue(payload["contexts"]["graph"]["nodes"])
+        self.assertTrue(payload["contexts"]["graph"]["edges"])
         self.assertEqual(payload["sources"][0]["document_id"], "doc_001")
+
+    def test_answer_question_prioritizes_intent_graph_matches_for_structured_context(self):
+        meetings = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "meeting_name": "Owner review",
+                "meeting_date": "2018-04-03",
+                "responsible_unit": "UR3",
+                "attendees": ["Carol"],
+            }
+        ]
+        items = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "item_id": "item_001",
+                "item_no": "01",
+                "content": "Prepare label submission.",
+                "owner": "Carol",
+                "planned_date": "2018-04-20",
+                "actual_completed_date": None,
+                "tracking_result": "In progress",
+            }
+        ]
+        graph_payload = {
+            "query": "Carol",
+            "intent": "person_responsibility",
+            "intent_entities": {"person_name": "Carol"},
+            "expanded_keywords": [],
+            "results": [
+                {
+                    "meeting_id": "meeting_001",
+                    "item_id": "item_001",
+                    "matched_relation": "RESPONSIBLE_BY",
+                    "matched_entity": "Carol",
+                    "matched_field": "owner",
+                    "match_type": "intent",
+                    "intent": "person_responsibility",
+                    "graph_score": 4.0,
+                }
+            ],
+            "warnings": [],
+        }
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "Carol",
+                semantic_searcher=lambda question, limit: {"query": question, "results": []},
+                graph_searcher=lambda question, limit: graph_payload,
+                llm_client=lambda prompt: "Carol is responsible for item_001.",
+            )
+
+        self.assertEqual(payload["contexts"]["structured"][0]["owner"], "Carol")
+        self.assertIn("RESPONSIBLE_BY", payload["contexts"]["graph"]["paths"][0]["path"])
+        node_types = {node["type"] for node in payload["contexts"]["graph"]["nodes"]}
+        edge_labels = {edge["label"] for edge in payload["contexts"]["graph"]["edges"]}
+        self.assertIn("Person", node_types)
+        self.assertIn("RESPONSIBLE_BY", edge_labels)
+        self.assertEqual(payload["warnings"], [])
+
+    def test_answer_question_keeps_working_when_intent_warning_exists(self):
+        meetings = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "meeting_name": "FDA review",
+                "meeting_date": "2018-04-03",
+                "responsible_unit": "UR3",
+            }
+        ]
+        items = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "item_id": "item_001",
+                "item_no": "01",
+                "content": "FDA label submission.",
+                "owner": "Carol",
+            }
+        ]
+        graph_payload = {
+            "query": "FDA",
+            "expanded_keywords": [],
+            "results": [
+                {
+                    "meeting_id": "meeting_001",
+                    "item_id": "item_001",
+                    "matched_keyword": "FDA",
+                    "matched_relation": "MENTIONS",
+                    "matched_field": "content",
+                    "match_type": "direct",
+                    "graph_score": 3.0,
+                }
+            ],
+            "warnings": ["Graph intent analysis unavailable: timeout"],
+        }
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "FDA",
+                semantic_searcher=lambda question, limit: {"query": question, "results": []},
+                graph_searcher=lambda question, limit: graph_payload,
+                llm_client=lambda prompt: "FDA appears in item_001.",
+            )
+
+        self.assertEqual(payload["contexts"]["structured"][0]["item_id"], "item_001")
+        self.assertEqual(payload["warnings"], ["Graph intent analysis unavailable: timeout"])
 
     def test_answer_question_returns_insufficient_data_message_without_context(self):
         with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection([])), patch(

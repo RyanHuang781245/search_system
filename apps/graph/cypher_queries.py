@@ -178,3 +178,98 @@ RETURN meeting.meeting_id AS meeting_id,
        mention.score AS keyword_score,
        mention.method AS keyword_method
 """
+
+QUERY_RESPONSIBLE_ITEMS = """
+MATCH (item:MeetingItem)-[:RESPONSIBLE_BY]->(person:Person)
+WHERE $entity = "" OR toUpper(person.name) CONTAINS $entity
+MATCH (meeting:Meeting)-[:HAS_ITEM]->(item)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       person.name AS matched_entity,
+       "RESPONSIBLE_BY" AS matched_relation,
+       "owner" AS matched_field
+"""
+
+QUERY_MEETING_PERSON_RELATION = """
+MATCH (meeting:Meeting)-[relation]->(person:Person)
+WHERE type(relation) = $relation
+  AND ($entity = "" OR toUpper(person.name) CONTAINS $entity)
+MATCH (meeting)-[:HAS_ITEM]->(item:MeetingItem)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       person.name AS matched_entity,
+       type(relation) AS matched_relation,
+       toLower(replace(type(relation), "_BY", "")) AS matched_field
+"""
+
+QUERY_UNIT_MEETINGS = """
+MATCH (meeting:Meeting)-[:BELONGS_TO_UNIT]->(unit:Unit)
+WHERE $entity = "" OR toUpper(unit.name) CONTAINS $entity
+MATCH (meeting)-[:HAS_ITEM]->(item:MeetingItem)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       unit.name AS matched_entity,
+       "BELONGS_TO_UNIT" AS matched_relation,
+       "responsible_unit" AS matched_field
+"""
+
+QUERY_ITEM_DATE_RELATION = """
+MATCH (item:MeetingItem)-[relation]->(date_node:Date)
+WHERE type(relation) = $relation
+  AND ($entity = "" OR toUpper(date_node.date_value) CONTAINS $entity)
+MATCH (meeting:Meeting)-[:HAS_ITEM]->(item)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       date_node.date_value AS matched_entity,
+       type(relation) AS matched_relation,
+       CASE type(relation)
+         WHEN "HAS_PLANNED_DATE" THEN "planned_date"
+         ELSE "actual_completed_date"
+       END AS matched_field
+"""
+
+QUERY_ITEM_PRODUCT_RELATION = """
+MATCH (item:MeetingItem)-[:MENTIONS_PRODUCT]->(product:Product)
+WHERE $entity = "" OR toUpper(product.name) CONTAINS $entity
+MATCH (meeting:Meeting)-[:HAS_ITEM]->(item)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       product.name AS matched_entity,
+       "MENTIONS_PRODUCT" AS matched_relation,
+       "content" AS matched_field
+"""
+
+QUERY_ITEM_REGULATION_RELATION = """
+MATCH (item:MeetingItem)-[:MENTIONS_REGULATION]->(regulation:Regulation)
+WHERE $entity = "" OR toUpper(regulation.name) CONTAINS $entity
+MATCH (meeting:Meeting)-[:HAS_ITEM]->(item)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       regulation.name AS matched_entity,
+       "MENTIONS_REGULATION" AS matched_relation,
+       "content" AS matched_field
+"""
