@@ -3,13 +3,13 @@ from __future__ import annotations
 import hashlib
 import re
 
-from .keyword_extractor import extract_keyword_entities
+from .keyword_extractor import dedupe, extract_keyword_entities, valid_person_name
 
 
 COMPLETED_TERMS = (
-    "已完成",
-    "完成",
-    "結案",
+    "\u5df2\u5b8c\u6210",
+    "\u5b8c\u6210",
+    "\u7d50\u6848",
     "closed",
     "complete",
     "completed",
@@ -17,36 +17,37 @@ COMPLETED_TERMS = (
     "resolved",
 )
 IN_PROGRESS_TERMS = (
-    "進行中",
-    "處理中",
-    "確認中",
-    "追蹤中",
+    "\u9032\u884c\u4e2d",
+    "\u8655\u7406\u4e2d",
+    "\u78ba\u8a8d\u4e2d",
+    "\u8ffd\u8e64\u4e2d",
+    "\u5f85\u78ba\u8a8d",
     "pending",
     "in progress",
     "ongoing",
     "follow up",
 )
 DECISION_TERMS = (
-    "決議",
-    "決定",
-    "同意",
-    "核准",
-    "確認採用",
-    "決定採用",
+    "\u6c7a\u8b70",
+    "\u6c7a\u5b9a",
+    "\u540c\u610f",
+    "\u6838\u51c6",
+    "\u78ba\u8a8d\u63a1\u7528",
+    "\u6c7a\u5b9a\u63a1\u7528",
     "approved",
     "decided",
     "agreed",
 )
 RISK_TERMS = (
-    "風險",
-    "問題",
-    "異常",
-    "不一致",
-    "延遲",
-    "延後",
-    "影響",
-    "待確認",
-    "需確認",
+    "\u98a8\u96aa",
+    "\u554f\u984c",
+    "\u7570\u5e38",
+    "\u4e0d\u4e00\u81f4",
+    "\u5ef6\u9072",
+    "\u5ef6\u5f8c",
+    "\u5f71\u97ff",
+    "\u5f85\u78ba\u8a8d",
+    "\u9700\u78ba\u8a8d",
     "risk",
     "issue",
     "concern",
@@ -70,6 +71,7 @@ def extract_semantic_item(item: dict) -> dict:
         "decision": decision,
         "risk": risk,
         "issue": issue,
+        "responsible_people": extract_responsible_people_from_text(combined),
         "products": keywords.get("products", []),
         "regulations": keywords.get("regulations", []),
         "keywords": [keyword["name"] for keyword in keywords.get("keywords", [])],
@@ -142,9 +144,9 @@ def detect_status(item: dict) -> str:
 
 def infer_risk_severity(text: str) -> str:
     lowered = str(text or "").lower()
-    if any(term in lowered for term in ("重大", "嚴重", "critical", "blocker", "high risk")):
+    if any(term in lowered for term in ("\u91cd\u5927", "\u56b4\u91cd", "critical", "blocker", "high risk")):
         return "high"
-    if any(term in lowered for term in ("低", "minor", "low risk")):
+    if any(term in lowered for term in ("\u4f4e", "minor", "low risk")):
         return "low"
     return "medium"
 
@@ -152,6 +154,44 @@ def infer_risk_severity(text: str) -> str:
 def contains_any(text: str, terms: tuple[str, ...]) -> bool:
     lowered = str(text or "").lower()
     return any(term.lower() in lowered for term in terms)
+
+
+def extract_responsible_people_from_text(text: str) -> list[str]:
+    source = _clean_text(text)
+    if not source:
+        return []
+
+    candidates = []
+    patterns = (
+        (
+            r"(?:\u539f?\s*\u8ca0\s*\u8cac\s*\u4eba|owner|responsible)"
+            r"[^。\uff1b;,.，]*?"
+            r"(?:\u6539\s*[\u70ba\u7232\u4eba]|\u66f4\s*\u6539\s*[\u70ba\u7232\u4eba]|"
+            r"\u8b8a\s*\u66f4\s*[\u70ba\u7232\u4eba]|changed\s+to|change\s+to)"
+            r"\s*([^。\uff1b;,.，()\uff08\uff09]+)"
+        ),
+        (
+            r"(?:\u6539\s*\u7531|\u7531)\s*([^。\uff1b;,.，()\uff08\uff09]{2,40}?)"
+            r"(?:\u8ca0\s*\u8cac|\u8655\s*\u7406|\u78ba\s*\u8a8d|\u5354\s*\u52a9)"
+        ),
+    )
+    for pattern in patterns:
+        for match in re.finditer(pattern, source, flags=re.I):
+            candidates.extend(split_person_candidates(match.group(1)))
+    return dedupe([name for name in candidates if valid_person_name(name)])
+
+
+def split_person_candidates(value: str) -> list[str]:
+    parts = re.split(r"[\u3001/,，\u8207\u548c]| and ", str(value or ""), flags=re.I)
+    return [normalize_person_candidate(part) for part in parts if normalize_person_candidate(part)]
+
+
+def normalize_person_candidate(value: str) -> str:
+    text = str(value or "").strip()
+    text = re.sub(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])", "", text)
+    text = re.sub(r"^(\u539f)?\u8ca0\s*\u8cac\s*\u4eba", "", text)
+    text = re.sub(r"(\u8ca0\s*\u8cac|\u8655\s*\u7406|\u78ba\s*\u8a8d|\u5354\s*\u52a9).*$", "", text)
+    return text.strip(" :\uff1a-()\uff08\uff09[]{}")
 
 
 def normalize_signature(value: str) -> str:

@@ -24,10 +24,11 @@ class GraphRagAskView(APIView):
         if not question:
             return error_response("question is required.")
 
-        try:
-            limit = max(int(request.data.get("limit", 5)), 1)
-        except ValueError:
-            return error_response("limit must be a valid integer.")
+        limit = request.data.get("limit", "auto")
+        if isinstance(limit, str):
+            limit = limit.strip() or "auto"
+        if not _is_valid_limit_value(limit):
+            return error_response("limit must be auto, focused, balanced, broad, or a valid integer.")
 
         try:
             data = answer_question(question, limit=limit)
@@ -35,3 +36,15 @@ class GraphRagAskView(APIView):
             return error_response(str(exc), status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return success_response(data=data, message="GraphRAG answer generated.")
+
+
+def _is_valid_limit_value(value) -> bool:
+    if value is None:
+        return True
+    if str(value).strip().lower() in {"auto", "focused", "precision", "balanced", "explore", "exploratory", "broad", "inventory", "wide"}:
+        return True
+    try:
+        int(str(value).strip())
+        return True
+    except ValueError:
+        return False

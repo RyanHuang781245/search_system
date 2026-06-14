@@ -308,7 +308,7 @@ async function handleAsk(event) {
         return;
     }
 
-    const limit = Math.max(parseInt(elements.askLimit.value || "5", 10) || 5, 1);
+    const limit = elements.askLimit.value || "auto";
     setButtonLoading(elements.askSubmit, "生成中...");
     elements.answerPanel.innerHTML = renderLoadingInline("正在產生 GraphRAG 回答...");
     renderSources([]);
@@ -423,8 +423,15 @@ function renderAnswer(data) {
             <div class="score-pill"><span class="score-pill-label">Structured</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.structured?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">Graph</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.graph?.paths?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">Semantic</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.semantic?.length || 0))}</span></div>
+            <div class="score-pill"><span class="score-pill-label">Scope</span><span class="score-pill-value">${escapeHtml(formatAnswerScope(data))}</span></div>
         </div>
     `;
+}
+
+function formatAnswerScope(data) {
+    const limit = data.limit || "-";
+    const mode = String(data.limit_mode || "").replace("auto:", "");
+    return mode ? `${limit} ${mode}` : String(limit);
 }
 
 function renderEvidenceGraph(graph) {

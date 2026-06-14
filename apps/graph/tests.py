@@ -10,7 +10,7 @@ from .graph_search import fetch_related_keywords, search_graph
 from .intent import analyze_graph_intent
 from .keyword_extractor import extract_keyword_entities
 from .query_planner import analyze_graph_query_plan, heuristic_query_plan
-from .semantic_extractor import extract_semantic_item
+from .semantic_extractor import extract_responsible_people_from_text, extract_semantic_item
 
 
 @override_settings(KEYWORD_LLM_ENABLED=False, KEYWORD_EMBEDDING_RERANK_ENABLED=False)
@@ -260,8 +260,49 @@ class GraphBuilderTestCase(SimpleTestCase):
         self.assertTrue(any("ActionItem" in query for query in queries))
         self.assertTrue(any("FOLLOW_UP_OF" in query for query in queries))
 
+    def test_build_graph_persists_responsibility_changed_in_content(self):
+        meeting = {
+            "document_id": "doc_001",
+            "meeting_id": "meeting_001",
+            "meeting_name": "Responsibility update",
+            "meeting_date": "2018-04-03",
+        }
+        item = {
+            "item_id": "item_001",
+            "meeting_id": "meeting_001",
+            "item_no": "01",
+            "content": "\u539f\u8ca0\u8cac\u4eba\u4f59\u67cf\u52f3\u6539\u70ba\u9673\u8056\u660c\u3001\u9673\u58eb\u6db5",
+            "owner": "",
+            "planned_date": None,
+            "actual_completed_date": None,
+            "tracking_result": "",
+        }
+        client = _CapturingGraphClient()
+
+        with patch("apps.graph.graph_builder.get_meeting_minutes_collection", return_value=_FakeCollection([meeting])), patch(
+            "apps.graph.graph_builder.get_meeting_items_collection", return_value=_FakeCollection([item])
+        ):
+            summary = build_graph_from_mongo(client)
+
+        responsible_params = [
+            entry["params"]
+            for entry in client.runs
+            if "RESPONSIBLE_BY" in entry["query"] and entry["params"].get("person_name")
+        ]
+        responsible_names = {params["person_name"] for params in responsible_params}
+        self.assertIn("\u9673\u8056\u660c", responsible_names)
+        self.assertIn("\u9673\u58eb\u6db5", responsible_names)
+        self.assertGreaterEqual(summary["relationship_counts"]["RESPONSIBLE_BY"], 2)
+
 
 class SemanticExtractorTestCase(SimpleTestCase):
+    def test_extract_responsible_people_from_content_change_sentence(self):
+        names = extract_responsible_people_from_text(
+            "\u539f\u8ca0\u8cac\u4eba\u4f59\u67cf\u52f3\u6539\u70ba\u9673\u8056\u660c\u3001\u9673\u58eb\u6db5"
+        )
+
+        self.assertEqual(names, ["\u9673\u8056\u660c", "\u9673\u58eb\u6db5"])
+
     def test_extract_semantic_item_identifies_action_risk_decision_and_status(self):
         payload = extract_semantic_item(
             {

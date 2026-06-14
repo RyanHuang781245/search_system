@@ -93,13 +93,6 @@ def build_graph_from_mongo(client) -> dict:
                 _write(client, _merge_has_completed_date, item_id, completed_date)
                 relation_counts["HAS_COMPLETED_DATE"] += 1
 
-            owner = str(item.get("owner") or "").strip()
-            if owner and owner.lower() not in {"--", "na", "n/a", "none", "null"}:
-                _write(client, _merge_person, owner)
-                node_counts["Person"] += 1
-                _write(client, _merge_responsible_by, item_id, owner)
-                relation_counts["RESPONSIBLE_BY"] += 1
-
             keyword_names = []
             for field in ("content", "tracking_result"):
                 keyword_names.extend(
@@ -120,6 +113,7 @@ def build_graph_from_mongo(client) -> dict:
                 keyword_pairs[(right, left)] += 1
 
             semantic = extract_semantic_item(item)
+            _persist_responsible_people(client, item_id, responsible_people_for_item(item, semantic), node_counts, relation_counts)
             _persist_semantic_item(client, item, semantic, node_counts, relation_counts)
             issue = semantic.get("issue")
             if issue:
@@ -171,8 +165,7 @@ def _persist_semantic_item(client, item, semantic, node_counts, relation_counts)
         _write(client, _merge_has_action, item_id, action["action_id"])
         relation_counts["HAS_ACTION"] += 1
 
-        owner = str(item.get("owner") or "").strip()
-        if owner and owner.lower() not in {"--", "na", "n/a", "none", "null"}:
+        for owner in responsible_people_for_item(item, semantic):
             _write(client, _merge_person, owner)
             node_counts["Person"] += 1
             _write(client, _merge_action_assigned_to, action["action_id"], owner)
@@ -227,6 +220,25 @@ def _persist_follow_up_links(client, issue_items, meetings_by_id, relation_count
                 continue
             _write(client, _merge_follow_up_of, current.get("item_id"), previous.get("item_id"))
             relation_counts["FOLLOW_UP_OF"] += 1
+
+
+def responsible_people_for_item(item: dict, semantic: dict) -> list[str]:
+    people = []
+    owner = str(item.get("owner") or "").strip()
+    if owner and owner.lower() not in {"--", "na", "n/a", "none", "null"}:
+        people.append(owner)
+    people.extend(semantic.get("responsible_people") or [])
+    return sorted(set(people), key=people.index)
+
+
+def _persist_responsible_people(client, item_id, people, node_counts, relation_counts) -> None:
+    if not item_id:
+        return
+    for person_name in people:
+        _write(client, _merge_person, person_name)
+        node_counts["Person"] += 1
+        _write(client, _merge_responsible_by, item_id, person_name)
+        relation_counts["RESPONSIBLE_BY"] += 1
 
 
 def _write(client, callback, *args):

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from django.conf import settings
 
@@ -14,7 +14,7 @@ class GraphRagServiceError(Exception):
 
 def answer_question(
     question: str,
-    limit: int = 5,
+    limit: int | str | None = 5,
     semantic_searcher=None,
     graph_searcher=None,
     llm_client=None,
@@ -22,13 +22,14 @@ def answer_question(
     normalized_question = str(question or "").strip()
     if not normalized_question:
         raise GraphRagServiceError("Question is required.")
+    effective_limit, limit_mode = determine_effective_limit(normalized_question, limit)
 
     semantic_searcher = semantic_searcher or semantic_search
     graph_searcher = graph_searcher or graph_search_query
     llm_client = llm_client or ollama_answer
 
-    semantic_payload = _safe_semantic_search(semantic_searcher, normalized_question, limit)
-    graph_payload = _safe_graph_search(graph_searcher, normalized_question, limit * 4)
+    semantic_payload = _safe_semantic_search(semantic_searcher, normalized_question, effective_limit)
+    graph_payload = _safe_graph_search(graph_searcher, normalized_question, effective_limit * 4)
 
     meetings = list(get_meeting_minutes_collection().find({}, {"_id": 0}))
     items = list(get_meeting_items_collection().find({}, {"_id": 0}))
@@ -39,24 +40,26 @@ def answer_question(
         semantic_payload.get("results", []),
         graph_payload.get("results", []),
     )
-    structured_context = build_structured_context(ranked_item_ids, items_by_id, meetings_by_id, limit)
+    structured_context = build_structured_context(ranked_item_ids, items_by_id, meetings_by_id, effective_limit)
 
-    if len(structured_context) < limit:
+    if len(structured_context) < effective_limit:
         structured_context.extend(
             item
-            for item in keyword_structured_context(normalized_question, meetings, items, limit)
+            for item in keyword_structured_context(normalized_question, meetings, items, effective_limit)
             if item["item_id"] not in {entry["item_id"] for entry in structured_context}
         )
-        structured_context = structured_context[:limit]
+        structured_context = structured_context[:effective_limit]
 
-    graph_context = build_graph_context(graph_payload.get("results", []), limit=limit * 2)
-    semantic_context = semantic_payload.get("results", [])[:limit]
+    graph_context = build_graph_context(graph_payload.get("results", []), limit=effective_limit * 2)
+    semantic_context = semantic_payload.get("results", [])[:effective_limit]
     source_metadata = build_source_metadata(structured_context, semantic_context)
 
     if not structured_context and not graph_context["paths"] and not semantic_context:
         return {
             "question": normalized_question,
-            "answer": "無法由現有會議記錄確認。",
+            "limit": effective_limit,
+            "limit_mode": limit_mode,
+            "answer": "Insufficient meeting-record context to answer.",
             "contexts": {
                 "structured": [],
                 "graph": graph_context,
@@ -77,6 +80,8 @@ def answer_question(
 
     return {
         "question": normalized_question,
+        "limit": effective_limit,
+        "limit_mode": limit_mode,
         "answer": answer,
         "contexts": {
             "structured": structured_context,
@@ -86,6 +91,68 @@ def answer_question(
         "sources": source_metadata,
         "warnings": semantic_payload.get("warnings", []) + graph_payload.get("warnings", []),
     }
+
+
+def determine_effective_limit(question: str, requested_limit=None) -> tuple[int, str]:
+    value = str(requested_limit if requested_limit is not None else "auto").strip().lower()
+    fixed_modes = {
+        "focused": (5, "focused"),
+        "precision": (5, "focused"),
+        "balanced": (8, "balanced"),
+        "explore": (8, "balanced"),
+        "exploratory": (8, "balanced"),
+        "broad": (12, "broad"),
+        "inventory": (12, "broad"),
+        "wide": (12, "broad"),
+    }
+    if value in fixed_modes:
+        return fixed_modes[value]
+    if value and value != "auto":
+        try:
+            return max(min(int(value), 20), 1), "manual"
+        except ValueError:
+            return auto_limit_for_question(question)
+    return auto_limit_for_question(question)
+
+
+def auto_limit_for_question(question: str) -> tuple[int, str]:
+    text = str(question or "").lower()
+    inventory_terms = (
+        "哪些",
+        "所有",
+        "全部",
+        "列出",
+        "盤點",
+        "清單",
+        "誰負責哪些",
+        "有哪些",
+        "目前有哪些",
+        "未完成",
+        "尚未完成",
+        "follow-up",
+        "follow up",
+        "追蹤",
+        "list",
+        "all",
+        "inventory",
+        "items",
+        "open items",
+    )
+    exploratory_terms = (
+        "相關",
+        "狀況",
+        "進度",
+        "主要",
+        "整理",
+        "overview",
+        "summary",
+        "how",
+    )
+    if any(term in text for term in inventory_terms):
+        return 12, "auto:broad"
+    if any(term in text for term in exploratory_terms):
+        return 8, "auto:balanced"
+    return 5, "auto:focused"
 
 
 def _safe_semantic_search(semantic_searcher, question: str, limit: int) -> dict:
@@ -182,7 +249,8 @@ def build_graph_context(graph_results: list[dict], limit: int = 10) -> dict:
     paths = []
     seen = set()
     graph_builder = EvidenceGraphBuilder()
-    for result in graph_results:
+    filtered_results = filter_graph_evidence_results(graph_results, limit)
+    for result in filtered_results:
         path = format_graph_path(result)
         if path in seen:
             continue
@@ -202,13 +270,25 @@ def build_graph_context(graph_results: list[dict], limit: int = 10) -> dict:
             }
         )
         graph_builder.add_result(result)
-        if len(paths) >= limit:
-            break
     return {
         "paths": paths,
         "nodes": graph_builder.nodes(),
         "edges": graph_builder.edges(),
     }
+
+
+def filter_graph_evidence_results(graph_results: list[dict], limit: int) -> list[dict]:
+    candidates = [result for result in graph_results if result.get("meeting_id") or result.get("item_id")]
+    if not candidates:
+        return []
+    scored = [float(result.get("graph_score") or 0) for result in candidates]
+    best_score = max(scored)
+    score_floor = max(best_score - 0.75, best_score * 0.82)
+    strong_results = [result for result in candidates if float(result.get("graph_score") or 0) >= score_floor]
+    if not strong_results:
+        strong_results = candidates[:1]
+    max_paths = max(1, min(limit, 6))
+    return strong_results[:max_paths]
 
 
 class EvidenceGraphBuilder:
@@ -233,7 +313,7 @@ class EvidenceGraphBuilder:
             self.add_node(
                 node_type="MeetingItem",
                 value=item_id,
-                label=result.get("item_no") or item_id,
+                label=meeting_item_label(result),
                 title=result.get("content") or item_id,
             )
         if meeting_id and item_id:
@@ -317,6 +397,23 @@ class EvidenceGraphBuilder:
 
 def make_graph_node_id(node_type: str, value) -> str:
     return f"{node_type}:{str(value or '').strip()}"
+
+
+def meeting_item_label(result: dict) -> str:
+    item_no = str(result.get("item_no") or "").strip()
+    item_id = str(result.get("item_id") or "").strip()
+    if item_no and item_id:
+        return f"{item_no}\n{short_identifier(item_id)}"
+    return item_no or short_identifier(item_id) or item_id
+
+
+def short_identifier(value: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if len(text) <= 10:
+        return text
+    return text[-8:]
 
 
 def entity_type_for_relation(relation: str) -> str:
@@ -415,12 +512,12 @@ def build_graphrag_prompt(
     source_metadata: list[dict],
 ) -> str:
     return (
-        "你是企業會議記錄 GraphRAG 助理。\n"
-        "回答規則：\n"
-        "1. 只能根據下方 Structured Context、Graph Context、Semantic Context 回答。\n"
-        "2. 若資料不足，回答「無法由現有會議記錄確認」。\n"
-        "3. 回答需提到可驗證來源，例如 meeting_id、item_id 或 item_no。\n"
-        "4. 若引用圖譜關聯，請簡短描述 graph path。\n\n"
+        "雿隡平?降閮? GraphRAG ?拍??n"
+        "??閬?嚗n"
+        "1. ?芾?寞?銝 Structured Context?raph Context?emantic Context ???n"
+        "2. ?亥???頞喉????瘜?暹??降閮?蝣箄??n"
+        "3. ?????舫?霅?皞?靘? meeting_id?tem_id ??item_no?n"
+        "4. ?亙??典?霅??荔?隢陛?剜?餈?graph path?n\n"
         f"Question:\n{question}\n\n"
         f"Structured Context:\n{structured_context}\n\n"
         f"Graph Context:\n{graph_context}\n\n"
@@ -461,3 +558,5 @@ def ollama_answer(prompt: str) -> str:
     if not content:
         raise GraphRagServiceError("Ollama response did not include answer content.")
     return content
+
+
