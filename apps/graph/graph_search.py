@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from . import cypher_queries as cq
 from .intent import analyze_graph_intent
+from .query_planner import default_plan
 
 
 def fetch_related_keywords(client, keyword: str, limit: int = 10) -> list[dict]:
@@ -15,7 +16,7 @@ def fetch_related_keywords(client, keyword: str, limit: int = 10) -> list[dict]:
     return client.execute_read(_query_related_keywords, normalized_keyword, limit) or []
 
 
-def search_graph(client, query: str, limit: int = 50, intent_analyzer=None) -> dict:
+def search_graph(client, query: str, limit: int = 50, intent_analyzer=None, query_planner=None) -> dict:
     normalized_query = str(query or "").strip()
     if not normalized_query:
         return {"query": "", "expanded_keywords": [], "results": [], "warnings": []}
@@ -27,6 +28,8 @@ def search_graph(client, query: str, limit: int = 50, intent_analyzer=None) -> d
             "warnings": ["Neo4j graph search unavailable."],
         }
 
+    planner_payload = run_query_planning(normalized_query, query_planner)
+    composite_results = search_composite_graph(client, planner_payload, limit=limit)
     intent_payload = run_intent_analysis(normalized_query, intent_analyzer)
     intent_results = search_intent_graph(client, intent_payload, limit=limit)
     related_keywords = fetch_related_keywords(client, normalized_query, limit=8)
@@ -64,15 +67,23 @@ def search_graph(client, query: str, limit: int = 50, intent_analyzer=None) -> d
             }
         )
 
-    results = dedupe_graph_results([*intent_results, *keyword_results])
+    if composite_results or intent_results:
+        keyword_results = [result for result in keyword_results if result.get("match_type") == "direct"]
+
+    results = dedupe_graph_results([*composite_results, *intent_results, *keyword_results])
     results.sort(key=lambda item: (-item["graph_score"], item.get("meeting_date") or "", item.get("item_id") or ""))
     return {
         "query": normalized_query,
+        "query_plan": {
+            "target": planner_payload.get("target"),
+            "constraints": planner_payload.get("constraints", {}),
+            "include_followups": planner_payload.get("include_followups", False),
+        },
         "intent": intent_payload["intent"],
         "intent_entities": intent_payload["entities"],
         "expanded_keywords": expanded_keywords[1:],
         "results": results[:limit],
-        "warnings": intent_payload.get("warnings", []),
+        "warnings": planner_payload.get("warnings", []) + intent_payload.get("warnings", []),
     }
 
 
@@ -140,6 +151,224 @@ def run_intent_analysis(query: str, intent_analyzer) -> dict:
         "entities": payload.get("entities") or {},
         "warnings": payload.get("warnings") or [],
     }
+
+
+def run_query_planning(query: str, query_planner) -> dict:
+    if query_planner is None:
+        return default_plan()
+    planner = query_planner
+    try:
+        payload = planner(query)
+    except Exception as exc:
+        return {
+            "target": "meeting_items",
+            "constraints": {},
+            "include_followups": False,
+            "warnings": [f"Graph query planning unavailable: {exc}"],
+        }
+    if not isinstance(payload, dict):
+        return {
+            "target": "meeting_items",
+            "constraints": {},
+            "include_followups": False,
+            "warnings": ["Graph query planning returned an invalid payload."],
+        }
+    return {
+        "target": payload.get("target") or "meeting_items",
+        "constraints": payload.get("constraints") or {},
+        "include_followups": bool(payload.get("include_followups")),
+        "warnings": payload.get("warnings") or [],
+    }
+
+
+def search_composite_graph(client, planner_payload: dict, limit: int) -> list[dict]:
+    target = planner_payload.get("target") or "meeting_items"
+    constraints = planner_payload.get("constraints") or {}
+    if target == "meeting_items":
+        return []
+    if target == "action_items" and not has_composite_constraints(constraints):
+        return []
+
+    rows = client.execute_read(_query_composite_graph_search, target, constraints, limit) or []
+    results = [format_composite_result(row, planner_payload) for row in rows]
+    if planner_payload.get("include_followups"):
+        follow_up_rows = client.execute_read(_query_follow_up_graph_search, constraints, limit) or []
+        results.extend(format_follow_up_result(row, planner_payload) for row in follow_up_rows)
+    return results
+
+
+def _query_composite_graph_search(tx, target: str, constraints: dict, limit: int):
+    params = normalize_composite_params(target, constraints, limit)
+    records = tx.run(cq.QUERY_COMPOSITE_GRAPH_SEARCH, **params)
+    return [dict(record) for record in records][:limit]
+
+
+def _query_follow_up_graph_search(tx, constraints: dict, limit: int):
+    params = {
+        "keyword": str(constraints.get("keyword") or constraints.get("product_name") or constraints.get("regulation_name") or "")
+        .strip()
+        .upper(),
+        "limit": limit,
+    }
+    records = tx.run(cq.QUERY_FOLLOW_UP_ITEMS, **params)
+    return [dict(record) for record in records][:limit]
+
+
+def normalize_composite_params(target: str, constraints: dict, limit: int) -> dict:
+    return {
+        "target": target if target in {"action_items", "decisions", "risks", "issues"} else "action_items",
+        "person": str(constraints.get("person_name") or "").strip().upper(),
+        "unit": str(constraints.get("unit_name") or "").strip().upper(),
+        "product": str(constraints.get("product_name") or "").strip().upper(),
+        "regulation": str(constraints.get("regulation_name") or "").strip().upper(),
+        "status": str(constraints.get("status") or "").strip(),
+        "keyword": str(constraints.get("keyword") or "").strip().upper(),
+        "limit": limit,
+    }
+
+
+def has_composite_constraints(constraints: dict) -> bool:
+    return any(str(constraints.get(key) or "").strip() for key in (
+        "person_name",
+        "unit_name",
+        "product_name",
+        "regulation_name",
+        "status",
+        "keyword",
+    ))
+
+
+def format_composite_result(row: dict, planner_payload: dict) -> dict:
+    relation = row.get("matched_relation") or "HAS_ACTION"
+    return {
+        "meeting_id": row.get("meeting_id"),
+        "meeting_name": row.get("meeting_name"),
+        "meeting_date": row.get("meeting_date"),
+        "item_id": row.get("item_id"),
+        "item_no": row.get("item_no"),
+        "content": row.get("content"),
+        "matched_keyword": None,
+        "matched_field": row.get("matched_field"),
+        "matched_relation": relation,
+        "matched_entity": row.get("matched_entity") or row.get("matched_node_id"),
+        "matched_node_id": row.get("matched_node_id"),
+        "semantic_status": row.get("semantic_status"),
+        "evidence_relations": build_composite_evidence_relations(row, planner_payload),
+        "match_type": "query_plan",
+        "intent": planner_payload.get("target"),
+        "query_plan": planner_payload,
+        "graph_score": graph_score_for_semantic_relation(relation),
+    }
+
+
+def format_follow_up_result(row: dict, planner_payload: dict) -> dict:
+    return {
+        "meeting_id": row.get("meeting_id"),
+        "meeting_name": row.get("meeting_name"),
+        "meeting_date": row.get("meeting_date"),
+        "item_id": row.get("item_id"),
+        "item_no": row.get("item_no"),
+        "content": row.get("content"),
+        "matched_keyword": None,
+        "matched_field": "follow_up",
+        "matched_relation": "FOLLOW_UP_OF",
+        "matched_entity": row.get("matched_entity"),
+        "matched_node_id": row.get("matched_node_id"),
+        "match_type": "query_plan",
+        "intent": "follow_up",
+        "query_plan": planner_payload,
+        "graph_score": 4.4,
+    }
+
+
+def graph_score_for_semantic_relation(relation: str) -> float:
+    return {
+        "HAS_ACTION": 3.8,
+        "HAS_DECISION": 4.8,
+        "HAS_RISK": 4.9,
+        "TRACKS_ISSUE": 4.5,
+        "FOLLOW_UP_OF": 4.4,
+    }.get(relation, 4.2)
+
+
+def build_composite_evidence_relations(row: dict, planner_payload: dict) -> list[dict]:
+    item_id = row.get("item_id")
+    meeting_id = row.get("meeting_id")
+    matched_node_id = row.get("matched_node_id")
+    matched_entity = row.get("matched_entity")
+    relation = row.get("matched_relation") or "HAS_ACTION"
+    constraints = planner_payload.get("constraints") or {}
+    evidence = []
+
+    if item_id and matched_node_id and relation in {"HAS_ACTION", "HAS_DECISION", "HAS_RISK", "TRACKS_ISSUE"}:
+        evidence.append(
+            {
+                "source_type": "MeetingItem",
+                "source_value": item_id,
+                "target_type": semantic_target_type_for_relation(relation),
+                "target_value": matched_node_id,
+                "target_label": matched_entity,
+                "relation": relation,
+            }
+        )
+
+    person = constraints.get("person_name")
+    for owner in filter_matching_values(row.get("owner_names"), person):
+        evidence.append(make_evidence_relation("MeetingItem", item_id, "Person", owner, "RESPONSIBLE_BY"))
+    for assignee in filter_matching_values(row.get("assignee_names"), person):
+        evidence.append(make_evidence_relation("ActionItem", matched_node_id, "Person", assignee, "ASSIGNED_TO"))
+
+    unit = constraints.get("unit_name")
+    for unit_name in filter_matching_values(row.get("unit_names"), unit):
+        evidence.append(make_evidence_relation("Meeting", meeting_id, "Unit", unit_name, "BELONGS_TO_UNIT"))
+
+    product = constraints.get("product_name")
+    for product_name in filter_matching_values(row.get("product_names"), product):
+        evidence.append(make_evidence_relation("MeetingItem", item_id, "Product", product_name, "MENTIONS_PRODUCT"))
+    for product_name in filter_matching_values(row.get("action_product_names"), product):
+        evidence.append(make_evidence_relation("ActionItem", matched_node_id, "Product", product_name, "TARGETS_PRODUCT"))
+
+    regulation = constraints.get("regulation_name")
+    for regulation_name in filter_matching_values(row.get("regulation_names"), regulation):
+        evidence.append(
+            make_evidence_relation("MeetingItem", item_id, "Regulation", regulation_name, "MENTIONS_REGULATION")
+        )
+    for regulation_name in filter_matching_values(row.get("action_regulation_names"), regulation):
+        evidence.append(make_evidence_relation("ActionItem", matched_node_id, "Regulation", regulation_name, "CONSTRAINED_BY"))
+
+    keyword = constraints.get("keyword")
+    for keyword_name in filter_matching_values(row.get("keyword_names"), keyword):
+        evidence.append(make_evidence_relation("MeetingItem", item_id, "Keyword", keyword_name, "MENTIONS"))
+
+    return [item for item in evidence if item.get("source_value") and item.get("target_value")]
+
+
+def make_evidence_relation(source_type, source_value, target_type, target_value, relation: str, target_label=None) -> dict:
+    return {
+        "source_type": source_type,
+        "source_value": source_value,
+        "target_type": target_type,
+        "target_value": target_value,
+        "target_label": target_label or target_value,
+        "relation": relation,
+    }
+
+
+def filter_matching_values(values, constraint: str) -> list[str]:
+    cleaned = [str(value or "").strip() for value in values or [] if str(value or "").strip()]
+    normalized_constraint = str(constraint or "").strip().upper()
+    if not normalized_constraint:
+        return []
+    return [value for value in cleaned if normalized_constraint in value.upper()]
+
+
+def semantic_target_type_for_relation(relation: str) -> str:
+    return {
+        "HAS_ACTION": "ActionItem",
+        "HAS_DECISION": "Decision",
+        "HAS_RISK": "Risk",
+        "TRACKS_ISSUE": "Issue",
+    }.get(relation, "Entity")
 
 
 def search_intent_graph(client, intent_payload: dict, limit: int) -> list[dict]:

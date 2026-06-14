@@ -551,6 +551,10 @@ function renderEvidenceGraph(graph) {
             { selector: 'node[type = "Product"]', style: { "background-color": "#a855f7", "shape": "hexagon" } },
             { selector: 'node[type = "Regulation"]', style: { "background-color": "#f97316", "shape": "hexagon" } },
             { selector: 'node[type = "Date"]', style: { "background-color": "#14b8a6", "shape": "tag", "width": 48 } },
+            { selector: 'node[type = "ActionItem"]', style: { "background-color": "#06b6d4", "shape": "round-tag", "width": 64, "height": 38 } },
+            { selector: 'node[type = "Decision"]', style: { "background-color": "#8b5cf6", "shape": "vee", "width": 46, "height": 46 } },
+            { selector: 'node[type = "Risk"]', style: { "background-color": "#e11d48", "shape": "triangle", "width": 48, "height": 48 } },
+            { selector: 'node[type = "Issue"]', style: { "background-color": "#0f766e", "shape": "round-diamond", "width": 54, "height": 54 } },
             {
                 selector: "edge",
                 style: {

@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APISimpleTestCase
 
-from .services import answer_question, build_graphrag_prompt
+from .services import answer_question, build_graph_context, build_graphrag_prompt
 
 
 class FakeCollection:
@@ -200,6 +200,55 @@ class GraphRagServiceTestCase(SimpleTestCase):
 
         self.assertEqual(payload["contexts"]["structured"][0]["item_id"], "item_001")
         self.assertEqual(payload["warnings"], ["Graph intent analysis unavailable: timeout"])
+
+    def test_graph_context_uses_supporting_evidence_relations(self):
+        payload = build_graph_context(
+            [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "FDA review",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "content": "Carol handles FDA submission.",
+                    "matched_relation": "HAS_ACTION",
+                    "matched_entity": "Carol handles FDA submission.",
+                    "matched_node_id": "action_item_001",
+                    "evidence_relations": [
+                        {
+                            "source_type": "MeetingItem",
+                            "source_value": "item_001",
+                            "target_type": "ActionItem",
+                            "target_value": "action_item_001",
+                            "target_label": "Carol handles FDA submission.",
+                            "relation": "HAS_ACTION",
+                        },
+                        {
+                            "source_type": "MeetingItem",
+                            "source_value": "item_001",
+                            "target_type": "Person",
+                            "target_value": "Carol",
+                            "target_label": "Carol",
+                            "relation": "RESPONSIBLE_BY",
+                        },
+                        {
+                            "source_type": "MeetingItem",
+                            "source_value": "item_001",
+                            "target_type": "Regulation",
+                            "target_value": "FDA",
+                            "target_label": "FDA",
+                            "relation": "MENTIONS_REGULATION",
+                        },
+                    ],
+                }
+            ]
+        )
+
+        edge_labels = {edge["label"] for edge in payload["edges"]}
+        self.assertIn("HAS_ACTION", edge_labels)
+        self.assertIn("RESPONSIBLE_BY", edge_labels)
+        self.assertIn("MENTIONS_REGULATION", edge_labels)
+        self.assertIn("RESPONSIBLE_BY", payload["paths"][0]["path"])
+        self.assertIn("MENTIONS_REGULATION", payload["paths"][0]["path"])
 
     def test_answer_question_returns_insufficient_data_message_without_context(self):
         with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection([])), patch(

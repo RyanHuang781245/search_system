@@ -9,6 +9,8 @@ from .graph_builder import build_graph_from_mongo
 from .graph_search import fetch_related_keywords, search_graph
 from .intent import analyze_graph_intent
 from .keyword_extractor import extract_keyword_entities
+from .query_planner import analyze_graph_query_plan, heuristic_query_plan
+from .semantic_extractor import extract_semantic_item
 
 
 @override_settings(KEYWORD_LLM_ENABLED=False, KEYWORD_EMBEDDING_RERANK_ENABLED=False)
@@ -203,6 +205,79 @@ class GraphBuilderTestCase(SimpleTestCase):
         self.assertTrue(all("score" in params and "method" in params for params in mention_params))
         self.assertTrue(all(not str(params["method"]).startswith("domain_") for params in mention_params))
 
+    def test_build_graph_persists_semantic_nodes_and_follow_up_links(self):
+        meetings = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "meeting_name": "FDA review",
+                "meeting_date": "2018-04-03",
+            },
+            {
+                "document_id": "doc_002",
+                "meeting_id": "meeting_002",
+                "meeting_name": "FDA follow up",
+                "meeting_date": "2018-04-10",
+            },
+        ]
+        items = [
+            {
+                "item_id": "item_001",
+                "meeting_id": "meeting_001",
+                "item_no": "01",
+                "content": "Conformity stem FDA submission has delay risk.",
+                "owner": "Carol",
+                "planned_date": "2018-04-20",
+                "actual_completed_date": None,
+                "tracking_result": "pending",
+            },
+            {
+                "item_id": "item_002",
+                "meeting_id": "meeting_002",
+                "item_no": "01",
+                "content": "Conformity stem FDA submission risk follow up decision approved.",
+                "owner": "Carol",
+                "planned_date": "2018-04-27",
+                "actual_completed_date": "2018-04-26",
+                "tracking_result": "completed",
+            },
+        ]
+        client = _CapturingGraphClient()
+
+        with patch("apps.graph.graph_builder.get_meeting_minutes_collection", return_value=_FakeCollection(meetings)), patch(
+            "apps.graph.graph_builder.get_meeting_items_collection", return_value=_FakeCollection(items)
+        ):
+            summary = build_graph_from_mongo(client)
+
+        self.assertGreaterEqual(summary["node_counts"]["ActionItem"], 2)
+        self.assertGreaterEqual(summary["node_counts"]["Issue"], 1)
+        self.assertGreaterEqual(summary["relationship_counts"]["TRACKS_ISSUE"], 2)
+        self.assertGreaterEqual(summary["relationship_counts"]["FOLLOW_UP_OF"], 1)
+        self.assertGreaterEqual(summary["relationship_counts"]["HAS_RISK"], 1)
+        self.assertGreaterEqual(summary["relationship_counts"]["HAS_DECISION"], 1)
+
+        queries = [entry["query"] for entry in client.runs]
+        self.assertTrue(any("ActionItem" in query for query in queries))
+        self.assertTrue(any("FOLLOW_UP_OF" in query for query in queries))
+
+
+class SemanticExtractorTestCase(SimpleTestCase):
+    def test_extract_semantic_item_identifies_action_risk_decision_and_status(self):
+        payload = extract_semantic_item(
+            {
+                "item_id": "item_001",
+                "content": "決議 Conformity stem FDA submission delay risk must be reviewed.",
+                "owner": "Carol",
+                "actual_completed_date": None,
+                "tracking_result": "pending",
+            }
+        )
+
+        self.assertEqual(payload["action"]["status"], "in_progress")
+        self.assertIsNotNone(payload["risk"])
+        self.assertIsNotNone(payload["decision"])
+        self.assertIsNotNone(payload["issue"])
+
 
 class _FakeGraphClient:
     available = True
@@ -266,6 +341,48 @@ class _FakeTx:
                     "matched_field": "content",
                     "keyword_score": 1.0,
                     "keyword_method": "regex_abbreviation",
+                }
+            ]
+
+        if "OPTIONAL MATCH (item)-[:HAS_ACTION]->(action:ActionItem)" in query:
+            return [
+                {
+                    "meeting_id": "meet_006",
+                    "meeting_name": "Composite meeting",
+                    "meeting_date": "2018-04-08",
+                    "item_id": "item_006",
+                    "item_no": "06",
+                    "content": "Carol handles FDA Conformity stem open action.",
+                    "matched_entity": "Carol handles FDA Conformity stem open action.",
+                    "matched_relation": "HAS_ACTION",
+                    "matched_node_id": "action_item_006",
+                    "matched_field": params.get("target", "action_items"),
+                    "semantic_status": "pending",
+                    "owner_names": ["Carol"],
+                    "assignee_names": ["Carol"],
+                    "unit_names": ["UR3"],
+                    "product_names": ["Conformity stem"],
+                    "action_product_names": ["Conformity stem"],
+                    "regulation_names": ["FDA"],
+                    "action_regulation_names": ["FDA"],
+                    "keyword_names": ["FDA"],
+                }
+            ]
+
+        if "FOLLOW_UP_OF" in query:
+            return [
+                {
+                    "meeting_id": "meet_007",
+                    "meeting_name": "Follow up meeting",
+                    "meeting_date": "2018-04-09",
+                    "item_id": "item_007",
+                    "item_no": "07",
+                    "content": "Follow up FDA action.",
+                    "matched_entity": "item_006",
+                    "matched_relation": "FOLLOW_UP_OF",
+                    "matched_node_id": "item_006",
+                    "matched_field": "follow_up",
+                    "previous_meeting_id": "meet_006",
                 }
             ]
 
@@ -364,6 +481,29 @@ class _FakeTx:
 
 
 class GraphSearchTestCase(SimpleTestCase):
+    def test_query_planner_parses_composite_constraints(self):
+        payload = analyze_graph_query_plan(
+            "Carol 負責且 FDA 未完成的 Conformity stem 項目",
+            llm_client=lambda _question: (
+                '{"target":"action_items","constraints":{"person_name":"Carol",'
+                '"product_name":"Conformity stem","regulation_name":"FDA","status":"not_completed"},'
+                '"include_followups":true}'
+            ),
+        )
+
+        self.assertEqual(payload["target"], "action_items")
+        self.assertEqual(payload["constraints"]["person_name"], "Carol")
+        self.assertEqual(payload["constraints"]["regulation_name"], "FDA")
+        self.assertEqual(payload["constraints"]["status"], "not_completed")
+        self.assertTrue(payload["include_followups"])
+
+    def test_heuristic_query_plan_targets_risks(self):
+        payload = heuristic_query_plan("FDA 有哪些風險尚未完成？")
+
+        self.assertEqual(payload["target"], "risks")
+        self.assertEqual(payload["constraints"]["status"], "not_completed")
+        self.assertEqual(payload["constraints"]["regulation_name"].upper(), "FDA")
+
     def test_analyze_graph_intent_parses_llm_json(self):
         payload = analyze_graph_intent(
             "What is Carol responsible for?",
@@ -450,3 +590,52 @@ class GraphSearchTestCase(SimpleTestCase):
                 )
 
                 self.assertEqual(payload["results"][0]["matched_relation"], relation)
+
+    def test_search_graph_uses_composite_query_plan_for_mixed_constraints(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "Carol FDA not completed action items",
+            limit=10,
+            query_planner=lambda _query: {
+                "target": "action_items",
+                "constraints": {
+                    "person_name": "Carol",
+                    "product_name": "Conformity stem",
+                    "regulation_name": "FDA",
+                    "status": "not_completed",
+                },
+                "include_followups": True,
+                "warnings": [],
+            },
+        )
+
+        relations = {result["matched_relation"] for result in payload["results"]}
+        self.assertIn("HAS_ACTION", relations)
+        self.assertIn("FOLLOW_UP_OF", relations)
+        self.assertEqual(payload["query_plan"]["target"], "action_items")
+        action_result = next(result for result in payload["results"] if result["matched_relation"] == "HAS_ACTION")
+        evidence_relations = action_result["evidence_relations"]
+        evidence_labels = {relation["relation"] for relation in evidence_relations}
+        self.assertIn("RESPONSIBLE_BY", evidence_labels)
+        self.assertIn("MENTIONS_REGULATION", evidence_labels)
+        self.assertIn("MENTIONS_PRODUCT", evidence_labels)
+
+    def test_search_graph_does_not_let_generic_action_plan_override_responsibility_intent(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "Who is responsible for each item?",
+            limit=10,
+            intent_analyzer=lambda _query: {
+                "intent": "person_responsibility",
+                "entities": {"person_name": ""},
+                "warnings": [],
+            },
+            query_planner=lambda _query: {
+                "target": "action_items",
+                "constraints": {},
+                "include_followups": False,
+                "warnings": [],
+            },
+        )
+
+        self.assertEqual(payload["results"][0]["matched_relation"], "RESPONSIBLE_BY")

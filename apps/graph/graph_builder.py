@@ -7,6 +7,7 @@ from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_
 
 from . import cypher_queries as cq
 from .keyword_extractor import extract_keyword_entities, extract_person_names
+from .semantic_extractor import extract_semantic_item
 
 
 def build_graph_from_mongo(client) -> dict:
@@ -19,6 +20,8 @@ def build_graph_from_mongo(client) -> dict:
     keyword_pairs = Counter()
     node_counts = Counter()
     relation_counts = Counter()
+    issue_items = defaultdict(list)
+    meetings_by_id = {meeting.get("meeting_id"): meeting for meeting in meetings}
 
     for meeting in meetings:
         document_id = meeting.get("document_id")
@@ -116,7 +119,14 @@ def build_graph_from_mongo(client) -> dict:
                 keyword_pairs[(left, right)] += 1
                 keyword_pairs[(right, left)] += 1
 
+            semantic = extract_semantic_item(item)
+            _persist_semantic_item(client, item, semantic, node_counts, relation_counts)
+            issue = semantic.get("issue")
+            if issue:
+                issue_items[issue["issue_id"]].append(item)
+
     _persist_keyword_cooccurrence(client, keyword_pairs, relation_counts)
+    _persist_follow_up_links(client, issue_items, meetings_by_id, relation_counts)
 
     return {
         "meeting_count": len(meetings),
@@ -140,6 +150,83 @@ def _persist_keyword_cooccurrence(client, keyword_pairs: Counter, relation_count
         weight = round(count / denominator, 4)
         _write(client, _merge_co_occurs_with, left, right, count, weight)
         relation_counts["CO_OCCURS_WITH"] += 1
+
+
+def _persist_semantic_item(client, item, semantic, node_counts, relation_counts) -> None:
+    item_id = item.get("item_id")
+    if not item_id:
+        return
+
+    issue = semantic.get("issue")
+    if issue:
+        _write(client, _merge_issue, issue)
+        node_counts["Issue"] += 1
+        _write(client, _merge_tracks_issue, item_id, issue["issue_id"])
+        relation_counts["TRACKS_ISSUE"] += 1
+
+    action = semantic.get("action")
+    if action:
+        _write(client, _merge_action_item, action)
+        node_counts["ActionItem"] += 1
+        _write(client, _merge_has_action, item_id, action["action_id"])
+        relation_counts["HAS_ACTION"] += 1
+
+        owner = str(item.get("owner") or "").strip()
+        if owner and owner.lower() not in {"--", "na", "n/a", "none", "null"}:
+            _write(client, _merge_person, owner)
+            node_counts["Person"] += 1
+            _write(client, _merge_action_assigned_to, action["action_id"], owner)
+            relation_counts["ASSIGNED_TO"] += 1
+
+        for product in semantic.get("products", []):
+            _write(client, _merge_product, product)
+            node_counts["Product"] += 1
+            _write(client, _merge_action_targets_product, action["action_id"], product)
+            relation_counts["TARGETS_PRODUCT"] += 1
+
+        for regulation in semantic.get("regulations", []):
+            _write(client, _merge_regulation, regulation)
+            node_counts["Regulation"] += 1
+            _write(client, _merge_action_constrained_by, action["action_id"], regulation)
+            relation_counts["CONSTRAINED_BY"] += 1
+
+    decision = semantic.get("decision")
+    if decision:
+        _write(client, _merge_decision, decision)
+        node_counts["Decision"] += 1
+        _write(client, _merge_has_decision, item_id, decision["decision_id"])
+        relation_counts["HAS_DECISION"] += 1
+        if issue:
+            _write(client, _merge_decides_on_issue, decision["decision_id"], issue["issue_id"])
+            relation_counts["DECIDES_ON"] += 1
+
+    risk = semantic.get("risk")
+    if risk:
+        _write(client, _merge_risk, risk)
+        node_counts["Risk"] += 1
+        _write(client, _merge_has_risk, item_id, risk["risk_id"])
+        relation_counts["HAS_RISK"] += 1
+        if issue:
+            _write(client, _merge_risk_of_issue, risk["risk_id"], issue["issue_id"])
+            relation_counts["RISK_OF"] += 1
+
+
+def _persist_follow_up_links(client, issue_items, meetings_by_id, relation_counts) -> None:
+    for items in issue_items.values():
+        ordered = sorted(
+            items,
+            key=lambda item: (
+                meetings_by_id.get(item.get("meeting_id"), {}).get("meeting_date") or "",
+                item.get("meeting_id") or "",
+                item.get("item_no") or "",
+                item.get("item_id") or "",
+            ),
+        )
+        for previous, current in zip(ordered, ordered[1:]):
+            if previous.get("item_id") == current.get("item_id"):
+                continue
+            _write(client, _merge_follow_up_of, current.get("item_id"), previous.get("item_id"))
+            relation_counts["FOLLOW_UP_OF"] += 1
 
 
 def _write(client, callback, *args):
@@ -363,6 +450,90 @@ def _merge_mentions_regulation(tx, item_id, regulation_name):
     if tx is None:
         return None
     tx.run(cq.MERGE_MENTIONS_REGULATION, item_id=item_id, regulation_name=regulation_name)
+
+
+def _merge_action_item(tx, action):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_ACTION_ITEM, **action)
+
+
+def _merge_has_action(tx, item_id, action_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_HAS_ACTION, item_id=item_id, action_id=action_id)
+
+
+def _merge_action_assigned_to(tx, action_id, person_name):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_ACTION_ASSIGNED_TO, action_id=action_id, person_name=person_name)
+
+
+def _merge_action_targets_product(tx, action_id, product_name):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_ACTION_TARGETS_PRODUCT, action_id=action_id, product_name=product_name)
+
+
+def _merge_action_constrained_by(tx, action_id, regulation_name):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_ACTION_CONSTRAINED_BY, action_id=action_id, regulation_name=regulation_name)
+
+
+def _merge_decision(tx, decision):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_DECISION, **decision)
+
+
+def _merge_has_decision(tx, item_id, decision_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_HAS_DECISION, item_id=item_id, decision_id=decision_id)
+
+
+def _merge_risk(tx, risk):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_RISK, **risk)
+
+
+def _merge_has_risk(tx, item_id, risk_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_HAS_RISK, item_id=item_id, risk_id=risk_id)
+
+
+def _merge_issue(tx, issue):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_ISSUE, **issue)
+
+
+def _merge_tracks_issue(tx, item_id, issue_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_TRACKS_ISSUE, item_id=item_id, issue_id=issue_id)
+
+
+def _merge_decides_on_issue(tx, decision_id, issue_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_DECIDES_ON_ISSUE, decision_id=decision_id, issue_id=issue_id)
+
+
+def _merge_risk_of_issue(tx, risk_id, issue_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_RISK_OF_ISSUE, risk_id=risk_id, issue_id=issue_id)
+
+
+def _merge_follow_up_of(tx, current_item_id, previous_item_id):
+    if tx is None:
+        return None
+    tx.run(cq.MERGE_FOLLOW_UP_OF, current_item_id=current_item_id, previous_item_id=previous_item_id)
 
 
 def _merge_co_occurs_with(tx, left_keyword, right_keyword, count, weight):

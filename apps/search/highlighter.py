@@ -20,16 +20,17 @@ def collect_matched_snippets(query: str, meeting: dict, items: list[dict], extra
         snippet = make_highlight_snippet(field, meeting.get(field), terms)
         if snippet and (field, snippet) not in seen:
             seen.add((field, snippet))
-            snippets.append({"field": field, "snippet": snippet})
+            snippets.append({"field": field, "snippet": snippet, "direct_match": bool(find_match(str(meeting.get(field) or ""), [query])[0])})
 
     for item in items:
         for field in ("content", "owner", "tracking_result"):
             snippet = make_highlight_snippet(field, item.get(field), terms)
             if snippet and (field, snippet) not in seen:
                 seen.add((field, snippet))
-                snippets.append({"field": field, "snippet": snippet})
+                snippets.append({"field": field, "snippet": snippet, "direct_match": bool(find_match(str(item.get(field) or ""), [query])[0])})
 
-    return snippets[:8]
+    snippets.sort(key=lambda item: (not item["direct_match"], item["field"]))
+    return [{key: value for key, value in snippet.items() if key != "direct_match"} for snippet in snippets[:8]]
 
 
 def make_highlight_snippet(field: str, value, terms: list[str]) -> str | None:

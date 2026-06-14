@@ -239,6 +239,12 @@ class EvidenceGraphBuilder:
         if meeting_id and item_id:
             self.add_edge("Meeting", meeting_id, "MeetingItem", item_id, "HAS_ITEM")
 
+        evidence_relations = result.get("evidence_relations") or []
+        if evidence_relations:
+            for evidence_relation in evidence_relations:
+                self.add_evidence_relation(evidence_relation)
+            return
+
         relation = result.get("matched_relation") or "MENTIONS"
         if relation == "MENTIONS":
             keyword = result.get("matched_keyword") or result.get("matched_entity")
@@ -247,16 +253,36 @@ class EvidenceGraphBuilder:
                 self.add_edge("MeetingItem", item_id, "Keyword", keyword, "MENTIONS")
             return
 
+        if relation == "FOLLOW_UP_OF":
+            previous_item_id = result.get("matched_node_id") or result.get("matched_entity")
+            if previous_item_id and item_id:
+                self.add_node("MeetingItem", previous_item_id, previous_item_id, previous_item_id)
+                self.add_edge("MeetingItem", item_id, "MeetingItem", previous_item_id, "FOLLOW_UP_OF")
+            return
+
         entity = result.get("matched_entity")
         if not entity:
             return
 
         entity_type = entity_type_for_relation(relation)
-        self.add_node(entity_type, entity, entity, entity)
+        entity_value = result.get("matched_node_id") or entity
+        self.add_node(entity_type, entity_value, entity, entity)
         if relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY", "BELONGS_TO_UNIT"} and meeting_id:
-            self.add_edge("Meeting", meeting_id, entity_type, entity, relation)
+            self.add_edge("Meeting", meeting_id, entity_type, entity_value, relation)
         elif item_id:
-            self.add_edge("MeetingItem", item_id, entity_type, entity, relation)
+            self.add_edge("MeetingItem", item_id, entity_type, entity_value, relation)
+
+    def add_evidence_relation(self, evidence_relation: dict) -> None:
+        source_type = evidence_relation.get("source_type")
+        source_value = evidence_relation.get("source_value")
+        target_type = evidence_relation.get("target_type")
+        target_value = evidence_relation.get("target_value")
+        relation = evidence_relation.get("relation")
+        if not all([source_type, source_value, target_type, target_value, relation]):
+            return
+        self.add_node(source_type, source_value, evidence_relation.get("source_label") or source_value, source_value)
+        self.add_node(target_type, target_value, evidence_relation.get("target_label") or target_value, target_value)
+        self.add_edge(source_type, source_value, target_type, target_value, relation)
 
     def add_node(self, node_type: str, value, label, title) -> None:
         node_id = make_graph_node_id(node_type, value)
@@ -304,10 +330,32 @@ def entity_type_for_relation(relation: str) -> str:
         "HAS_COMPLETED_DATE": "Date",
         "MENTIONS_PRODUCT": "Product",
         "MENTIONS_REGULATION": "Regulation",
+        "HAS_ACTION": "ActionItem",
+        "HAS_DECISION": "Decision",
+        "HAS_RISK": "Risk",
+        "TRACKS_ISSUE": "Issue",
+        "ASSIGNED_TO": "Person",
+        "TARGETS_PRODUCT": "Product",
+        "CONSTRAINED_BY": "Regulation",
     }.get(relation, "Entity")
 
 
 def format_graph_path(result: dict) -> str:
+    evidence_relations = result.get("evidence_relations") or []
+    if evidence_relations:
+        meeting_id = result.get("meeting_id") or "unknown_meeting"
+        item_id = result.get("item_id") or "unknown_item"
+        evidence_paths = [
+            (
+                f"{relation.get('source_type')}({relation.get('source_value')})"
+                f"-[:{relation.get('relation')}]->"
+                f"{relation.get('target_type')}({relation.get('target_label') or relation.get('target_value')})"
+            )
+            for relation in evidence_relations
+            if relation.get("source_type") and relation.get("target_type") and relation.get("relation")
+        ]
+        return "; ".join([f"Meeting({meeting_id})-[:HAS_ITEM]->MeetingItem({item_id})", *evidence_paths])
+
     relation = result.get("matched_relation")
     if relation and relation != "MENTIONS":
         entity = result.get("matched_entity") or "unknown_entity"
@@ -318,9 +366,15 @@ def format_graph_path(result: dict) -> str:
                 f"Meeting({meeting_id})-[:{relation}]->Entity({entity}); "
                 f"Meeting({meeting_id})-[:HAS_ITEM]->MeetingItem({item_id})"
             )
+        if relation == "FOLLOW_UP_OF":
+            return (
+                f"Meeting({meeting_id})-[:HAS_ITEM]->MeetingItem({item_id})"
+                f"-[:FOLLOW_UP_OF]->MeetingItem({entity})"
+            )
+        entity_type = entity_type_for_relation(relation)
         return (
             f"Meeting({meeting_id})-[:HAS_ITEM]->MeetingItem({item_id})"
-            f"-[:{relation}]->Entity({entity})"
+            f"-[:{relation}]->{entity_type}({entity})"
         )
 
     field = result.get("matched_field") or "unknown_field"
