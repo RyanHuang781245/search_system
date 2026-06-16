@@ -1,0 +1,76 @@
+{
+  "description": "GraphRAG golden cases. Approved cases are used by eval_graphrag.",
+  "cases": [
+    {
+      "id": "person_responsibility_chen_sheng_chang",
+      "enabled": false,
+      "question": "陳聖昌負責哪些項目",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_c1fe50de8197"
+      ],
+      "expected_relations": [
+        "RESPONSIBLE_BY"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true
+    },
+    {
+      "id": "planned_date_2017_12_15",
+      "enabled": false,
+      "question": "2017 年 12 月 15 日要完成哪些事項",
+      "limit": "auto",
+      "expected_item_ids": [],
+      "expected_relations": [
+        "HAS_PLANNED_DATE"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true
+    },
+    {
+      "id": "meeting_items_p1812",
+      "enabled": false,
+      "question": "P1812 Coformity stem器械進度 會議包含哪些事項",
+      "limit": "auto",
+      "expected_meeting_ids": [
+        "meeting_b6f94d9c0eaa"
+      ],
+      "expected_item_ids": [],
+      "expected_relations": [
+        "HAS_ITEM"
+      ],
+      "require_consistency": true
+    },
+    {
+      "id": "insufficient_unknown_person",
+      "enabled": false,
+      "question": "不存在的人名負責哪些項目",
+      "limit": "auto",
+      "expect_insufficient": true,
+      "require_consistency": true
+    },
+    {
+      "id": "seed_001_張志豪負責哪些事項",
+      "enabled": true,
+      "question": "張志豪負責哪些事項",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_414edabccb28",
+        "item_54c6ec394efb",
+        "item_a984ea2f168c",
+        "item_b97008753dbf",
+        "item_d8dc484d6c30",
+        "item_f7cc52173d29"
+      ],
+      "expected_meeting_ids": [
+        "meeting_8788c83b0cf4"
+      ],
+      "expected_relations": [
+        "RESPONSIBLE_BY"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    }
+  ]
+}

@@ -223,6 +223,49 @@
                 <div id="vector-results" class="result-list mt-4"></div>
             </div>
         </section>
+
+        <section class="app-card">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="clipboard-check"></i>
+                    回歸評估
+                </h2>
+                <span class="small text-muted">Golden cases</span>
+            </div>
+            <div class="app-card-body">
+                <div class="d-grid gap-3">
+                    <textarea
+                        id="eval-questions"
+                        class="form-control"
+                        rows="5"
+                        placeholder="一行一題，例如：&#10;陳聖昌負責哪些項目&#10;2017 年 12 月 15 日要完成哪些事項"
+                    ></textarea>
+                    <div class="input-group">
+                        <span class="input-group-text">Scope</span>
+                        <select id="eval-limit" class="form-select">
+                            <option value="auto" selected>Auto</option>
+                            <option value="focused">聚焦</option>
+                            <option value="balanced">平衡</option>
+                            <option value="broad">廣泛</option>
+                        </select>
+                        <button id="eval-seed-button" class="btn btn-primary btn-primary-custom" type="button">
+                            <i data-lucide="wand-sparkles"></i>
+                            <span>產生候選</span>
+                        </button>
+                        <button id="eval-run-button" class="btn btn-outline-primary" type="button">
+                            <i data-lucide="play"></i>
+                            <span>執行評估</span>
+                        </button>
+                        <button id="eval-save-button" class="btn btn-outline-success" type="button">
+                            <i data-lucide="save"></i>
+                            <span>保存已確認</span>
+                        </button>
+                    </div>
+                    <div id="eval-summary" class="operation-log">尚未產生評估案例。</div>
+                    <div id="eval-results" class="result-list"></div>
+                </div>
+            </div>
+        </section>
     </div>
 </aside>
 

@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APISimpleTestCase
 
 from .graph_builder import build_graph_from_mongo
-from .graph_search import fetch_related_keywords, search_graph
+from .graph_search import fetch_related_keywords, meeting_query_terms, search_graph
 from .intent import analyze_graph_intent
 from .keyword_extractor import extract_keyword_entities
 from .query_planner import analyze_graph_query_plan, heuristic_query_plan
@@ -205,6 +205,43 @@ class GraphBuilderTestCase(SimpleTestCase):
         self.assertTrue(all("score" in params and "method" in params for params in mention_params))
         self.assertTrue(all(not str(params["method"]).startswith("domain_") for params in mention_params))
 
+    def test_build_graph_clears_stale_completed_date_relation_for_placeholder_date(self):
+        meeting = {
+            "document_id": "doc_001",
+            "meeting_id": "meeting_001",
+            "meeting_name": "Design transfer",
+            "meeting_date": "2018-04-03",
+        }
+        item = {
+            "item_id": "item_001",
+            "meeting_id": "meeting_001",
+            "item_no": "05",
+            "content": "可用性評估報告確認",
+            "owner": "UR3",
+            "planned_date": "--",
+            "actual_completed_date": "--",
+            "tracking_result": "不 適 用 ，詳 設 計 移 轉 會 議 投 影 片 ( 附 件)",
+        }
+        client = _CapturingGraphClient()
+
+        with patch("apps.graph.graph_builder.get_meeting_minutes_collection", return_value=_FakeCollection([meeting])), patch(
+            "apps.graph.graph_builder.get_meeting_items_collection", return_value=_FakeCollection([item])
+        ):
+            summary = build_graph_from_mongo(client)
+
+        self.assertEqual(summary["relationship_counts"].get("HAS_COMPLETED_DATE", 0), 0)
+        self.assertEqual(summary["relationship_counts"].get("HAS_PLANNED_DATE", 0), 0)
+        completed_date_merges = [
+            entry for entry in client.runs
+            if "MERGE (i)-[:HAS_COMPLETED_DATE]->(d)" in entry["query"]
+        ]
+        self.assertEqual(completed_date_merges, [])
+        cleanup_runs = [
+            entry for entry in client.runs
+            if "HAS_PLANNED_DATE|HAS_COMPLETED_DATE" in entry["query"]
+        ]
+        self.assertEqual(cleanup_runs[0]["params"]["item_id"], "item_001")
+
     def test_build_graph_persists_semantic_nodes_and_follow_up_links(self):
         meetings = [
             {
@@ -307,7 +344,7 @@ class SemanticExtractorTestCase(SimpleTestCase):
         payload = extract_semantic_item(
             {
                 "item_id": "item_001",
-                "content": "決議 Conformity stem FDA submission delay risk must be reviewed.",
+                "content": "Approved decision: Conformity stem FDA submission delay risk must be reviewed.",
                 "owner": "Carol",
                 "actual_completed_date": None,
                 "tracking_result": "pending",
@@ -318,6 +355,69 @@ class SemanticExtractorTestCase(SimpleTestCase):
         self.assertIsNotNone(payload["risk"])
         self.assertIsNotNone(payload["decision"])
         self.assertIsNotNone(payload["issue"])
+
+    def test_tracking_result_bare_complete_does_not_create_completed_status_without_actual_date(self):
+        payload = extract_semantic_item(
+            {
+                "item_id": "item_001",
+                "content": "請下次完成 FDA submission follow-up.",
+                "owner": "Carol",
+                "actual_completed_date": None,
+                "tracking_result": "下次會議前完成",
+            }
+        )
+
+        self.assertEqual(payload["action"]["status"], "pending")
+
+    def test_tracking_result_high_confidence_completion_sets_completed_status(self):
+        examples = (
+            "新 竹 製 程 確 認完 成 ，詳 設 計 移 轉 會 議 投 影 片 ( 附 件一)",
+            "確 認 已完 成 ，詳 設 計 移 轉 會 議 投 影片 ( 附件)",
+        )
+
+        for tracking_result in examples:
+            payload = extract_semantic_item(
+                {
+                    "item_id": "item_001",
+                    "content": "製程確認",
+                    "owner": "Carol",
+                    "actual_completed_date": None,
+                    "tracking_result": tracking_result,
+                }
+            )
+
+            self.assertEqual(payload["action"]["status"], "completed")
+            self.assertEqual(payload["action"]["status_source"], "tracking_result")
+            self.assertEqual(payload["action"]["status_confidence"], "high")
+
+    def test_actual_completed_date_placeholder_does_not_create_completed_status(self):
+        payload = extract_semantic_item(
+            {
+                "item_id": "item_001",
+                "content": "FDA submission follow-up.",
+                "owner": "Carol",
+                "actual_completed_date": "--",
+                "tracking_result": "",
+            }
+        )
+
+        self.assertEqual(payload["action"]["status"], "pending")
+
+    def test_not_applicable_tracking_result_does_not_create_completed_status(self):
+        payload = extract_semantic_item(
+            {
+                "item_id": "item_001",
+                "content": "可用性評估報告確認",
+                "owner": "UR3",
+                "planned_date": "--",
+                "actual_completed_date": "--",
+                "tracking_result": "不 適 用 ，詳 設 計 移 轉 會 議 投 影 片 ( 附 件)",
+            }
+        )
+
+        self.assertEqual(payload["action"]["status"], "not_applicable")
+        self.assertEqual(payload["action"]["status_source"], "tracking_result")
+        self.assertEqual(payload["action"]["status_confidence"], "high")
 
 
 class _FakeGraphClient:
@@ -354,13 +454,13 @@ class _CapturingTx:
 
 
 class _FakeTx:
-    def run(self, query, **params):
+    def run(self, cypher, **params):
         normalized_keyword = str(params.get("keyword") or "").strip().upper()
         normalized_keywords = [str(item or "").strip().upper() for item in params.get("keywords", [])]
         entity = str(params.get("entity") or "").strip().upper()
         relation = str(params.get("relation") or "").strip().upper()
 
-        if "CO_OCCURS_WITH" in query:
+        if "CO_OCCURS_WITH" in cypher:
             if normalized_keyword == "FDA":
                 return [
                     {"keyword": "TFDA", "type": "abbreviation", "weight": 1.0, "count": 2},
@@ -368,7 +468,7 @@ class _FakeTx:
                 ]
             return []
 
-        if "MATCH (item:MeetingItem)-[mention:MENTIONS]->(keyword:Keyword)" in query and "FDA" in normalized_keywords:
+        if "MATCH (item:MeetingItem)-[mention:MENTIONS]->(keyword:Keyword)" in cypher and "FDA" in normalized_keywords:
             return [
                 {
                     "meeting_id": "meet_001",
@@ -385,7 +485,26 @@ class _FakeTx:
                 }
             ]
 
-        if "OPTIONAL MATCH (item)-[:HAS_ACTION]->(action:ActionItem)" in query:
+        if "QUERY_MEETING_ITEMS_BY_QUERY" in cypher:
+            return []
+
+        if "WHERE toUpper($query) CONTAINS toUpper(meeting.meeting_name)" in cypher:
+            return [
+                {
+                    "meeting_id": "meet_items",
+                    "meeting_name": "Owner review meeting",
+                    "meeting_date": "2018-04-03",
+                    "item_id": f"item_{index:03d}",
+                    "item_no": f"{index:02d}",
+                    "content": f"Meeting item {index}",
+                    "matched_entity": "Owner review meeting",
+                    "matched_relation": "HAS_ITEM",
+                    "matched_field": "meeting_items",
+                }
+                for index in range(1, 6)
+            ]
+
+        if "OPTIONAL MATCH (item)-[:HAS_ACTION]->(action:ActionItem)" in cypher:
             return [
                 {
                     "meeting_id": "meet_006",
@@ -410,7 +529,7 @@ class _FakeTx:
                 }
             ]
 
-        if "FOLLOW_UP_OF" in query:
+        if "FOLLOW_UP_OF" in cypher:
             return [
                 {
                     "meeting_id": "meet_007",
@@ -427,7 +546,7 @@ class _FakeTx:
                 }
             ]
 
-        if "RESPONSIBLE_BY" in query:
+        if "RESPONSIBLE_BY" in cypher:
             if not entity or "CAROL" in entity:
                 return [
                     {
@@ -444,7 +563,7 @@ class _FakeTx:
                 ]
             return []
 
-        if "type(relation) = $relation" in query and relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY"}:
+        if "type(relation) = $relation" in cypher and relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY"}:
             return [
                 {
                     "meeting_id": "meet_001",
@@ -459,7 +578,7 @@ class _FakeTx:
                 }
             ]
 
-        if "BELONGS_TO_UNIT" in query:
+        if "BELONGS_TO_UNIT" in cypher:
             return [
                 {
                     "meeting_id": "meet_002",
@@ -474,7 +593,7 @@ class _FakeTx:
                 }
             ]
 
-        if "HAS_PLANNED_DATE" in query or "HAS_COMPLETED_DATE" in query:
+        if "HAS_PLANNED_DATE" in cypher or "HAS_COMPLETED_DATE" in cypher:
             return [
                 {
                     "meeting_id": "meet_003",
@@ -489,7 +608,7 @@ class _FakeTx:
                 }
             ]
 
-        if "MENTIONS_PRODUCT" in query:
+        if "MENTIONS_PRODUCT" in cypher:
             return [
                 {
                     "meeting_id": "meet_004",
@@ -504,7 +623,7 @@ class _FakeTx:
                 }
             ]
 
-        if "MENTIONS_REGULATION" in query:
+        if "MENTIONS_REGULATION" in cypher:
             return [
                 {
                     "meeting_id": "meet_005",
@@ -524,7 +643,7 @@ class _FakeTx:
 class GraphSearchTestCase(SimpleTestCase):
     def test_query_planner_parses_composite_constraints(self):
         payload = analyze_graph_query_plan(
-            "Carol 負責且 FDA 未完成的 Conformity stem 項目",
+            "Carol is responsible for FDA not completed Conformity stem items",
             llm_client=lambda _question: (
                 '{"target":"action_items","constraints":{"person_name":"Carol",'
                 '"product_name":"Conformity stem","regulation_name":"FDA","status":"not_completed"},'
@@ -539,11 +658,16 @@ class GraphSearchTestCase(SimpleTestCase):
         self.assertTrue(payload["include_followups"])
 
     def test_heuristic_query_plan_targets_risks(self):
-        payload = heuristic_query_plan("FDA 有哪些風險尚未完成？")
+        payload = heuristic_query_plan("FDA open risk items")
 
         self.assertEqual(payload["target"], "risks")
         self.assertEqual(payload["constraints"]["status"], "not_completed")
         self.assertEqual(payload["constraints"]["regulation_name"].upper(), "FDA")
+
+    def test_heuristic_query_plan_does_not_treat_due_questions_as_completed(self):
+        payload = heuristic_query_plan("2017 年 12 月 15 日要完成哪些事項")
+
+        self.assertEqual(payload["constraints"]["status"], "")
 
     def test_analyze_graph_intent_parses_llm_json(self):
         payload = analyze_graph_intent(
@@ -558,8 +682,45 @@ class GraphSearchTestCase(SimpleTestCase):
     def test_analyze_graph_intent_returns_warning_for_invalid_json(self):
         payload = analyze_graph_intent("What is Carol responsible for?", llm_client=lambda _question: "not json")
 
-        self.assertEqual(payload["intent"], "keyword_related")
-        self.assertTrue(payload["warnings"])
+        self.assertEqual(payload["intent"], "person_responsibility")
+        self.assertEqual(payload["entities"]["person_name"], "Carol")
+        self.assertEqual(payload["warnings"], [])
+
+    def test_analyze_graph_intent_uses_deterministic_date_intent(self):
+        payload = analyze_graph_intent(
+            "2017 年 12 月 15 日要完成哪些事項",
+            llm_client=lambda _question: self.fail("date intent should not require LLM"),
+        )
+
+        self.assertEqual(payload["intent"], "planned_date")
+        self.assertEqual(payload["entities"]["date_value"], "2017-12-15")
+        self.assertEqual(payload["warnings"], [])
+
+    def test_analyze_graph_intent_uses_deterministic_person_relation_intents(self):
+        cases = [
+            ("陳聖昌出席哪些會議", "person_attendance"),
+            ("陳聖昌主持哪些會議", "meeting_chair"),
+            ("陳聖昌記錄哪些會議", "meeting_recorder"),
+            ("陳聖昌負責哪些項目", "person_responsibility"),
+        ]
+
+        for question, intent in cases:
+            with self.subTest(question=question):
+                payload = analyze_graph_intent(
+                    question,
+                    llm_client=lambda _query: self.fail("deterministic person intent should not require LLM"),
+                )
+                self.assertEqual(payload["intent"], intent)
+                self.assertEqual(payload["entities"]["person_name"], "陳聖昌")
+
+    def test_heuristic_query_plan_extracts_mixed_constraints(self):
+        payload = heuristic_query_plan("陳聖昌 FDA Conformity stem 未完成事項")
+
+        self.assertEqual(payload["target"], "action_items")
+        self.assertEqual(payload["constraints"]["person_name"], "陳聖昌")
+        self.assertEqual(payload["constraints"]["regulation_name"].upper(), "FDA")
+        self.assertEqual(payload["constraints"]["product_name"], "Conformity stem")
+        self.assertEqual(payload["constraints"]["status"], "not_completed")
 
     def test_fetch_related_keywords_is_case_insensitive(self):
         payload = fetch_related_keywords(_FakeGraphClient(), "fda", limit=10)
@@ -661,6 +822,34 @@ class GraphSearchTestCase(SimpleTestCase):
         self.assertIn("MENTIONS_REGULATION", evidence_labels)
         self.assertIn("MENTIONS_PRODUCT", evidence_labels)
 
+    def test_search_graph_uses_has_item_for_meeting_item_list_questions(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "Which items are included in Owner review meeting?",
+            limit=10,
+        )
+
+        self.assertEqual(len(payload["results"]), 5)
+        self.assertTrue(all(result["matched_relation"] == "HAS_ITEM" for result in payload["results"]))
+        self.assertEqual(payload["results"][0]["match_type"], "meeting_items")
+        self.assertEqual(payload["results"][0]["retrieval_mode"], "structural")
+
+    def test_search_graph_can_limit_retrieval_modes(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "Owner review meeting 的討論事項",
+            limit=10,
+            retrieval_modes=("structural",),
+        )
+
+        self.assertEqual(payload["retrieval_modes"], ["structural"])
+        self.assertEqual(len(payload["results"]), 5)
+        self.assertTrue(all(result["retrieval_mode"] == "structural" for result in payload["results"]))
+
+    def test_meeting_query_terms_keep_meeting_identifiers(self):
+        self.assertEqual(meeting_query_terms("P1812 會議包含哪些項目"), ["P1812"])
+        self.assertEqual(meeting_query_terms("P1812 會議的討論事項"), ["P1812"])
+
     def test_search_graph_does_not_let_generic_action_plan_override_responsibility_intent(self):
         payload = search_graph(
             _FakeGraphClient(),
@@ -680,3 +869,4 @@ class GraphSearchTestCase(SimpleTestCase):
         )
 
         self.assertEqual(payload["results"][0]["matched_relation"], "RESPONSIBLE_BY")
+

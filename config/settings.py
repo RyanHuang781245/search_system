@@ -79,6 +79,8 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost")
 OLLAMA_PORT = int(os.getenv("OLLAMA_PORT", "10000"))
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 OLLAMA_INFERENCE_MODEL = os.getenv("OLLAMA_INFERENCE_MODEL", "qwen2.5:3b")
+GRAPHRAG_QUERY_ROUTER_LLM_ENABLED = os.getenv("GRAPHRAG_QUERY_ROUTER_LLM_ENABLED", "1").lower() in {"1", "true", "yes", "on"}
+GRAPHRAG_QUERY_ROUTER_LLM_TIMEOUT = int(os.getenv("GRAPHRAG_QUERY_ROUTER_LLM_TIMEOUT", "8"))
 
 KEYWORD_LLM_ENABLED = os.getenv("KEYWORD_LLM_ENABLED", "True").lower() == "true"
 KEYWORD_LLM_TIMEOUT = int(os.getenv("KEYWORD_LLM_TIMEOUT", "12"))

@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 from django.utils import timezone
 
+from apps.item_status import BLANK_VALUES, is_meaningful_value
+
 
 MEETING_KEYWORD_WEIGHTS = {
     "meeting_name": 10,
@@ -31,7 +33,7 @@ STRUCTURE_WEIGHTS = {
     "attendees": 2,
 }
 
-BLANK_OWNER_VALUES = {"", "--", "na", "n/a", "none", "null"}
+BLANK_OWNER_VALUES = BLANK_VALUES
 TASK_INTENT_TERMS = {
     "owner",
     "responsible",
@@ -204,11 +206,7 @@ def has_owner_value(value) -> bool:
 
 
 def has_value(value) -> bool:
-    if value is None:
-        return False
-    if isinstance(value, str):
-        return bool(value.strip())
-    return True
+    return is_meaningful_value(value)
 
 
 def parse_iso_date(value: str | None) -> date | None:

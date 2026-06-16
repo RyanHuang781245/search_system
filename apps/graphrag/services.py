@@ -1,8 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
+
+from collections import Counter
+from dataclasses import asdict, dataclass
+import json
+import re
 
 from django.conf import settings
 
 from apps.graph.services import graph_search_query
+from apps.graphrag.query_router import QueryRoute, analyze_query_route, route_question
 from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_collection
 from apps.search.ranking import matches_query
 from apps.vector.services import VectorServiceError, semantic_search
@@ -12,24 +18,53 @@ class GraphRagServiceError(Exception):
     """Raised when GraphRAG answer generation cannot be completed."""
 
 
+@dataclass(frozen=True)
+class EvidenceRecord:
+    evidence_id: str
+    evidence_source: str
+    meeting_id: str | None
+    item_id: str | None
+    relation: str
+    entity: str | None
+    confidence: float
+    reason: str
+    retrieved_by: str
+    payload: dict
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
 def answer_question(
     question: str,
     limit: int | str | None = 5,
     semantic_searcher=None,
     graph_searcher=None,
+    query_analyzer=None,
     llm_client=None,
 ) -> dict:
     normalized_question = str(question or "").strip()
     if not normalized_question:
         raise GraphRagServiceError("Question is required.")
-    effective_limit, limit_mode = determine_effective_limit(normalized_question, limit)
+    query_route = _safe_query_route(query_analyzer or analyze_query_route, normalized_question)
+    effective_limit, limit_mode = determine_effective_limit(normalized_question, limit, query_route=query_route)
+    graph_limit = graph_search_limit(query_route, effective_limit)
 
     semantic_searcher = semantic_searcher or semantic_search
     graph_searcher = graph_searcher or graph_search_query
     llm_client = llm_client or ollama_answer
 
-    semantic_payload = _safe_semantic_search(semantic_searcher, normalized_question, effective_limit)
-    graph_payload = _safe_graph_search(graph_searcher, normalized_question, effective_limit * 4)
+    semantic_payload = (
+        _safe_semantic_search(semantic_searcher, normalized_question, effective_limit)
+        if query_route.use_semantic
+        else {"query": normalized_question, "results": [], "warnings": []}
+    )
+    graph_payload = _safe_graph_search(
+        graph_searcher,
+        normalized_question,
+        graph_limit,
+        retrieval_modes=query_route.retrieval_modes,
+    )
 
     meetings = list(get_meeting_minutes_collection().find({}, {"_id": 0}))
     items = list(get_meeting_items_collection().find({}, {"_id": 0}))
@@ -42,23 +77,73 @@ def answer_question(
     )
     structured_context = build_structured_context(ranked_item_ids, items_by_id, meetings_by_id, effective_limit)
 
-    if len(structured_context) < effective_limit:
-        structured_context.extend(
+    structural_fallback_context = []
+    if query_route.query_type == "structural_list" and len(structured_context) < effective_limit:
+        structural_fallback_context = [
+            item
+            for item in meeting_items_structured_context(
+                normalized_question,
+                meetings,
+                items,
+                effective_limit,
+                meeting_hint=query_route.entities.get("meeting_hint"),
+            )
+            if item["item_id"] not in {entry["item_id"] for entry in structured_context}
+        ]
+        structured_context.extend(structural_fallback_context)
+        structured_context = structured_context[:effective_limit]
+
+    keyword_fallback_context = []
+    if query_route.allow_keyword_fallback and len(structured_context) < effective_limit:
+        keyword_fallback_context = [
             item
             for item in keyword_structured_context(normalized_question, meetings, items, effective_limit)
             if item["item_id"] not in {entry["item_id"] for entry in structured_context}
-        )
+        ]
+        structured_context.extend(keyword_fallback_context)
         structured_context = structured_context[:effective_limit]
 
-    graph_context = build_graph_context(graph_payload.get("results", []), limit=effective_limit * 2)
     semantic_context = semantic_payload.get("results", [])[:effective_limit]
-    source_metadata = build_source_metadata(structured_context, semantic_context)
+    evidence_set = build_answer_evidence_set(
+        graph_results=graph_payload.get("results", []),
+        structured_context=structured_context,
+        semantic_context=semantic_context,
+        structural_fallback_context=structural_fallback_context,
+        keyword_fallback_context=keyword_fallback_context,
+        query_route=query_route,
+        graph_limit=effective_limit * 2,
+    )
+    structured_context = evidence_set["structured_context"]
+    semantic_context = evidence_set["semantic_context"]
+    graph_context = evidence_set["graph_context"]
+    source_metadata = evidence_set["sources"]
+    trace = build_graphrag_trace(
+        question=normalized_question,
+        query_route=query_route,
+        effective_limit=effective_limit,
+        limit_mode=limit_mode,
+        graph_limit=graph_limit,
+        semantic_payload=semantic_payload,
+        graph_payload=graph_payload,
+        structural_fallback_context=structural_fallback_context,
+        keyword_fallback_context=keyword_fallback_context,
+        meeting_count=len(meetings),
+        item_count=len(items),
+        structured_context=structured_context,
+        graph_context=graph_context,
+        semantic_context=semantic_context,
+        source_metadata=source_metadata,
+        evidence_set=evidence_set,
+    )
 
     if not structured_context and not graph_context["paths"] and not semantic_context:
+        trace["is_insufficient"] = True
         return {
             "question": normalized_question,
             "limit": effective_limit,
             "limit_mode": limit_mode,
+            "query_route": query_route.to_dict(),
+            "trace": trace,
             "answer": "Insufficient meeting-record context to answer.",
             "contexts": {
                 "structured": [],
@@ -66,22 +151,58 @@ def answer_question(
                 "semantic": [],
             },
             "sources": [],
-            "warnings": semantic_payload.get("warnings", []) + graph_payload.get("warnings", []),
+            "warnings": build_warnings(query_route, semantic_payload, graph_payload),
         }
 
     prompt = build_graphrag_prompt(
         question=normalized_question,
+        query_route=query_route,
         structured_context=structured_context,
         graph_context=graph_context,
         semantic_context=semantic_context,
         source_metadata=source_metadata,
+        evidence_records=evidence_set["records"],
     )
-    answer = llm_client(prompt)
+    raw_answer = llm_client(prompt)
+    claims, claim_warnings = build_verified_answer_claims(raw_answer, evidence_set["records"], query_route)
+    if claims:
+        evidence_set = restrict_evidence_set_to_claims(evidence_set, claims, query_route, effective_limit * 2)
+        structured_context = evidence_set["structured_context"]
+        semantic_context = evidence_set["semantic_context"]
+        graph_context = evidence_set["graph_context"]
+        source_metadata = evidence_set["sources"]
+        answer = render_answer_from_claims(claims, evidence_set["records"])
+        trace = build_graphrag_trace(
+            question=normalized_question,
+            query_route=query_route,
+            effective_limit=effective_limit,
+            limit_mode=limit_mode,
+            graph_limit=graph_limit,
+            semantic_payload=semantic_payload,
+            graph_payload=graph_payload,
+            structural_fallback_context=structural_fallback_context,
+            keyword_fallback_context=keyword_fallback_context,
+            meeting_count=len(meetings),
+            item_count=len(items),
+            structured_context=structured_context,
+            graph_context=graph_context,
+            semantic_context=semantic_context,
+            source_metadata=source_metadata,
+            evidence_set=evidence_set,
+        )
+        trace["answer_claims"] = {
+            "count": len(claims),
+            "evidence_ids": sorted({evidence_id for claim in claims for evidence_id in claim.get("evidence_ids", [])}),
+        }
+    else:
+        answer = raw_answer
 
     return {
         "question": normalized_question,
         "limit": effective_limit,
         "limit_mode": limit_mode,
+        "query_route": query_route.to_dict(),
+        "trace": trace,
         "answer": answer,
         "contexts": {
             "structured": structured_context,
@@ -89,11 +210,11 @@ def answer_question(
             "semantic": semantic_context,
         },
         "sources": source_metadata,
-        "warnings": semantic_payload.get("warnings", []) + graph_payload.get("warnings", []),
+        "warnings": build_warnings(query_route, semantic_payload, graph_payload) + claim_warnings,
     }
 
 
-def determine_effective_limit(question: str, requested_limit=None) -> tuple[int, str]:
+def determine_effective_limit(question: str, requested_limit=None, query_route: QueryRoute | None = None) -> tuple[int, str]:
     value = str(requested_limit if requested_limit is not None else "auto").strip().lower()
     fixed_modes = {
         "focused": (5, "focused"),
@@ -111,48 +232,14 @@ def determine_effective_limit(question: str, requested_limit=None) -> tuple[int,
         try:
             return max(min(int(value), 20), 1), "manual"
         except ValueError:
-            return auto_limit_for_question(question)
-    return auto_limit_for_question(question)
+            return auto_limit_for_question(question, query_route=query_route)
+    return auto_limit_for_question(question, query_route=query_route)
 
 
-def auto_limit_for_question(question: str) -> tuple[int, str]:
-    text = str(question or "").lower()
-    inventory_terms = (
-        "哪些",
-        "所有",
-        "全部",
-        "列出",
-        "盤點",
-        "清單",
-        "誰負責哪些",
-        "有哪些",
-        "目前有哪些",
-        "未完成",
-        "尚未完成",
-        "follow-up",
-        "follow up",
-        "追蹤",
-        "list",
-        "all",
-        "inventory",
-        "items",
-        "open items",
-    )
-    exploratory_terms = (
-        "相關",
-        "狀況",
-        "進度",
-        "主要",
-        "整理",
-        "overview",
-        "summary",
-        "how",
-    )
-    if any(term in text for term in inventory_terms):
-        return 12, "auto:broad"
-    if any(term in text for term in exploratory_terms):
-        return 8, "auto:balanced"
-    return 5, "auto:focused"
+def auto_limit_for_question(question: str, query_route: QueryRoute | None = None) -> tuple[int, str]:
+    if query_route is None:
+        query_route = route_question(question)
+    return query_route.default_limit, query_route.limit_mode
 
 
 def _safe_semantic_search(semantic_searcher, question: str, limit: int) -> dict:
@@ -164,9 +251,58 @@ def _safe_semantic_search(semantic_searcher, question: str, limit: int) -> dict:
         return {"query": question, "results": [], "warnings": [f"Semantic search unavailable: {exc}"]}
 
 
-def _safe_graph_search(graph_searcher, question: str, limit: int) -> dict:
+def _safe_query_route(query_analyzer, question: str) -> QueryRoute:
     try:
-        return graph_searcher(question, limit=limit)
+        route = query_analyzer(question)
+    except Exception as exc:
+        fallback = route_question(question)
+        return QueryRoute(
+            query_type=fallback.query_type,
+            retrieval_modes=fallback.retrieval_modes,
+            use_semantic=fallback.use_semantic,
+            allow_keyword_fallback=fallback.allow_keyword_fallback,
+            default_limit=fallback.default_limit,
+            limit_mode=fallback.limit_mode,
+            answer_style=fallback.answer_style,
+            confidence=fallback.confidence,
+            route_source="heuristic_fallback",
+            entities=fallback.entities,
+            warnings=(f"Query analyzer unavailable: {exc}",),
+        )
+    if isinstance(route, QueryRoute):
+        return route
+    fallback = route_question(question)
+    return QueryRoute(
+        query_type=fallback.query_type,
+        retrieval_modes=fallback.retrieval_modes,
+        use_semantic=fallback.use_semantic,
+        allow_keyword_fallback=fallback.allow_keyword_fallback,
+        default_limit=fallback.default_limit,
+        limit_mode=fallback.limit_mode,
+        answer_style=fallback.answer_style,
+        confidence=fallback.confidence,
+        route_source="heuristic_fallback",
+        entities=fallback.entities,
+        warnings=("Query analyzer returned an invalid route.",),
+    )
+
+
+def build_warnings(query_route: QueryRoute, semantic_payload: dict, graph_payload: dict) -> list[str]:
+    return [
+        *list(query_route.warnings or []),
+        *list(semantic_payload.get("warnings", []) or []),
+        *list(graph_payload.get("warnings", []) or []),
+    ]
+
+
+def _safe_graph_search(graph_searcher, question: str, limit: int, retrieval_modes=None) -> dict:
+    try:
+        try:
+            return graph_searcher(question, limit=limit, retrieval_modes=retrieval_modes)
+        except TypeError as exc:
+            if "retrieval_modes" not in str(exc):
+                raise
+            return graph_searcher(question, limit=limit)
     except Exception as exc:
         return {
             "query": question,
@@ -174,6 +310,92 @@ def _safe_graph_search(graph_searcher, question: str, limit: int) -> dict:
             "results": [],
             "warnings": [f"Graph search unavailable: {exc}"],
         }
+
+
+def graph_search_limit(query_route: QueryRoute, effective_limit: int) -> int:
+    if query_route.query_type in {"structural_list", "relation_lookup", "composite_query"}:
+        return effective_limit
+    return effective_limit * 4
+
+
+def build_graphrag_trace(
+    *,
+    question: str,
+    query_route: QueryRoute,
+    effective_limit: int,
+    limit_mode: str,
+    graph_limit: int,
+    semantic_payload: dict,
+    graph_payload: dict,
+    structural_fallback_context: list[dict],
+    keyword_fallback_context: list[dict],
+    meeting_count: int,
+    item_count: int,
+    structured_context: list[dict],
+    graph_context: dict,
+    semantic_context: list[dict],
+    source_metadata: list[dict],
+    evidence_set: dict | None = None,
+) -> dict:
+    semantic_results = semantic_payload.get("results", [])
+    graph_results = graph_payload.get("results", [])
+    evidence_records = (evidence_set or {}).get("records", [])
+    evidence_sources = Counter(record.get("evidence_source") for record in evidence_records)
+    evidence_relations = Counter(record.get("relation") for record in evidence_records)
+    return {
+        "question": question,
+        "route": query_route.to_dict(),
+        "limit": effective_limit,
+        "limit_mode": limit_mode,
+        "retrievers": [
+            {
+                "name": "semantic",
+                "enabled": bool(query_route.use_semantic),
+                "limit": effective_limit if query_route.use_semantic else 0,
+                "count": len(semantic_results),
+                "warnings": semantic_payload.get("warnings", []),
+            },
+            {
+                "name": "graph",
+                "enabled": True,
+                "limit": graph_limit,
+                "retrieval_modes": list(query_route.retrieval_modes),
+                "count": len(graph_results),
+                "expanded_keywords": graph_payload.get("expanded_keywords", []),
+                "warnings": graph_payload.get("warnings", []),
+            },
+            {
+                "name": "mongo_structural_fallback",
+                "enabled": query_route.query_type == "structural_list",
+                "limit": effective_limit if query_route.query_type == "structural_list" else 0,
+                "count": len(structural_fallback_context),
+            },
+            {
+                "name": "mongo_keyword_fallback",
+                "enabled": bool(query_route.allow_keyword_fallback),
+                "limit": effective_limit if query_route.allow_keyword_fallback else 0,
+                "count": len(keyword_fallback_context),
+            },
+        ],
+        "corpus_counts": {
+            "meetings": meeting_count,
+            "items": item_count,
+        },
+        "context_counts": {
+            "structured": len(structured_context),
+            "graph_paths": len(graph_context.get("paths", [])),
+            "semantic": len(semantic_context),
+            "sources": len(source_metadata),
+            "evidence": len(evidence_records),
+        },
+        "evidence": {
+            "count": len(evidence_records),
+            "sources": {key: value for key, value in evidence_sources.items() if key},
+            "relations": {key: value for key, value in evidence_relations.items() if key},
+        },
+        "graph_summary": graph_context.get("summary", {}),
+        "is_insufficient": False,
+    }
 
 
 def collect_ranked_item_ids(semantic_results: list[dict], graph_results: list[dict]) -> list[str]:
@@ -185,6 +407,378 @@ def collect_ranked_item_ids(semantic_results: list[dict], graph_results: list[di
             seen.add(item_id)
             ranked_ids.append(item_id)
     return ranked_ids
+
+
+def build_answer_evidence_set(
+    *,
+    graph_results: list[dict],
+    structured_context: list[dict],
+    semantic_context: list[dict],
+    structural_fallback_context: list[dict],
+    keyword_fallback_context: list[dict],
+    query_route: QueryRoute,
+    graph_limit: int,
+) -> dict:
+    graph_evidence_results = augment_graph_results_with_structured_context(
+        graph_results,
+        structured_context,
+        semantic_context,
+        structural_fallback_context,
+        keyword_fallback_context,
+    )
+    represented_item_ids = {result.get("item_id") for result in graph_evidence_results if result.get("item_id")}
+    for item in semantic_context:
+        item_id = item.get("item_id")
+        if not item_id or item_id in represented_item_ids:
+            continue
+        represented_item_ids.add(item_id)
+        graph_evidence_results.append(semantic_item_graph_result(item))
+
+    graph_evidence_results, records = build_evidence_records(graph_evidence_results)
+    graph_context = build_graph_context(graph_evidence_results, limit=graph_limit, query_route=query_route)
+    return {
+        "records": records,
+        "structured_context": structured_context,
+        "semantic_context": semantic_context,
+        "graph_results": graph_evidence_results,
+        "graph_context": graph_context,
+        "sources": build_source_metadata_from_evidence(records),
+    }
+
+
+def build_evidence_records(graph_evidence_results: list[dict]) -> tuple[list[dict], list[dict]]:
+    records = []
+    annotated_results = []
+    seen = set()
+    for index, result in enumerate(graph_evidence_results, start=1):
+        relation = result.get("matched_relation") or "HAS_ITEM"
+        key = (
+            result.get("meeting_id"),
+            result.get("item_id"),
+            relation,
+            result.get("matched_entity"),
+            result.get("evidence_source") or "neo4j",
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        annotated_result = dict(result)
+        annotated_result["evidence_id"] = f"evidence_{len(records) + 1:03d}"
+        annotated_results.append(annotated_result)
+        records.append(
+            EvidenceRecord(
+                evidence_id=annotated_result["evidence_id"],
+                evidence_source=annotated_result.get("evidence_source") or "neo4j",
+                meeting_id=annotated_result.get("meeting_id"),
+                item_id=annotated_result.get("item_id"),
+                relation=relation,
+                entity=annotated_result.get("matched_entity") or annotated_result.get("matched_keyword"),
+                confidence=float(annotated_result.get("graph_score") or 0),
+                reason=annotated_result.get("match_type") or annotated_result.get("matched_field") or "retrieved evidence",
+                retrieved_by=annotated_result.get("retrieval_mode") or annotated_result.get("intent") or "unknown",
+                payload=annotated_result,
+            ).to_dict()
+        )
+    return annotated_results, records
+
+
+def build_verified_answer_claims(
+    raw_answer: str,
+    evidence_records: list[dict],
+    query_route: QueryRoute,
+) -> tuple[list[dict], list[str]]:
+    warnings = []
+    payload = parse_claim_response(raw_answer)
+    claims = normalize_answer_claims(payload, evidence_records)
+    claims = complete_claims_with_evidence(claims, evidence_records, query_route)
+    return claims, warnings
+
+
+def parse_claim_response(raw_answer: str):
+    text = str(raw_answer or "").strip()
+    if not text:
+        return None
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", text, flags=re.S)
+        if not match:
+            return None
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+
+
+def normalize_answer_claims(payload, evidence_records: list[dict]) -> list[dict]:
+    if payload is None:
+        return []
+    valid_evidence_ids = {record.get("evidence_id") for record in evidence_records}
+    raw_claims = payload.get("claims") if isinstance(payload, dict) else payload
+    if not isinstance(raw_claims, list):
+        return []
+    claims = []
+    seen = set()
+    for raw_claim in raw_claims:
+        if not isinstance(raw_claim, dict):
+            continue
+        claim_text = str(raw_claim.get("claim") or raw_claim.get("text") or "").strip()
+        evidence_ids = [
+            str(evidence_id).strip()
+            for evidence_id in raw_claim.get("evidence_ids", [])
+            if str(evidence_id).strip() in valid_evidence_ids
+        ]
+        if not claim_text or not evidence_ids:
+            continue
+        key = (claim_text, tuple(evidence_ids))
+        if key in seen:
+            continue
+        seen.add(key)
+        claims.append({"claim": claim_text, "evidence_ids": evidence_ids})
+    return claims
+
+
+def complete_claims_with_evidence(
+    claims: list[dict],
+    evidence_records: list[dict],
+    query_route: QueryRoute,
+) -> list[dict]:
+    if query_route.query_type not in {"structural_list", "relation_lookup", "composite_query"}:
+        return claims
+    claimed_evidence_ids = {evidence_id for claim in claims for evidence_id in claim.get("evidence_ids", [])}
+    completed = list(claims)
+    for record in evidence_records:
+        evidence_id = record.get("evidence_id")
+        if evidence_id in claimed_evidence_ids:
+            continue
+        completed.append({"claim": claim_text_from_evidence(record), "evidence_ids": [evidence_id]})
+    return completed
+
+
+def claim_text_from_evidence(record: dict) -> str:
+    payload = record.get("payload") or {}
+    relation = record.get("relation") or payload.get("matched_relation") or "HAS_ITEM"
+    entity = record.get("entity") or payload.get("matched_entity")
+    content = str(payload.get("content") or "").strip()
+    item_no = payload.get("item_no")
+    item_prefix = f"item_no {item_no}: " if item_no else ""
+    if relation == "HAS_PLANNED_DATE":
+        return f"預計日期 {entity}，{item_prefix}{content}"
+    if relation == "HAS_COMPLETED_DATE":
+        return f"完成日期 {entity}，{item_prefix}{content}"
+    if relation == "RESPONSIBLE_BY":
+        return f"{entity} 負責，{item_prefix}{content}"
+    if relation == "HAS_ITEM":
+        return f"{item_prefix}{content}"
+    if entity:
+        return f"{relation} {entity}，{item_prefix}{content}"
+    return f"{item_prefix}{content}"
+
+
+def render_answer_from_claims(claims: list[dict], evidence_records: list[dict]) -> str:
+    evidence_by_id = {record.get("evidence_id"): record for record in evidence_records}
+    lines = ["根據會議記錄，相關事項如下：", ""]
+    for index, claim in enumerate(claims, start=1):
+        source_labels = [
+            source_label_for_evidence(evidence_by_id[evidence_id])
+            for evidence_id in claim.get("evidence_ids", [])
+            if evidence_id in evidence_by_id
+        ]
+        source_text = "；".join(source_labels)
+        suffix = f"（來源：{source_text}）" if source_text else ""
+        lines.append(f"{index}. {claim.get('claim')}{suffix}")
+    return "\n".join(lines)
+
+
+def source_label_for_evidence(record: dict) -> str:
+    payload = record.get("payload") or {}
+    meeting_id = record.get("meeting_id") or "unknown_meeting"
+    item_id = record.get("item_id") or "unknown_item"
+    item_no = payload.get("item_no")
+    evidence_id = record.get("evidence_id")
+    if item_no:
+        return f"{meeting_id} / {item_id} / item_no {item_no} / {evidence_id}"
+    return f"{meeting_id} / {item_id} / {evidence_id}"
+
+
+def restrict_evidence_set_to_claims(
+    evidence_set: dict,
+    claims: list[dict],
+    query_route: QueryRoute,
+    graph_limit: int,
+) -> dict:
+    used_evidence_ids = {evidence_id for claim in claims for evidence_id in claim.get("evidence_ids", [])}
+    if not used_evidence_ids:
+        return evidence_set
+    records = [record for record in evidence_set["records"] if record.get("evidence_id") in used_evidence_ids]
+    graph_results = [
+        result
+        for result in evidence_set["graph_results"]
+        if result.get("evidence_id") in used_evidence_ids
+    ]
+    item_ids = {record.get("item_id") for record in records if record.get("item_id")}
+    return {
+        "records": records,
+        "structured_context": filter_context_by_item_ids(evidence_set["structured_context"], item_ids),
+        "semantic_context": filter_context_by_item_ids(evidence_set["semantic_context"], item_ids),
+        "graph_results": graph_results,
+        "graph_context": build_graph_context(graph_results, limit=graph_limit, query_route=query_route),
+        "sources": build_source_metadata_from_evidence(records),
+    }
+
+
+def filter_context_by_item_ids(context: list[dict], item_ids: set[str]) -> list[dict]:
+    if not item_ids:
+        return context
+    return [item for item in context if item.get("item_id") in item_ids]
+
+
+def augment_graph_results_with_structured_context(
+    graph_results: list[dict],
+    structured_context: list[dict],
+    semantic_results: list[dict],
+    structural_fallback_context: list[dict],
+    keyword_fallback_context: list[dict],
+) -> list[dict]:
+    answer_item_ids, answer_meeting_ids = answer_context_keys(structured_context, semantic_results)
+    structured_by_item_id = {item["item_id"]: item for item in structured_context if item.get("item_id")}
+    aligned_graph_results = [
+        merge_structured_metadata(result, structured_by_item_id)
+        for result in graph_results
+        if graph_result_matches_answer_context(result, answer_item_ids, answer_meeting_ids)
+    ]
+    augmented = [
+        dict(result, evidence_source=result.get("evidence_source") or "neo4j")
+        for result in aligned_graph_results
+    ]
+    represented_item_ids = {result.get("item_id") for result in augmented if result.get("item_id")}
+    source_by_item_id = structured_evidence_sources(
+        semantic_results=semantic_results,
+        structural_fallback_context=structural_fallback_context,
+        keyword_fallback_context=keyword_fallback_context,
+    )
+    for item in structured_context:
+        item_id = item.get("item_id")
+        if not item_id or item_id in represented_item_ids:
+            continue
+        represented_item_ids.add(item_id)
+        augmented.append(structured_item_graph_result(item, source_by_item_id.get(item_id, "structured_context")))
+    return augmented
+
+
+def merge_structured_metadata(result: dict, structured_by_item_id: dict) -> dict:
+    item_id = result.get("item_id")
+    structured_item = structured_by_item_id.get(item_id) if item_id else None
+    if not structured_item:
+        return result
+    merged = dict(result)
+    for key in (
+        "document_id",
+        "meeting_id",
+        "meeting_name",
+        "meeting_date",
+        "item_id",
+        "item_no",
+        "content",
+        "owner",
+        "planned_date",
+        "actual_completed_date",
+        "tracking_result",
+    ):
+        if not merged.get(key) and structured_item.get(key):
+            merged[key] = structured_item.get(key)
+    return merged
+
+
+def answer_context_keys(structured_context: list[dict], semantic_results: list[dict]) -> tuple[set[str], set[str]]:
+    item_ids = {
+        item["item_id"]
+        for item in [*structured_context, *semantic_results]
+        if item.get("item_id")
+    }
+    meeting_ids = {
+        item["meeting_id"]
+        for item in [*structured_context, *semantic_results]
+        if item.get("meeting_id")
+    }
+    return item_ids, meeting_ids
+
+
+def graph_result_matches_answer_context(
+    result: dict,
+    answer_item_ids: set[str],
+    answer_meeting_ids: set[str],
+) -> bool:
+    if not answer_item_ids and not answer_meeting_ids:
+        return True
+    item_id = result.get("item_id")
+    if item_id:
+        return item_id in answer_item_ids
+    meeting_id = result.get("meeting_id")
+    return bool(meeting_id and meeting_id in answer_meeting_ids)
+
+
+def structured_evidence_sources(
+    *,
+    semantic_results: list[dict],
+    structural_fallback_context: list[dict],
+    keyword_fallback_context: list[dict],
+) -> dict:
+    source_by_item_id = {}
+    for result in semantic_results:
+        if result.get("item_id"):
+            source_by_item_id[result["item_id"]] = "semantic_context"
+    for result in keyword_fallback_context:
+        if result.get("item_id"):
+            source_by_item_id[result["item_id"]] = "mongo_keyword_fallback"
+    for result in structural_fallback_context:
+        if result.get("item_id"):
+            source_by_item_id[result["item_id"]] = "mongo_structural_fallback"
+    return source_by_item_id
+
+
+def structured_item_graph_result(item: dict, evidence_source: str) -> dict:
+    return {
+        "document_id": item.get("document_id"),
+        "meeting_id": item.get("meeting_id"),
+        "meeting_name": item.get("meeting_name"),
+        "meeting_date": item.get("meeting_date"),
+        "item_id": item.get("item_id"),
+        "item_no": item.get("item_no"),
+        "content": item.get("content"),
+        "matched_keyword": None,
+        "matched_field": "structured_context",
+        "matched_relation": "HAS_ITEM",
+        "matched_entity": item.get("meeting_name") or item.get("meeting_id"),
+        "match_type": "answer_evidence",
+        "intent": "structured_context",
+        "retrieval_mode": "structured",
+        "evidence_source": evidence_source,
+        "graph_score": 5.0,
+    }
+
+
+def semantic_item_graph_result(item: dict) -> dict:
+    return {
+        "document_id": item.get("document_id"),
+        "meeting_id": item.get("meeting_id"),
+        "meeting_name": item.get("meeting_name"),
+        "meeting_date": item.get("meeting_date"),
+        "item_id": item.get("item_id"),
+        "item_no": item.get("item_no"),
+        "content": item.get("content"),
+        "matched_keyword": None,
+        "matched_field": "semantic_context",
+        "matched_relation": "HAS_ITEM",
+        "matched_entity": item.get("meeting_name") or item.get("meeting_id"),
+        "match_type": "answer_evidence",
+        "intent": "semantic_context",
+        "retrieval_mode": "semantic",
+        "evidence_source": "semantic_context",
+        "graph_score": float(item.get("score") or 3.0),
+    }
 
 
 def build_structured_context(
@@ -203,6 +797,115 @@ def build_structured_context(
         if len(context) >= limit:
             break
     return context
+
+
+def meeting_items_structured_context(
+    question: str,
+    meetings: list[dict],
+    items: list[dict],
+    limit: int,
+    meeting_hint: str | None = None,
+) -> list[dict]:
+    matched_meetings = find_meetings_for_structural_question(question, meetings, meeting_hint=meeting_hint)
+    if not matched_meetings:
+        return []
+    matched_meeting_ids = {meeting.get("meeting_id") for meeting in matched_meetings if meeting.get("meeting_id")}
+    meetings_by_id = {meeting.get("meeting_id"): meeting for meeting in meetings}
+    matched_items = [item for item in items if item.get("meeting_id") in matched_meeting_ids]
+    matched_items.sort(key=meeting_item_sort_key)
+    context = []
+    for item in matched_items:
+        meeting = meetings_by_id.get(item.get("meeting_id"), {})
+        context.append(format_structured_item(meeting, item))
+        if len(context) >= limit:
+            break
+    return context
+
+
+def find_meetings_for_structural_question(question: str, meetings: list[dict], meeting_hint: str | None = None) -> list[dict]:
+    query = str(question or "").strip()
+    hint = str(meeting_hint or "").strip()
+    if not query and not hint:
+        return []
+    normalized_query = normalize_match_text(" ".join(value for value in (query, hint) if value))
+    terms = meeting_question_terms(" ".join(value for value in (query, hint) if value))
+    scored = []
+    for meeting in meetings:
+        meeting_id = str(meeting.get("meeting_id") or "")
+        meeting_name = str(meeting.get("meeting_name") or "")
+        document_id = str(meeting.get("document_id") or "")
+        normalized_fields = [
+            normalize_match_text(meeting_id),
+            normalize_match_text(meeting_name),
+            normalize_match_text(document_id),
+        ]
+        score = 0
+        if normalized_fields[0] and normalized_fields[0] in normalized_query:
+            score += 100
+        if normalized_fields[1] and normalized_fields[1] in normalized_query:
+            score += 100
+        for term in terms:
+            normalized_term = normalize_match_text(term)
+            if normalized_term and any(normalized_term in field for field in normalized_fields):
+                score += 10 + min(len(normalized_term), 10)
+        if score:
+            scored.append((score, meeting))
+    if not scored:
+        return []
+    best_score = max(score for score, _meeting in scored)
+    threshold = max(best_score * 0.75, best_score - 10)
+    return [
+        meeting
+        for score, meeting in sorted(scored, key=lambda item: (-item[0], str(item[1].get("meeting_date") or "")))
+        if score >= threshold
+    ]
+
+
+def meeting_question_terms(question: str) -> list[str]:
+    text = str(question or "")
+    for cue in (
+        "會議",
+        "項目",
+        "討論事項",
+        "事項",
+        "議題",
+        "內容",
+        "包含",
+        "有哪些",
+        "哪些",
+        "列出",
+        "請問",
+        "這場",
+        "該場",
+        "的",
+        "which",
+        "items",
+        "agenda",
+        "topics",
+        "topic",
+        "included",
+        "include",
+        "meeting",
+        "content",
+    ):
+        text = re.sub(re.escape(cue), " ", text, flags=re.I)
+    terms = []
+    for token in re.split(r"[\s,，。；;:：?？()（）\[\]【】]+", text):
+        cleaned = token.strip()
+        if len(cleaned) >= 2:
+            terms.append(cleaned)
+    return terms[:8]
+
+
+def normalize_match_text(value) -> str:
+    return re.sub(r"\s+", "", str(value or "")).upper()
+
+
+def meeting_item_sort_key(item: dict):
+    item_no = str(item.get("item_no") or "")
+    match = re.search(r"\d+", item_no)
+    numeric = int(match.group(0)) if match else 9999
+    return (str(item.get("meeting_id") or ""), numeric, item_no, str(item.get("item_id") or ""))
 
 
 def keyword_structured_context(question: str, meetings: list[dict], items: list[dict], limit: int) -> list[dict]:
@@ -245,18 +948,19 @@ def format_structured_item(meeting: dict, item: dict) -> dict:
     }
 
 
-def build_graph_context(graph_results: list[dict], limit: int = 10) -> dict:
+def build_graph_context(graph_results: list[dict], limit: int = 10, query_route: QueryRoute | None = None) -> dict:
     paths = []
     seen = set()
     graph_builder = EvidenceGraphBuilder()
-    filtered_results = filter_graph_evidence_results(graph_results, limit)
-    for result in filtered_results:
+    evidence_selection = select_graph_evidence_results(graph_results, limit, query_route=query_route)
+    for result in evidence_selection["results"]:
         path = format_graph_path(result)
         if path in seen:
             continue
         seen.add(path)
         paths.append(
             {
+                "evidence_id": result.get("evidence_id"),
                 "meeting_id": result.get("meeting_id"),
                 "item_id": result.get("item_id"),
                 "matched_keyword": result.get("matched_keyword"),
@@ -265,22 +969,37 @@ def build_graph_context(graph_results: list[dict], limit: int = 10) -> dict:
                 "matched_field": result.get("matched_field"),
                 "match_type": result.get("match_type"),
                 "intent": result.get("intent"),
+                "retrieval_mode": result.get("retrieval_mode"),
+                "evidence_source": result.get("evidence_source"),
                 "graph_score": result.get("graph_score"),
                 "path": path,
             }
         )
         graph_builder.add_result(result)
+    summary = {
+        key: value
+        for key, value in evidence_selection.items()
+        if key != "results"
+    }
+    summary["visible_paths"] = len(paths)
     return {
         "paths": paths,
         "nodes": graph_builder.nodes(),
         "edges": graph_builder.edges(),
+        "summary": summary,
     }
 
 
 def filter_graph_evidence_results(graph_results: list[dict], limit: int) -> list[dict]:
+    return select_graph_evidence_results(graph_results, limit)["results"]
+
+
+def select_graph_evidence_results(graph_results: list[dict], limit: int, query_route: QueryRoute | None = None) -> dict:
     candidates = [result for result in graph_results if result.get("meeting_id") or result.get("item_id")]
     if not candidates:
-        return []
+        return evidence_selection([], [], "empty", limit)
+    if should_keep_complete_evidence(candidates, query_route=query_route):
+        return evidence_selection(candidates, candidates, "complete_evidence", limit)
     scored = [float(result.get("graph_score") or 0) for result in candidates]
     best_score = max(scored)
     score_floor = max(best_score - 0.75, best_score * 0.82)
@@ -288,7 +1007,40 @@ def filter_graph_evidence_results(graph_results: list[dict], limit: int) -> list
     if not strong_results:
         strong_results = candidates[:1]
     max_paths = max(1, min(limit, 6))
-    return strong_results[:max_paths]
+    selected = strong_results[:max_paths]
+    return evidence_selection(candidates, selected, "ranked_preview", limit)
+
+
+def should_keep_complete_evidence(candidates: list[dict], query_route: QueryRoute | None = None) -> bool:
+    if query_route and query_route.query_type in {"structural_list", "relation_lookup", "composite_query"}:
+        return True
+    complete_relations = {
+        "HAS_ITEM",
+        "RESPONSIBLE_BY",
+        "ATTENDED_BY",
+        "CHAIRED_BY",
+        "RECORDED_BY",
+        "BELONGS_TO_UNIT",
+        "HAS_PLANNED_DATE",
+        "HAS_COMPLETED_DATE",
+    }
+    relations = {result.get("matched_relation") for result in candidates}
+    modes = {result.get("retrieval_mode") for result in candidates}
+    return bool(relations) and relations.issubset(complete_relations) and modes.isdisjoint({"keyword", "composite"})
+
+
+def evidence_selection(candidates: list[dict], selected: list[dict], mode: str, requested_limit: int) -> dict:
+    total = len(candidates)
+    visible = len(selected)
+    return {
+        "results": selected,
+        "total_paths": total,
+        "selected_paths": visible,
+        "hidden_paths": max(total - visible, 0),
+        "is_truncated": visible < total,
+        "selection_mode": mode,
+        "requested_limit": requested_limit,
+    }
 
 
 class EvidenceGraphBuilder:
@@ -317,7 +1069,14 @@ class EvidenceGraphBuilder:
                 title=result.get("content") or item_id,
             )
         if meeting_id and item_id:
-            self.add_edge("Meeting", meeting_id, "MeetingItem", item_id, "HAS_ITEM")
+            self.add_edge(
+                "Meeting",
+                meeting_id,
+                "MeetingItem",
+                item_id,
+                "HAS_ITEM",
+                evidence_source=result.get("evidence_source") or "neo4j",
+            )
 
         evidence_relations = result.get("evidence_relations") or []
         if evidence_relations:
@@ -326,6 +1085,9 @@ class EvidenceGraphBuilder:
             return
 
         relation = result.get("matched_relation") or "MENTIONS"
+        if relation == "HAS_ITEM":
+            return
+
         if relation == "MENTIONS":
             keyword = result.get("matched_keyword") or result.get("matched_entity")
             if keyword and item_id:
@@ -362,7 +1124,14 @@ class EvidenceGraphBuilder:
             return
         self.add_node(source_type, source_value, evidence_relation.get("source_label") or source_value, source_value)
         self.add_node(target_type, target_value, evidence_relation.get("target_label") or target_value, target_value)
-        self.add_edge(source_type, source_value, target_type, target_value, relation)
+        self.add_edge(
+            source_type,
+            source_value,
+            target_type,
+            target_value,
+            relation,
+            evidence_source=evidence_relation.get("evidence_source") or "neo4j",
+        )
 
     def add_node(self, node_type: str, value, label, title) -> None:
         node_id = make_graph_node_id(node_type, value)
@@ -375,7 +1144,7 @@ class EvidenceGraphBuilder:
             "title": str(title or label or value or node_type),
         }
 
-    def add_edge(self, source_type: str, source_value, target_type: str, target_value, label: str) -> None:
+    def add_edge(self, source_type: str, source_value, target_type: str, target_value, label: str, evidence_source: str = "neo4j") -> None:
         source = make_graph_node_id(source_type, source_value)
         target = make_graph_node_id(target_type, target_value)
         edge_id = f"{source}->{label}->{target}"
@@ -386,6 +1155,7 @@ class EvidenceGraphBuilder:
             "source": source,
             "target": target,
             "label": label,
+            "evidence_source": evidence_source,
         }
 
     def nodes(self) -> list[dict]:
@@ -458,6 +1228,9 @@ def format_graph_path(result: dict) -> str:
         entity = result.get("matched_entity") or "unknown_entity"
         meeting_id = result.get("meeting_id") or "unknown_meeting"
         item_id = result.get("item_id") or "unknown_item"
+        if relation == "HAS_ITEM":
+            source = result.get("evidence_source") or "neo4j"
+            return f"Meeting({meeting_id})-[:HAS_ITEM {{source: {source}}}]->MeetingItem({item_id})"
         if relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY", "BELONGS_TO_UNIT"}:
             return (
                 f"Meeting({meeting_id})-[:{relation}]->Entity({entity}); "
@@ -504,21 +1277,85 @@ def build_source_metadata(structured_context: list[dict], semantic_context: list
     return sources
 
 
+def build_source_metadata_from_evidence(evidence_records: list[dict]) -> list[dict]:
+    sources = []
+    seen = set()
+    for record in evidence_records:
+        payload = record.get("payload") or {}
+        key = (payload.get("document_id"), record.get("meeting_id"), record.get("item_id"))
+        if key in seen:
+            continue
+        seen.add(key)
+        sources.append(
+            {
+                "evidence_id": record.get("evidence_id"),
+                "document_id": payload.get("document_id"),
+                "meeting_id": record.get("meeting_id"),
+                "item_id": record.get("item_id"),
+                "item_no": payload.get("item_no"),
+                "meeting_name": payload.get("meeting_name"),
+                "evidence_source": record.get("evidence_source"),
+                "relation": record.get("relation"),
+                "retrieved_by": record.get("retrieved_by"),
+            }
+        )
+    return sources
+
+
+def validate_response_evidence_consistency(payload: dict) -> dict:
+    trace = payload.get("trace") or {}
+    claim_ids = set((trace.get("answer_claims") or {}).get("evidence_ids") or [])
+    graph_ids = {
+        path.get("evidence_id")
+        for path in ((payload.get("contexts") or {}).get("graph") or {}).get("paths", [])
+        if path.get("evidence_id")
+    }
+    source_ids = {
+        source.get("evidence_id")
+        for source in payload.get("sources", [])
+        if source.get("evidence_id")
+    }
+    errors = []
+    if claim_ids and graph_ids != claim_ids:
+        errors.append("graph evidence_ids do not match answer claim evidence_ids")
+    if claim_ids and source_ids != claim_ids:
+        errors.append("source evidence_ids do not match answer claim evidence_ids")
+    if not claim_ids and graph_ids and source_ids and graph_ids != source_ids:
+        errors.append("graph evidence_ids do not match source evidence_ids")
+    return {
+        "is_consistent": not errors,
+        "errors": errors,
+        "answer_evidence_ids": sorted(claim_ids),
+        "graph_evidence_ids": sorted(graph_ids),
+        "source_evidence_ids": sorted(source_ids),
+    }
+
+
 def build_graphrag_prompt(
     question: str,
     structured_context: list[dict],
     graph_context: dict,
     semantic_context: list[dict],
     source_metadata: list[dict],
+    query_route: QueryRoute | None = None,
+    evidence_records: list[dict] | None = None,
 ) -> str:
+    route_payload = query_route.to_dict() if query_route is not None else {}
+    evidence_records = evidence_records or []
     return (
-        "雿隡平?降閮? GraphRAG ?拍??n"
-        "??閬?嚗n"
-        "1. ?芾?寞?銝 Structured Context?raph Context?emantic Context ???n"
-        "2. ?亥???頞喉????瘜?暹??降閮?蝣箄??n"
-        "3. ?????舫?霅?皞?靘? meeting_id?tem_id ??item_no?n"
-        "4. ?亙??典?霅??荔?隢陛?剜?餈?graph path?n\n"
+        "You are a source-grounded meeting-record GraphRAG claim extractor.\n"
+        "Return JSON only. Do not return markdown or prose outside JSON.\n"
+        "Use only Canonical Evidence Records.\n"
+        'JSON shape: {"claims":[{"claim":"...","evidence_ids":["evidence_001"]}]}\n'
+        "Rules:\n"
+        "1. Each claim must be directly supported by one or more evidence_ids.\n"
+        "2. Do not invent meeting_id, item_id, people, dates, products, or statuses.\n"
+        "3. If query_type is structural_list, create one claim per relevant evidence record.\n"
+        "4. If query_type is relation_lookup or composite_query, use explicit relation evidence first.\n"
+        "5. If no evidence supports an answer, return {\"claims\":[]}.\n\n"
+        f"Query Route:\n{route_payload}\n\n"
         f"Question:\n{question}\n\n"
+        f"Canonical Evidence Records:\n{evidence_records}\n\n"
         f"Structured Context:\n{structured_context}\n\n"
         f"Graph Context:\n{graph_context}\n\n"
         f"Semantic Context:\n{semantic_context}\n\n"

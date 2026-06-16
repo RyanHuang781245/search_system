@@ -2,6 +2,8 @@ import re
 from datetime import date
 from uuid import uuid4
 
+from apps.item_status import is_meaningful_value
+
 
 FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９．／－", "0123456789./-")
 ITEM_NO_PATTERN = re.compile(r"^[0-9０-９]{1,2}[.]?$")
@@ -468,10 +470,7 @@ def _normalize_item_no(value):
 
 def _normalize_partial_date(value, meeting_date):
     cleaned = _clean_text(value)
-    if not cleaned:
-        return None
-    lowered = cleaned.lower()
-    if lowered in {"--", "-", "na", "n/a"}:
+    if not is_meaningful_value(cleaned):
         return None
 
     normalized = cleaned.translate(FULLWIDTH_DIGITS)
@@ -498,8 +497,6 @@ def _iso_date(year, month, day_num):
 
 def _normalize_nullable(value):
     cleaned = _clean_text(value)
-    if not cleaned:
-        return None
-    if cleaned.lower() in {"--", "-", "na", "n/a"}:
+    if not is_meaningful_value(cleaned):
         return None
     return cleaned

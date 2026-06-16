@@ -5,9 +5,11 @@ import re
 
 from django.conf import settings
 
+from apps.graphrag.deterministic import deterministic_query_understanding
+
 
 SUPPORTED_TARGETS = {"meeting_items", "action_items", "decisions", "risks", "issues"}
-SUPPORTED_STATUSES = {"pending", "in_progress", "completed", "not_completed"}
+SUPPORTED_STATUSES = {"pending", "in_progress", "completed", "not_completed", "not_applicable"}
 CONSTRAINT_KEYS = {
     "person_name",
     "unit_name",
@@ -115,6 +117,8 @@ def normalize_query_plan(payload: dict, question: str = "") -> dict:
 
 def heuristic_query_plan(question: str) -> dict:
     plan = default_plan()
+    parsed = deterministic_query_understanding(question)
+    entities = parsed["entities"]
     lowered = str(question or "").lower()
     if any(term in lowered for term in ("風險", "問題", "risk", "issue", "concern", "異常")):
         plan["target"] = "risks"
@@ -128,12 +132,20 @@ def heuristic_query_plan(question: str) -> dict:
 
     if any(term in lowered for term in ("未完成", "尚未", "沒完成", "not completed", "open")):
         plan["constraints"]["status"] = "not_completed"
-    elif any(term in lowered for term in ("已完成", "完成", "completed", "closed", "done")):
+    elif any(term in lowered for term in ("已完成", "實際完成", "完成日期", "completed", "closed", "done")):
         plan["constraints"]["status"] = "completed"
     elif any(term in lowered for term in ("進行中", "處理中", "in progress", "ongoing", "pending")):
         plan["constraints"]["status"] = "in_progress"
 
-    regulation = re.search(r"\b(FDA|TFDA|CFDA|PMDA|CE|ISO\s*\d*)\b", question or "", flags=re.I)
-    if regulation:
-        plan["constraints"]["regulation_name"] = regulation.group(1).strip()
+    for entity_key, constraint_key in (
+        ("person_name", "person_name"),
+        ("unit_name", "unit_name"),
+        ("product_name", "product_name"),
+        ("regulation_name", "regulation_name"),
+        ("status", "status"),
+    ):
+        if entities.get(entity_key):
+            plan["constraints"][constraint_key] = entities[entity_key]
+    if parsed["graph_intent"] == "person_responsibility":
+        plan["target"] = "action_items"
     return plan

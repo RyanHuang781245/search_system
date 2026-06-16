@@ -5,6 +5,8 @@ import re
 
 from django.conf import settings
 
+from apps.graphrag.deterministic import deterministic_query_understanding, extract_date_value
+
 
 SUPPORTED_GRAPH_INTENTS = {
     "person_responsibility",
@@ -25,10 +27,17 @@ def analyze_graph_intent(question: str, llm_client=None) -> dict:
     if not normalized_question:
         return {"intent": "keyword_related", "entities": {}, "warnings": []}
 
+    heuristic_payload = heuristic_graph_intent(normalized_question)
+    if heuristic_payload["intent"] != "keyword_related":
+        return heuristic_payload
+
     try:
         content = (llm_client or ollama_graph_intent)(normalized_question)
         payload = parse_intent_json(content)
     except Exception as exc:
+        heuristic_payload["warnings"] = [f"Graph intent analysis unavailable: {exc}"]
+        if heuristic_payload["intent"] != "keyword_related":
+            return heuristic_payload
         return {
             "intent": "keyword_related",
             "entities": {},
@@ -46,6 +55,15 @@ def analyze_graph_intent(question: str, llm_client=None) -> dict:
         "entities": entities,
         "warnings": warnings,
     }
+
+
+def heuristic_graph_intent(question: str) -> dict:
+    entities = normalize_entities({})
+    parsed = deterministic_query_understanding(question)
+    for key, value in parsed["entities"].items():
+        if key in entities and value:
+            entities[key] = value
+    return {"intent": parsed["graph_intent"], "entities": entities, "warnings": []}
 
 
 def ollama_graph_intent(question: str) -> str:

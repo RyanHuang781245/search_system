@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import re
 
 from . import cypher_queries as cq
 from .intent import analyze_graph_intent
@@ -16,7 +17,14 @@ def fetch_related_keywords(client, keyword: str, limit: int = 10) -> list[dict]:
     return client.execute_read(_query_related_keywords, normalized_keyword, limit) or []
 
 
-def search_graph(client, query: str, limit: int = 50, intent_analyzer=None, query_planner=None) -> dict:
+def search_graph(
+    client,
+    query: str,
+    limit: int = 50,
+    intent_analyzer=None,
+    query_planner=None,
+    retrieval_modes=None,
+) -> dict:
     normalized_query = str(query or "").strip()
     if not normalized_query:
         return {"query": "", "expanded_keywords": [], "results": [], "warnings": []}
@@ -28,11 +36,17 @@ def search_graph(client, query: str, limit: int = 50, intent_analyzer=None, quer
             "warnings": ["Neo4j graph search unavailable."],
         }
 
-    planner_payload = run_query_planning(normalized_query, query_planner)
-    composite_results = search_composite_graph(client, planner_payload, limit=limit)
-    intent_payload = run_intent_analysis(normalized_query, intent_analyzer)
-    intent_results = search_intent_graph(client, intent_payload, limit=limit)
-    related_keywords = fetch_related_keywords(client, normalized_query, limit=8)
+    modes = normalize_retrieval_modes(retrieval_modes)
+    meeting_item_results = search_meeting_items_by_query(client, normalized_query, limit=limit) if "structural" in modes else []
+    planner_payload = run_query_planning(normalized_query, query_planner) if "composite" in modes else default_plan()
+    composite_results = search_composite_graph(client, planner_payload, limit=limit) if "composite" in modes else []
+    intent_payload = run_intent_analysis(normalized_query, intent_analyzer) if "relation" in modes else {
+        "intent": "keyword_related",
+        "entities": {},
+        "warnings": [],
+    }
+    intent_results = search_intent_graph(client, intent_payload, limit=limit) if "relation" in modes else []
+    related_keywords = fetch_related_keywords(client, normalized_query, limit=8) if "keyword" in modes else []
     expanded_keywords = [normalized_query]
     expanded_keywords.extend(
         item["keyword"]
@@ -40,7 +54,8 @@ def search_graph(client, query: str, limit: int = 50, intent_analyzer=None, quer
         if item.get("keyword") and item.get("keyword").upper() not in {value.upper() for value in expanded_keywords}
     )
 
-    rows = client.execute_read(_query_graph_search, expanded_keywords) or []
+    rows = client.execute_read(_query_graph_search, expanded_keywords) if "keyword" in modes else []
+    rows = rows or []
     keyword_results = []
     for row in rows:
         matched_keyword = row.get("matched_keyword")
@@ -63,14 +78,15 @@ def search_graph(client, query: str, limit: int = 50, intent_analyzer=None, quer
                 "keyword_method": row.get("keyword_method"),
                 "match_type": match_type,
                 "intent": "keyword_related",
+                "retrieval_mode": "keyword",
                 "graph_score": graph_score,
             }
         )
 
-    if composite_results or intent_results:
+    if meeting_item_results or composite_results or intent_results:
         keyword_results = [result for result in keyword_results if result.get("match_type") == "direct"]
 
-    results = dedupe_graph_results([*composite_results, *intent_results, *keyword_results])
+    results = dedupe_graph_results([*meeting_item_results, *composite_results, *intent_results, *keyword_results])
     results.sort(key=lambda item: (-item["graph_score"], item.get("meeting_date") or "", item.get("item_id") or ""))
     return {
         "query": normalized_query,
@@ -82,6 +98,7 @@ def search_graph(client, query: str, limit: int = 50, intent_analyzer=None, quer
         "intent": intent_payload["intent"],
         "intent_entities": intent_payload["entities"],
         "expanded_keywords": expanded_keywords[1:],
+        "retrieval_modes": list(modes),
         "results": results[:limit],
         "warnings": planner_payload.get("warnings", []) + intent_payload.get("warnings", []),
     }
@@ -128,6 +145,96 @@ def _query_graph_search(tx, keywords: list[str]):
     records = tx.run(cq.QUERY_GRAPH_SEARCH, keywords=normalized_keywords)
     return [dict(record) for record in records]
 
+
+def normalize_retrieval_modes(retrieval_modes) -> tuple[str, ...]:
+    supported = ("structural", "composite", "relation", "keyword")
+    if retrieval_modes is None:
+        return supported
+    if isinstance(retrieval_modes, str):
+        raw_modes = [retrieval_modes]
+    else:
+        raw_modes = list(retrieval_modes or [])
+    modes = []
+    for mode in raw_modes:
+        normalized = str(mode or "").strip().lower()
+        if normalized in supported and normalized not in modes:
+            modes.append(normalized)
+    return tuple(modes or supported)
+
+
+def search_meeting_items_by_query(client, query: str, limit: int) -> list[dict]:
+    if not looks_like_meeting_item_list_query(query):
+        return []
+    rows = client.execute_read(_query_meeting_items_by_query, query, limit) or []
+    return [format_meeting_item_result(row) for row in rows]
+
+
+def looks_like_meeting_item_list_query(query: str) -> bool:
+    text = str(query or "").lower()
+    has_meeting_cue = any(term in text for term in ("會議", "meeting"))
+    has_item_cue = any(
+        term in text
+        for term in ("項目", "事項", "討論事項", "議題", "item", "agenda", "topic", "內容", "包含", "有哪些", "哪些")
+    )
+    return has_meeting_cue and has_item_cue
+
+
+def _query_meeting_items_by_query(tx, query: str, limit: int):
+    records = tx.run(cq.QUERY_MEETING_ITEMS_BY_QUERY, query=query, terms=meeting_query_terms(query), limit=limit)
+    return [dict(record) for record in records][:limit]
+
+
+def format_meeting_item_result(row: dict) -> dict:
+    return {
+        "meeting_id": row.get("meeting_id"),
+        "meeting_name": row.get("meeting_name"),
+        "meeting_date": row.get("meeting_date"),
+        "item_id": row.get("item_id"),
+        "item_no": row.get("item_no"),
+        "content": row.get("content"),
+        "matched_keyword": None,
+        "matched_field": row.get("matched_field"),
+        "matched_relation": "HAS_ITEM",
+        "matched_entity": row.get("matched_entity"),
+        "match_type": "meeting_items",
+        "intent": "meeting_items",
+        "retrieval_mode": "structural",
+        "graph_score": 5.2,
+    }
+
+
+def meeting_query_terms(query: str) -> list[str]:
+    text = str(query or "")
+    for cue in (
+        "會議",
+        "項目",
+        "討論事項",
+        "事項",
+        "議題",
+        "內容",
+        "包含",
+        "有哪些",
+        "哪些",
+        "列出",
+        "請問",
+        "的",
+        "which",
+        "items",
+        "agenda",
+        "topics",
+        "topic",
+        "included",
+        "include",
+        "meeting",
+        "content",
+    ):
+        text = re.sub(re.escape(cue), " ", text, flags=re.I)
+    terms = []
+    for token in re.split(r"[\s,，。；;:：?？()（）\[\]【】]+", text):
+        cleaned = token.strip()
+        if len(cleaned) >= 2:
+            terms.append(cleaned.upper())
+    return terms[:8]
 
 def run_intent_analysis(query: str, intent_analyzer) -> dict:
     if intent_analyzer is None:
@@ -253,10 +360,13 @@ def format_composite_result(row: dict, planner_payload: dict) -> dict:
         "matched_entity": row.get("matched_entity") or row.get("matched_node_id"),
         "matched_node_id": row.get("matched_node_id"),
         "semantic_status": row.get("semantic_status"),
+        "semantic_status_source": row.get("semantic_status_source"),
+        "semantic_status_confidence": row.get("semantic_status_confidence"),
         "evidence_relations": build_composite_evidence_relations(row, planner_payload),
         "match_type": "query_plan",
         "intent": planner_payload.get("target"),
         "query_plan": planner_payload,
+        "retrieval_mode": "composite",
         "graph_score": graph_score_for_semantic_relation(relation),
     }
 
@@ -277,6 +387,7 @@ def format_follow_up_result(row: dict, planner_payload: dict) -> dict:
         "match_type": "query_plan",
         "intent": "follow_up",
         "query_plan": planner_payload,
+        "retrieval_mode": "composite",
         "graph_score": 4.4,
     }
 
@@ -437,6 +548,7 @@ def format_intent_result(row: dict, intent: str, query_entity: str) -> dict:
         "matched_entity": matched_entity,
         "match_type": "intent",
         "intent": intent,
+        "retrieval_mode": "relation",
         "graph_score": 4.0,
     }
 

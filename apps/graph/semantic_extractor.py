@@ -3,30 +3,11 @@ from __future__ import annotations
 import hashlib
 import re
 
+from apps.item_status import classify_item_status, contains_any, is_meaningful_value
+
 from .keyword_extractor import dedupe, extract_keyword_entities, valid_person_name
 
 
-COMPLETED_TERMS = (
-    "\u5df2\u5b8c\u6210",
-    "\u5b8c\u6210",
-    "\u7d50\u6848",
-    "closed",
-    "complete",
-    "completed",
-    "done",
-    "resolved",
-)
-IN_PROGRESS_TERMS = (
-    "\u9032\u884c\u4e2d",
-    "\u8655\u7406\u4e2d",
-    "\u78ba\u8a8d\u4e2d",
-    "\u8ffd\u8e64\u4e2d",
-    "\u5f85\u78ba\u8a8d",
-    "pending",
-    "in progress",
-    "ongoing",
-    "follow up",
-)
 DECISION_TERMS = (
     "\u6c7a\u8b70",
     "\u6c7a\u5b9a",
@@ -80,10 +61,13 @@ def extract_semantic_item(item: dict) -> dict:
 
 def build_action_descriptor(item: dict, text: str) -> dict:
     item_id = item.get("item_id")
+    status_payload = detect_status(item)
     return {
         "action_id": f"action_{item_id}",
         "title": truncate_text(text or item_id, 96),
-        "status": detect_status(item),
+        "status": status_payload["status"],
+        "status_source": status_payload["source"],
+        "status_confidence": status_payload["confidence"],
         "content": _clean_text(item.get("content")),
         "tracking_result": _clean_text(item.get("tracking_result")),
         "planned_date": _clean_text(item.get("planned_date")),
@@ -132,14 +116,8 @@ def build_issue_descriptor(item: dict, keywords: dict, text: str) -> dict | None
     }
 
 
-def detect_status(item: dict) -> str:
-    completed_date = _clean_text(item.get("actual_completed_date"))
-    tracking = _clean_text(item.get("tracking_result")).lower()
-    if completed_date or contains_any(tracking, COMPLETED_TERMS):
-        return "completed"
-    if contains_any(tracking, IN_PROGRESS_TERMS):
-        return "in_progress"
-    return "pending"
+def detect_status(item: dict) -> dict:
+    return classify_item_status(item)
 
 
 def infer_risk_severity(text: str) -> str:
@@ -149,11 +127,6 @@ def infer_risk_severity(text: str) -> str:
     if any(term in lowered for term in ("\u4f4e", "minor", "low risk")):
         return "low"
     return "medium"
-
-
-def contains_any(text: str, terms: tuple[str, ...]) -> bool:
-    lowered = str(text or "").lower()
-    return any(term.lower() in lowered for term in terms)
 
 
 def extract_responsible_people_from_text(text: str) -> list[str]:
@@ -213,5 +186,4 @@ def _clean_text(value) -> str:
 
 
 def _valid_text(value) -> bool:
-    text = _clean_text(value)
-    return bool(text and text.lower() not in {"--", "na", "n/a", "none", "null"})
+    return is_meaningful_value(_clean_text(value))

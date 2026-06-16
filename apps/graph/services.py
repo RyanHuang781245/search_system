@@ -23,12 +23,13 @@ def get_related_keywords(keyword: str, limit: int = 10) -> dict:
     }
 
 
-def graph_search_query(query: str, limit: int = 50) -> dict:
+def graph_search_query(query: str, limit: int = 50, retrieval_modes=None) -> dict:
     client = get_neo4j_client()
     payload = search_graph(
         client,
         query,
         limit=limit,
+        retrieval_modes=retrieval_modes,
         intent_analyzer=analyze_graph_intent,
         query_planner=analyze_graph_query_plan,
     )
@@ -38,6 +39,7 @@ def graph_search_query(query: str, limit: int = 50) -> dict:
         "intent": payload.get("intent"),
         "intent_entities": payload.get("intent_entities", {}),
         "expanded_keywords": payload["expanded_keywords"],
+        "retrieval_modes": payload.get("retrieval_modes", []),
         "results": payload["results"],
         "warnings": payload.get("warnings", []),
     }

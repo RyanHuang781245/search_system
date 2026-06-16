@@ -6,10 +6,21 @@ from django.test import SimpleTestCase
 from rest_framework import status
 from rest_framework.test import APISimpleTestCase
 
+from apps.item_status import classify_item_status, is_meaningful_value
+
 from .ranking import has_task_intent, score_item
 
 
 class SearchRankingTestCase(SimpleTestCase):
+    def test_shared_status_classifier_handles_placeholder_and_not_applicable(self):
+        item = {
+            "actual_completed_date": "--",
+            "tracking_result": "不 適 用 ，詳 設 計 移 轉 會 議 投 影 片",
+        }
+
+        self.assertFalse(is_meaningful_value(item["actual_completed_date"]))
+        self.assertEqual(classify_item_status(item)["status"], "not_applicable")
+
     def test_task_score_only_applies_to_task_intent_queries(self):
         item = {
             "content": "FDA submission discussion",
@@ -183,6 +194,43 @@ class SearchAPITestCase(APISimpleTestCase):
         self.assertEqual(result["meeting_id"], "meet_001")
         self.assertEqual(len(result["matched_items"]), 1)
         self.assertEqual(result["matched_items"][0]["item_id"], "item_001")
+
+    def test_search_does_not_treat_placeholder_actual_completed_date_as_completed(self):
+        self.meeting_items_collection.insert_one(
+            {
+                "item_id": "item_007",
+                "meeting_id": "meet_001",
+                "document_id": "doc_001",
+                "item_no": "07",
+                "content": "可用性評估報告確認",
+                "owner": "UR3",
+                "planned_date": "--",
+                "actual_completed_date": "--",
+                "tracking_result": "不 適 用 ，詳 設 計 移 轉 會 議 投 影 片 ( 附 件)",
+            }
+        )
+
+        incomplete_response = self.client.get(
+            reverse("meeting-minutes-search"),
+            {"is_completed": "false", "q": "可用性評估"},
+        )
+        completed_response = self.client.get(
+            reverse("meeting-minutes-search"),
+            {"is_completed": "true", "q": "可用性評估"},
+        )
+
+        incomplete_items = [
+            item
+            for result in incomplete_response.data["data"]["results"]
+            for item in result["matched_items"]
+        ]
+        completed_items = [
+            item
+            for result in completed_response.data["data"]["results"]
+            for item in result["matched_items"]
+        ]
+        self.assertIn("item_007", {item["item_id"] for item in incomplete_items})
+        self.assertNotIn("item_007", {item["item_id"] for item in completed_items})
 
     def test_feedback_score_increases_after_click(self):
         first_response = self.client.get(reverse("meeting-minutes-search"), {"q": "FDA"})

@@ -31,6 +31,13 @@ const elements = {
     vectorLimit: document.getElementById("vector-limit"),
     vectorSearchSubmit: document.getElementById("vector-search-submit"),
     vectorResults: document.getElementById("vector-results"),
+    evalQuestions: document.getElementById("eval-questions"),
+    evalLimit: document.getElementById("eval-limit"),
+    evalSeedButton: document.getElementById("eval-seed-button"),
+    evalRunButton: document.getElementById("eval-run-button"),
+    evalSaveButton: document.getElementById("eval-save-button"),
+    evalSummary: document.getElementById("eval-summary"),
+    evalResults: document.getElementById("eval-results"),
     askForm: document.getElementById("ask-form"),
     askQuestion: document.getElementById("ask-question"),
     askLimit: document.getElementById("ask-limit"),
@@ -49,9 +56,10 @@ const elements = {
 
 const toast = new bootstrap.Toast(elements.toastElement, { delay: 2800 });
 let evidenceCy = null;
-let evidenceGraphData = { nodes: [], edges: [] };
+let evidenceGraphData = { nodes: [], edges: [], summary: {} };
 let graphLabelsVisible = false;
 let currentAnswerData = null;
+let currentEvalCases = [];
 
 init();
 
@@ -60,6 +68,7 @@ function init() {
     renderKeywords([]);
     renderGraphResults({ expanded_keywords: [], results: [] });
     renderVectorResults([]);
+    renderEvalCases([]);
     renderSources([]);
     renderWarnings([]);
     renderEvidenceGraph({ nodes: [], edges: [] });
@@ -91,6 +100,10 @@ function bindEvents() {
     elements.keywordForm?.addEventListener("submit", handleExtractKeywords);
     elements.graphSearchForm?.addEventListener("submit", handleGraphSearch);
     elements.vectorSearchForm?.addEventListener("submit", handleVectorSearch);
+    elements.evalSeedButton?.addEventListener("click", handleEvalSeed);
+    elements.evalRunButton?.addEventListener("click", handleEvalRun);
+    elements.evalSaveButton?.addEventListener("click", handleEvalSave);
+    elements.evalResults?.addEventListener("change", handleEvalCaseChange);
     elements.askForm?.addEventListener("submit", handleAsk);
 }
 
@@ -335,6 +348,113 @@ async function handleAsk(event) {
     }
 }
 
+async function handleEvalSeed() {
+    const questions = (elements.evalQuestions?.value || "")
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+    if (!questions.length) {
+        showToast("請輸入至少一個評估問題。", "error");
+        return;
+    }
+
+    const limit = elements.evalLimit?.value || "auto";
+    setButtonLoading(elements.evalSeedButton, "產生中...");
+    elements.evalSummary.innerHTML = renderLoadingInline("正在產生候選 golden cases...");
+    elements.evalResults.innerHTML = "";
+
+    try {
+        const result = await fetchJson("/api/graphrag/eval/seed/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ questions, limit }),
+        });
+        currentEvalCases = result.data?.cases || [];
+        renderEvalCases(currentEvalCases);
+        showToast(result.message || "候選案例已產生。", "success");
+    } catch (error) {
+        elements.evalSummary.innerHTML = renderErrorBlock(error.message);
+        showToast(error.message, "error");
+    } finally {
+        restoreButton(elements.evalSeedButton, '<i data-lucide="wand-sparkles"></i><span>產生候選</span>');
+    }
+}
+
+async function handleEvalRun() {
+    if (!currentEvalCases.length) {
+        showToast("請先產生候選案例。", "error");
+        return;
+    }
+    setButtonLoading(elements.evalRunButton, "評估中...");
+    elements.evalSummary.innerHTML = renderLoadingInline("正在執行 GraphRAG 回歸評估...");
+
+    try {
+        const result = await fetchJson("/api/graphrag/eval/run/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cases: currentEvalCases.map(normalizeEvalCaseForRun) }),
+        });
+        renderEvalReport(result.data || {});
+        showToast(result.message || "評估完成。", "success");
+    } catch (error) {
+        elements.evalSummary.innerHTML = renderErrorBlock(error.message);
+        showToast(error.message, "error");
+    } finally {
+        restoreButton(elements.evalRunButton, '<i data-lucide="play"></i><span>執行評估</span>');
+    }
+}
+
+async function handleEvalSave() {
+    const approvedCases = currentEvalCases.filter((caseItem) => caseItem.enabled || caseItem.review_status === "approved");
+    if (!approvedCases.length) {
+        showToast("請先勾選要保存的正確案例。", "error");
+        return;
+    }
+    setButtonLoading(elements.evalSaveButton, "保存中...");
+    elements.evalSummary.innerHTML = renderLoadingInline(`正在保存 ${approvedCases.length} 題 golden cases...`);
+
+    try {
+        const result = await fetchJson("/api/graphrag/eval/save/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cases: approvedCases }),
+        });
+        const data = result.data || {};
+        elements.evalSummary.innerHTML = renderSaveSummary(data);
+        showToast(result.message || "Golden cases 已保存。", "success");
+    } catch (error) {
+        elements.evalSummary.innerHTML = renderErrorBlock(error.message);
+        showToast(error.message, "error");
+    } finally {
+        restoreButton(elements.evalSaveButton, '<i data-lucide="save"></i><span>保存已確認</span>');
+    }
+}
+
+function handleEvalCaseChange(event) {
+    const checkbox = event.target.closest("[data-eval-approve]");
+    if (!checkbox) {
+        return;
+    }
+    const index = Number(checkbox.dataset.evalApprove);
+    if (!Number.isInteger(index) || !currentEvalCases[index]) {
+        return;
+    }
+    currentEvalCases[index] = {
+        ...currentEvalCases[index],
+        enabled: checkbox.checked,
+        review_status: checkbox.checked ? "approved" : "needs_review",
+    };
+    renderEvalCases(currentEvalCases);
+}
+
+function normalizeEvalCaseForRun(caseItem) {
+    return {
+        ...caseItem,
+        enabled: true,
+        review_status: caseItem.review_status || "needs_review",
+    };
+}
+
 function renderKeywords(keywords) {
     if (!keywords.length) {
         elements.keywordResults.innerHTML = renderEmptyBlock("尚無關鍵字。");
@@ -407,6 +527,113 @@ function renderVectorResults(results) {
     renderIcons();
 }
 
+function renderEvalCases(cases) {
+    if (!elements.evalSummary || !elements.evalResults) {
+        return;
+    }
+    if (!cases.length) {
+        elements.evalSummary.innerHTML = "尚未產生評估案例。";
+        elements.evalResults.innerHTML = renderEmptyBlock("沒有候選案例。");
+        renderIcons();
+        return;
+    }
+    const consistentCount = cases.filter((item) => item.observed?.evidence_consistency?.is_consistent).length;
+    const approvedCount = cases.filter((item) => item.enabled || item.review_status === "approved").length;
+    elements.evalSummary.innerHTML = `
+        <div class="compact-list">
+            <div class="compact-list-row"><strong>候選案例</strong><span>${cases.length}</span></div>
+            <div class="compact-list-row"><strong>證據一致</strong><span>${consistentCount}/${cases.length}</span></div>
+            <div class="compact-list-row"><strong>已確認</strong><span>${approvedCount}/${cases.length}</span></div>
+        </div>
+    `;
+    elements.evalResults.innerHTML = cases.map((caseItem, index) => renderEvalCaseCard(caseItem, index)).join("");
+    renderIcons();
+}
+
+function renderEvalCaseCard(caseItem, index) {
+    const consistency = caseItem.observed?.evidence_consistency || {};
+    const expectedItems = caseItem.expected_item_ids || [];
+    const expectedMeetings = caseItem.expected_meeting_ids || [];
+    const expectedRelations = caseItem.expected_relations || [];
+    const route = caseItem.observed?.route?.query_type || "-";
+    const checked = caseItem.enabled || caseItem.review_status === "approved";
+    return `
+        <article class="related-card related-card-static">
+            <label class="d-flex align-items-start gap-2 mb-2">
+                <input class="form-check-input mt-1" type="checkbox" data-eval-approve="${index}" ${checked ? "checked" : ""}>
+                <span>
+                    <span class="related-title d-block">${escapeHtml(caseItem.question || "-")}</span>
+                    <span class="related-meta d-block">${checked ? "approved" : "needs_review"}</span>
+                </span>
+            </label>
+            <div class="related-meta">
+                ${escapeHtml(caseItem.id || "-")} | route ${escapeHtml(route)} | ${consistency.is_consistent ? "consistent" : "inconsistent"}
+            </div>
+            <div class="related-body">${escapeHtml(truncateText(caseItem.observed?.answer || "-", 220))}</div>
+            <div class="related-reasons">
+                ${renderChipGroup("items", expectedItems)}
+                ${renderChipGroup("meetings", expectedMeetings)}
+                ${renderChipGroup("relations", expectedRelations)}
+            </div>
+        </article>
+    `;
+}
+
+function renderEvalReport(report) {
+    const summary = report.summary || {};
+    const results = report.results || [];
+    elements.evalSummary.innerHTML = `
+        <div class="compact-list">
+            <div class="compact-list-row"><strong>Passed</strong><span>${escapeHtml(String(summary.passed || 0))}</span></div>
+            <div class="compact-list-row"><strong>Failed</strong><span>${escapeHtml(String(summary.failed || 0))}</span></div>
+            <div class="compact-list-row"><strong>Skipped</strong><span>${escapeHtml(String(summary.skipped || 0))}</span></div>
+            <div class="compact-list-row"><strong>Enabled</strong><span>${escapeHtml(String(summary.enabled || 0))}</span></div>
+        </div>
+    `;
+    elements.evalResults.innerHTML = results.length
+        ? results.map(renderEvalResultCard).join("")
+        : renderEmptyBlock("沒有評估結果。");
+    renderIcons();
+}
+
+function renderSaveSummary(data) {
+    return `
+        <div class="compact-list">
+            <div class="compact-list-row"><strong>Saved</strong><span>${escapeHtml(String(data.saved || 0))}</span></div>
+            <div class="compact-list-row"><strong>Created</strong><span>${escapeHtml(String(data.created || 0))}</span></div>
+            <div class="compact-list-row"><strong>Updated</strong><span>${escapeHtml(String(data.updated || 0))}</span></div>
+            <div class="compact-list-row"><strong>Skipped</strong><span>${escapeHtml(String(data.skipped || 0))}</span></div>
+            <div class="compact-list-row"><strong>File</strong><span>${escapeHtml(data.path || "-")}</span></div>
+        </div>
+    `;
+}
+
+function renderEvalResultCard(result) {
+    const failures = result.failures || [];
+    const observed = result.observed || {};
+    const statusClass = result.status === "passed" ? "text-success" : result.status === "skipped" ? "text-muted" : "text-danger";
+    return `
+        <article class="related-card related-card-static">
+            <div class="related-title ${statusClass}">${escapeHtml(String(result.status || "-").toUpperCase())} ${escapeHtml(result.id || "-")}</div>
+            <div class="related-meta">
+                ${escapeHtml((observed.route || {}).query_type || "-")} | graph ${escapeHtml(String((observed.graph_item_ids || []).length))} items
+            </div>
+            ${failures.length ? `<div class="related-body">${failures.map((failure) => escapeHtml(failure)).join("<br>")}</div>` : '<div class="related-body">通過。</div>'}
+            <div class="related-reasons">
+                ${renderChipGroup("source items", observed.source_item_ids || [])}
+                ${renderChipGroup("relations", observed.graph_relations || [])}
+            </div>
+        </article>
+    `;
+}
+
+function renderChipGroup(label, values) {
+    if (!values.length) {
+        return `<span class="search-chip">${escapeHtml(label)}: -</span>`;
+    }
+    return values.map((value) => `<span class="search-chip">${escapeHtml(label)}: ${escapeHtml(value)}</span>`).join("");
+}
+
 function renderAnswer(data) {
     currentAnswerData = data;
     const graph = data.contexts?.graph || {};
@@ -421,10 +648,11 @@ function renderAnswer(data) {
         <div class="answer-body">${renderMarkdownAnswer(data.answer || "-", graph.nodes || [])}</div>
         <div class="score-grid score-grid-inline mt-3">
             <div class="score-pill"><span class="score-pill-label">Structured</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.structured?.length || 0))}</span></div>
-            <div class="score-pill"><span class="score-pill-label">Graph</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.graph?.paths?.length || 0))}</span></div>
+            <div class="score-pill"><span class="score-pill-label">Graph</span><span class="score-pill-value">${escapeHtml(formatGraphEvidenceCount(data.contexts?.graph || {}))}</span></div>
             <div class="score-pill"><span class="score-pill-label">Semantic</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.semantic?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">Scope</span><span class="score-pill-value">${escapeHtml(formatAnswerScope(data))}</span></div>
         </div>
+        ${renderTraceSummary(data.trace)}
     `;
 }
 
@@ -442,9 +670,11 @@ function renderEvidenceGraph(graph) {
     const detailElement = document.getElementById("graph-detail-panel");
     const nodes = graph.nodes || [];
     const edges = graph.edges || [];
-    evidenceGraphData = { nodes, edges };
+    const summary = graph.summary || {};
+    evidenceGraphData = { nodes, edges, summary };
     if (countElement) {
-        countElement.textContent = String(nodes.length);
+        countElement.textContent = formatGraphEvidenceCount(graph);
+        countElement.title = graphEvidenceTitle(summary, nodes, edges);
     }
 
     if (evidenceCy) {
@@ -464,6 +694,9 @@ function renderEvidenceGraph(graph) {
         graphElement.classList.add("d-none");
         emptyElement.classList.remove("d-none");
         emptyElement.textContent = "No graph evidence for this answer.";
+        if (countElement) {
+            countElement.textContent = formatGraphEvidenceCount(graph);
+        }
         renderGraphLegend([], legendElement);
         return;
     }
@@ -497,6 +730,7 @@ function renderEvidenceGraph(graph) {
                     source: edge.source,
                     target: edge.target,
                     label: edge.label || "",
+                    evidenceSource: edge.evidence_source || "neo4j",
                     title: `${edge.source} -[${edge.label || ""}]-> ${edge.target}`,
                 },
             })),
@@ -634,6 +868,45 @@ function renderEvidenceGraph(graph) {
     bindEvidenceGraphInteractions(evidenceCy, detailElement);
 }
 
+function formatGraphEvidenceCount(graph) {
+    const summary = graph?.summary || {};
+    const visible = Number(summary.visible_paths ?? graph?.paths?.length ?? 0);
+    const total = Number(summary.total_paths ?? graph?.paths?.length ?? visible);
+    if (!Number.isFinite(total) || total <= 0) {
+        return "0";
+    }
+    return visible === total ? String(total) : `${visible}/${total}`;
+}
+
+function graphEvidenceTitle(summary, nodes, edges) {
+    const total = Number(summary?.total_paths || 0);
+    const visible = Number(summary?.visible_paths || 0);
+    const hidden = Number(summary?.hidden_paths || 0);
+    const mode = summary?.selection_mode || "unknown";
+    return `${visible}/${total || visible} evidence paths, ${hidden} hidden, ${nodes.length} nodes, ${edges.length} edges, ${mode}`;
+}
+
+function renderTraceSummary(trace) {
+    if (!trace) {
+        return "";
+    }
+    const route = trace.route?.query_type || "-";
+    const routeSource = trace.route?.route_source || "-";
+    const retrievers = trace.retrievers || [];
+    const contextCounts = trace.context_counts || {};
+    const chips = [
+        `route: ${route}`,
+        `source: ${routeSource}`,
+        ...retrievers.map((retriever) => `${retriever.name}: ${retriever.enabled === false ? "skip" : retriever.count ?? 0}`),
+        `ctx: ${contextCounts.structured || 0}/${contextCounts.graph_paths || 0}/${contextCounts.semantic || 0}`,
+    ];
+    return `
+        <div class="related-reasons trace-summary mt-3">
+            ${chips.map((chip) => `<span class="search-chip">${escapeHtml(chip)}</span>`).join("")}
+        </div>
+    `;
+}
+
 function makeEvidenceLayout(animate) {
     const selectedLayout = elements.graphLayoutSelect?.value || "cose";
     if (selectedLayout === "breadthfirst") {
@@ -687,6 +960,7 @@ function bindEvidenceGraphInteractions(cy, detailElement) {
                 source: event.target.data("source"),
                 target: event.target.data("target"),
                 relation: event.target.data("label"),
+                source_type: event.target.data("evidenceSource"),
             },
         });
     });
@@ -922,7 +1196,7 @@ function renderSources(sources) {
         ? sources.map((source) => `
             <article class="related-card related-card-static">
                 <div class="related-title">${escapeHtml(source.meeting_name || source.meeting_id || "-")}</div>
-                <div class="related-meta">${escapeHtml(source.meeting_date || "-")} | ${escapeHtml(source.item_id || "-")}</div>
+                <div class="related-meta">${escapeHtml(source.evidence_id || "-")} | ${escapeHtml(source.relation || "-")} | ${escapeHtml(source.item_id || "-")}</div>
                 <div class="related-body">${escapeHtml(source.content || source.snippet || "-")}</div>
             </article>
         `).join("")
@@ -1025,6 +1299,14 @@ function formatScore(value) {
         return "0.000";
     }
     return number.toFixed(3);
+}
+
+function truncateText(value, maxLength) {
+    const text = String(value ?? "");
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return `${text.slice(0, Math.max(maxLength - 1, 0))}…`;
 }
 
 function escapeHtml(value) {

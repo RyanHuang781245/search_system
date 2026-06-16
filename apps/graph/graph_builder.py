@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from itertools import combinations
 
+from apps.item_status import is_meaningful_value
 from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_collection
 
 from . import cypher_queries as cq
@@ -76,6 +77,7 @@ def build_graph_from_mongo(client) -> dict:
             item_id = item.get("item_id")
             _write(client, _merge_meeting_item, item)
             node_counts["MeetingItem"] += 1
+            _write(client, _clear_meeting_item_derived_relations, item_id)
             _write(client, _merge_has_item, meeting_id, item_id)
             relation_counts["HAS_ITEM"] += 1
 
@@ -298,9 +300,7 @@ def _persist_keyword_mentions(client, owner_kind, owner_id, field, text, node_co
 
 def _valid_text(value):
     text = str(value or "").strip()
-    if not text:
-        return None
-    if text.lower() in {"--", "na", "n/a", "none", "null"}:
+    if not is_meaningful_value(text):
         return None
     return text
 
@@ -340,6 +340,12 @@ def _merge_meeting_item(tx, item):
         planned_date=item.get("planned_date"),
         actual_completed_date=item.get("actual_completed_date"),
     )
+
+
+def _clear_meeting_item_derived_relations(tx, item_id):
+    if tx is None:
+        return None
+    tx.run(cq.CLEAR_MEETING_ITEM_DERIVED_RELATIONS, item_id=item_id)
 
 
 def _merge_date(tx, date_value, date_type):

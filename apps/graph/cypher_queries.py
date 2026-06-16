@@ -46,6 +46,19 @@ MATCH (d:Date {date_value: $date_value, date_type: 'completed'})
 MERGE (i)-[:HAS_COMPLETED_DATE]->(d)
 """
 
+CLEAR_MEETING_ITEM_DERIVED_RELATIONS = """
+MATCH (i:MeetingItem {item_id: $item_id})
+OPTIONAL MATCH (i)-[:HAS_ACTION]->(action:ActionItem)
+OPTIONAL MATCH (action)-[action_rel:ASSIGNED_TO|TARGETS_PRODUCT|CONSTRAINED_BY]->()
+DELETE action_rel
+WITH i
+OPTIONAL MATCH (i)-[out_rel:HAS_PLANNED_DATE|HAS_COMPLETED_DATE|RESPONSIBLE_BY|MENTIONS|MENTIONS_PRODUCT|MENTIONS_REGULATION|HAS_ACTION|HAS_DECISION|HAS_RISK|TRACKS_ISSUE|FOLLOW_UP_OF]->()
+DELETE out_rel
+WITH i
+OPTIONAL MATCH ()-[in_rel:FOLLOW_UP_OF]->(i)
+DELETE in_rel
+"""
+
 MERGE_PERSON = """
 MERGE (p:Person {name: $name})
 """
@@ -131,6 +144,8 @@ MERGE_ACTION_ITEM = """
 MERGE (a:ActionItem {action_id: $action_id})
 SET a.title = $title,
     a.status = $status,
+    a.status_source = $status_source,
+    a.status_confidence = $status_confidence,
     a.content = $content,
     a.tracking_result = $tracking_result,
     a.planned_date = $planned_date,
@@ -283,6 +298,26 @@ RETURN meeting.meeting_id AS meeting_id,
        "owner" AS matched_field
 """
 
+QUERY_MEETING_ITEMS_BY_QUERY = """
+MATCH (meeting:Meeting)-[:HAS_ITEM]->(item:MeetingItem)
+WHERE toUpper($query) CONTAINS toUpper(meeting.meeting_name)
+   OR toUpper($query) CONTAINS toUpper(meeting.meeting_id)
+   OR toUpper(meeting.meeting_name) CONTAINS toUpper($query)
+   OR any(term IN $terms WHERE toUpper(meeting.meeting_name) CONTAINS term)
+   OR any(term IN $terms WHERE toUpper(meeting.meeting_id) CONTAINS term)
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       meeting.meeting_name AS matched_entity,
+       "HAS_ITEM" AS matched_relation,
+       "meeting_items" AS matched_field
+ORDER BY meeting.meeting_date DESC, item.item_no ASC
+LIMIT $limit
+"""
+
 QUERY_MEETING_PERSON_RELATION = """
 MATCH (meeting:Meeting)-[relation]->(person:Person)
 WHERE type(relation) = $relation
@@ -415,10 +450,19 @@ WHERE ($target <> "action_items" OR action IS NOT NULL)
   )
   AND (
     $status = "" OR
-    ($status = "completed" AND (action.status = "completed" OR item.actual_completed_date IS NOT NULL)) OR
+    ($status = "completed" AND (
+      (coalesce(item.actual_completed_date, "") <> "" AND NOT (replace(trim(toLower(coalesce(item.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"])) OR
+      (coalesce(action.actual_completed_date, "") <> "" AND NOT (replace(trim(toLower(coalesce(action.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"])) OR
+      (action.status = "completed" AND action.status_confidence = "high")
+    )) OR
     ($status = "in_progress" AND action.status = "in_progress") OR
     ($status = "pending" AND action.status = "pending") OR
-    ($status = "not_completed" AND coalesce(action.status, "pending") <> "completed" AND item.actual_completed_date IS NULL)
+    ($status = "not_completed" AND (
+      coalesce(item.actual_completed_date, "") = "" OR replace(trim(toLower(coalesce(item.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"]
+    ) AND (
+      coalesce(action.actual_completed_date, "") = "" OR replace(trim(toLower(coalesce(action.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"]
+    ) AND NOT (coalesce(action.status, "pending") IN ["completed", "not_applicable"])) OR
+    ($status = "not_applicable" AND action.status = "not_applicable")
   )
   AND (
     $keyword = "" OR
@@ -458,6 +502,8 @@ RETURN meeting.meeting_id AS meeting_id,
        END AS matched_node_id,
        $target AS matched_field,
        coalesce(action.status, "") AS semantic_status,
+       coalesce(action.status_source, "") AS semantic_status_source,
+       coalesce(action.status_confidence, "") AS semantic_status_confidence,
        [(item)-[:RESPONSIBLE_BY]->(owner:Person) | owner.name] AS owner_names,
        [(action)-[:ASSIGNED_TO]->(assignee:Person) | assignee.name] AS assignee_names,
        [(meeting)-[:BELONGS_TO_UNIT]->(unit:Unit) | unit.name] AS unit_names,
