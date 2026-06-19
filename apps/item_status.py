@@ -4,6 +4,7 @@ import re
 
 
 BLANK_VALUES = {"", "-", "--", "na", "n/a", "none", "null"}
+SUPPORTED_STATUSES = {"pending", "in_progress", "completed", "not_completed", "not_applicable"}
 COMPLETED_TERMS = (
     "已完成",
     "結案",
@@ -51,6 +52,33 @@ def classify_item_status(item: dict) -> dict:
     if contains_any(tracking, IN_PROGRESS_TERMS):
         return {"status": "in_progress", "source": "tracking_result", "confidence": "medium"}
     return {"status": "pending", "source": "", "confidence": "low"}
+
+
+def item_status_payload(item: dict) -> dict:
+    status = str(item.get("status") or "").strip()
+    if status in SUPPORTED_STATUSES:
+        return {
+            "status": status,
+            "source": str(item.get("status_source") or "").strip(),
+            "confidence": str(item.get("status_confidence") or "").strip() or "low",
+        }
+    return classify_item_status(item)
+
+
+def apply_item_status_fields(item: dict) -> dict:
+    row = dict(item)
+    for field in ("planned_date", "actual_completed_date"):
+        if field in row and not is_meaningful_value(row.get(field)):
+            row[field] = None
+    status = classify_item_status(row)
+    row.update(
+        {
+            "status": status["status"],
+            "status_source": status["source"],
+            "status_confidence": status["confidence"],
+        }
+    )
+    return row
 
 
 def is_meaningful_value(value) -> bool:

@@ -38,6 +38,8 @@ class QueryRoute:
 
 def analyze_query_route(question: str, llm_client=None) -> QueryRoute:
     heuristic_route = route_question(question)
+    if llm_client is None and should_use_deterministic_route(heuristic_route):
+        return replace_route_metadata(heuristic_route, route_source="heuristic")
     if llm_client is None and not getattr(settings, "GRAPHRAG_QUERY_ROUTER_LLM_ENABLED", True):
         return replace_route_metadata(heuristic_route, route_source="heuristic")
     try:
@@ -50,6 +52,19 @@ def analyze_query_route(question: str, llm_client=None) -> QueryRoute:
             route_source="heuristic_fallback",
             warnings=(f"LLM query understanding unavailable: {exc}",),
         )
+
+
+def should_use_deterministic_route(route: QueryRoute) -> bool:
+    if route.query_type != "open_qa":
+        return True
+    return any(str(route.entities.get(key) or "").strip() for key in (
+        "meeting_hint",
+        "person_name",
+        "date_value",
+        "product_name",
+        "regulation_name",
+        "status",
+    ))
 
 
 def route_question(question: str) -> QueryRoute:
@@ -69,14 +84,16 @@ def ollama_query_understanding(question: str) -> str:
     prompt = (
         "Analyze a meeting-record GraphRAG question.\n"
         "Return JSON only with this exact shape:\n"
-        '{"query_type":"structural_list|relation_lookup|composite_query|semantic_summary|keyword_exploration|open_qa",'
+        '{"query_type":"structural_list|relation_lookup|composite_query|meeting_summary|semantic_summary|follow_up_tracking|keyword_exploration|open_qa",'
         '"entities":{"meeting_hint":"","person_name":"","date_value":"","product_name":"","regulation_name":"","status":"","keyword":""},'
         '"confidence":0.0}\n'
         "Rules:\n"
         "- structural_list: user asks for all items, discussion items, agenda, topics, or contents of a specific meeting.\n"
         "- relation_lookup: user asks what a person/unit/date is responsible for or related to.\n"
         "- composite_query: user combines person/product/regulation/status constraints.\n"
+        "- meeting_summary: user asks to summarize, organize, or extract highlights from one specific meeting.\n"
         "- semantic_summary: risks, decisions, issues, follow-up summaries.\n"
+        "- follow_up_tracking: cross-meeting issue/follow-up tracking, later handling, or issue timeline questions.\n"
         "- keyword_exploration: mentions/about/related to a keyword, regulation, product, or term.\n"
         "- open_qa: broad summarization or unclear questions.\n"
         "Extract meeting_hint from partial or full meeting names such as P1812, HA-Fit, Conformity stem.\n"
@@ -163,6 +180,14 @@ def route_specs() -> dict:
             "limit_mode": "auto:composite",
             "answer_style": "filtered_evidence",
         },
+        "meeting_summary": {
+            "retrieval_modes": ("structural",),
+            "use_semantic": True,
+            "allow_keyword_fallback": False,
+            "default_limit": 50,
+            "limit_mode": "auto:meeting_summary",
+            "answer_style": "meeting_summary",
+        },
         "semantic_summary": {
             "retrieval_modes": ("composite",),
             "use_semantic": True,
@@ -170,6 +195,14 @@ def route_specs() -> dict:
             "default_limit": 12,
             "limit_mode": "auto:semantic_summary",
             "answer_style": "summary",
+        },
+        "follow_up_tracking": {
+            "retrieval_modes": ("follow_up",),
+            "use_semantic": False,
+            "allow_keyword_fallback": False,
+            "default_limit": 30,
+            "limit_mode": "auto:follow_up_tracking",
+            "answer_style": "timeline",
         },
         "keyword_exploration": {
             "retrieval_modes": ("keyword",),

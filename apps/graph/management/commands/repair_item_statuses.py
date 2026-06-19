@@ -5,7 +5,7 @@ import json
 from django.core.management.base import BaseCommand
 
 from apps.graph.neo4j_client import get_neo4j_client
-from apps.item_status import classify_item_status, is_meaningful_value
+from apps.item_status import apply_item_status_fields, classify_item_status, is_meaningful_value
 from apps.search.mongo import get_meeting_items_collection
 
 
@@ -28,17 +28,16 @@ class Command(BaseCommand):
         mongo_updates = []
         status_payloads = []
         for item in items:
+            normalized = apply_item_status_fields(item)
             updates = {}
-            for field in ("planned_date", "actual_completed_date"):
-                value = item.get(field)
-                if value is not None and not is_meaningful_value(value):
-                    updates[field] = None
+            for field in ("planned_date", "actual_completed_date", "status", "status_source", "status_confidence"):
+                if item.get(field) != normalized.get(field):
+                    updates[field] = normalized.get(field)
             if updates:
                 mongo_updates.append({"item_id": item.get("item_id"), "set": updates})
                 if not dry_run:
                     collection.update_one({"item_id": item.get("item_id")}, {"$set": updates})
-                    item.update(updates)
-            status_payloads.append(build_status_payload(item))
+            status_payloads.append(build_status_payload(normalized))
 
         neo4j_summary = repair_neo4j_statuses(status_payloads, dry_run=dry_run)
         summary = {

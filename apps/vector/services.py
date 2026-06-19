@@ -4,6 +4,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from django.conf import settings
 
+from apps.item_status import is_meaningful_value, item_status_payload
 from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_collection
 
 
@@ -85,6 +86,7 @@ def build_meeting_item_embedding_text(meeting: dict, item: dict) -> str:
         ("planned_date", item.get("planned_date")),
         ("actual_completed_date", item.get("actual_completed_date")),
         ("tracking_result", item.get("tracking_result")),
+        ("status", item_status_payload(item)["status"]),
     ]
     lines = [f"{field}: {value}" for field, value in parts if has_text(value)]
     return "\n".join(lines)
@@ -104,6 +106,9 @@ def make_point(item: dict, meeting: dict, text: str, vector: list[float]):
         "planned_date": item.get("planned_date"),
         "actual_completed_date": item.get("actual_completed_date"),
         "tracking_result": item.get("tracking_result"),
+        "status": item_status_payload(item)["status"],
+        "status_source": item_status_payload(item)["source"],
+        "status_confidence": item_status_payload(item)["confidence"],
         "embedding_text": text,
     }
 
@@ -219,5 +224,4 @@ def serialize_scored_point(point) -> dict:
 
 
 def has_text(value) -> bool:
-    text = str(value or "").strip()
-    return bool(text) and text.lower() not in {"--", "na", "n/a", "none", "null"}
+    return is_meaningful_value(value)

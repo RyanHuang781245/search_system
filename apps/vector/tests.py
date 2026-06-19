@@ -80,7 +80,10 @@ class VectorServiceTestCase(SimpleTestCase):
         self.assertEqual(payload["item_id"], "item_001")
         self.assertEqual(payload["item_no"], "01")
         self.assertEqual(payload["meeting_name"], "FDA 標籤確認會議")
+        self.assertEqual(payload["status"], "pending")
+        self.assertEqual(payload["status_confidence"], "low")
         self.assertIn("content: 請UPD確認FDA標籤測試需求", payload["embedding_text"])
+        self.assertIn("status: pending", payload["embedding_text"])
         self.assertEqual(vector, [0.1, 0.2, 0.3])
 
     @override_settings(QDRANT_COLLECTION_NAME="test_meeting_items", QDRANT_VECTOR_DIMENSION=3)

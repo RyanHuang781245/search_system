@@ -185,8 +185,9 @@ def make_case_id(question: str, index: int) -> str:
 def evaluate_golden_cases(
     cases: list[dict],
     *,
-    answerer: Callable[..., dict] = answer_question,
+    answerer: Callable[..., dict] | None = None,
 ) -> dict:
+    answerer = answerer or evaluate_answer_question
     results = []
     for index, case in enumerate(cases, start=1):
         case_id = str(case.get("id") or f"case_{index:03d}")
@@ -220,6 +221,10 @@ def evaluate_golden_cases(
         },
         "results": results,
     }
+
+
+def evaluate_answer_question(question: str, **kwargs) -> dict:
+    return answer_question(question, llm_client=lambda _prompt: '{"claims":[]}', **kwargs)
 
 
 def evaluate_payload(case: dict, payload: dict) -> dict:

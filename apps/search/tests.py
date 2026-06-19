@@ -14,7 +14,7 @@ from .ranking import has_task_intent, score_item
 class SearchRankingTestCase(SimpleTestCase):
     def test_shared_status_classifier_handles_placeholder_and_not_applicable(self):
         item = {
-            "actual_completed_date": "--",
+            "actual_completed_date": "- -",
             "tracking_result": "不 適 用 ，詳 設 計 移 轉 會 議 投 影 片",
         }
 

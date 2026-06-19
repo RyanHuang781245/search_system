@@ -25,13 +25,16 @@ def analyze_graph_query_plan(question: str, llm_client=None) -> dict:
     if not normalized_question:
         return default_plan()
 
+    heuristic_plan = heuristic_query_plan(normalized_question)
+    if should_use_deterministic_plan(normalized_question, heuristic_plan):
+        return heuristic_plan
+
     try:
         content = (llm_client or ollama_graph_query_plan)(normalized_question)
         payload = parse_query_plan_json(content)
     except Exception as exc:
-        plan = heuristic_query_plan(normalized_question)
-        plan["warnings"] = [f"Graph query planning unavailable: {exc}"]
-        return plan
+        heuristic_plan["warnings"] = [f"Graph query planning unavailable: {exc}"]
+        return heuristic_plan
 
     return normalize_query_plan(payload, normalized_question)
 
@@ -43,6 +46,18 @@ def default_plan() -> dict:
         "include_followups": False,
         "warnings": [],
     }
+
+
+def should_use_deterministic_plan(question: str, plan: dict) -> bool:
+    if not re.search(r"[\u4e00-\u9fff]", question):
+        return False
+    constraints = plan.get("constraints") or {}
+    non_empty_constraints = sum(bool(str(value or "").strip()) for value in constraints.values())
+    if plan.get("target") in {"risks", "decisions", "issues"}:
+        return True
+    if constraints.get("status"):
+        return True
+    return non_empty_constraints >= 2
 
 
 def ollama_graph_query_plan(question: str) -> str:
@@ -130,12 +145,19 @@ def heuristic_query_plan(question: str) -> dict:
     elif any(term in lowered for term in ("負責", "owner", "responsible", "待辦", "action")):
         plan["target"] = "action_items"
 
-    if any(term in lowered for term in ("未完成", "尚未", "沒完成", "not completed", "open")):
+    if any(term in lowered for term in ("不適用", "不需", "無需", "not applicable", "n/a")):
+        plan["constraints"]["status"] = "not_applicable"
+    elif any(term in lowered for term in ("未完成", "尚未", "沒完成", "not completed", "open")):
         plan["constraints"]["status"] = "not_completed"
     elif any(term in lowered for term in ("已完成", "實際完成", "完成日期", "completed", "closed", "done")):
         plan["constraints"]["status"] = "completed"
     elif any(term in lowered for term in ("進行中", "處理中", "in progress", "ongoing", "pending")):
         plan["constraints"]["status"] = "in_progress"
+
+    if plan["constraints"]["status"] and plan["target"] == "meeting_items" and any(
+        term in lowered for term in ("項目", "事項", "item", "items", "待辦", "action", "完成", "適用")
+    ):
+        plan["target"] = "action_items"
 
     for entity_key, constraint_key in (
         ("person_name", "person_name"),

@@ -38,13 +38,46 @@ def search_graph(
 
     modes = normalize_retrieval_modes(retrieval_modes)
     meeting_item_results = search_meeting_items_by_query(client, normalized_query, limit=limit) if "structural" in modes else []
-    planner_payload = run_query_planning(normalized_query, query_planner) if "composite" in modes else default_plan()
-    composite_results = search_composite_graph(client, planner_payload, limit=limit) if "composite" in modes else []
+    if meeting_item_results:
+        return {
+            "query": normalized_query,
+            "query_plan": {
+                "target": "meeting_items",
+                "constraints": {},
+                "include_followups": False,
+            },
+            "intent": "meeting_items",
+            "intent_entities": {},
+            "expanded_keywords": [],
+            "retrieval_modes": list(modes),
+            "results": meeting_item_results[:limit],
+            "warnings": [],
+        }
+    follow_up_results = search_issue_timeline_graph(client, normalized_query, limit=limit) if "follow_up" in modes else []
     intent_payload = run_intent_analysis(normalized_query, intent_analyzer) if "relation" in modes else {
         "intent": "keyword_related",
         "entities": {},
         "warnings": [],
     }
+    if intent_payload.get("intent") in {"planned_date", "completed_date"}:
+        intent_results = search_intent_graph(client, intent_payload, limit=limit)
+        if intent_results:
+            return {
+                "query": normalized_query,
+                "query_plan": {
+                    "target": "meeting_items",
+                    "constraints": {},
+                    "include_followups": False,
+                },
+                "intent": intent_payload["intent"],
+                "intent_entities": intent_payload["entities"],
+                "expanded_keywords": [],
+                "retrieval_modes": list(modes),
+                "results": intent_results[:limit],
+                "warnings": intent_payload.get("warnings", []),
+            }
+    planner_payload = run_query_planning(normalized_query, query_planner) if "composite" in modes else default_plan()
+    composite_results = search_composite_graph(client, planner_payload, limit=limit) if "composite" in modes else []
     intent_results = search_intent_graph(client, intent_payload, limit=limit) if "relation" in modes else []
     related_keywords = fetch_related_keywords(client, normalized_query, limit=8) if "keyword" in modes else []
     expanded_keywords = [normalized_query]
@@ -83,19 +116,19 @@ def search_graph(
             }
         )
 
-    if meeting_item_results or composite_results or intent_results:
+    if meeting_item_results or follow_up_results or composite_results or intent_results:
         keyword_results = [result for result in keyword_results if result.get("match_type") == "direct"]
 
-    results = dedupe_graph_results([*meeting_item_results, *composite_results, *intent_results, *keyword_results])
+    results = dedupe_graph_results([*meeting_item_results, *follow_up_results, *composite_results, *intent_results, *keyword_results])
     results.sort(key=lambda item: (-item["graph_score"], item.get("meeting_date") or "", item.get("item_id") or ""))
     return {
         "query": normalized_query,
         "query_plan": {
-            "target": planner_payload.get("target"),
+            "target": "issues" if "follow_up" in modes else planner_payload.get("target"),
             "constraints": planner_payload.get("constraints", {}),
-            "include_followups": planner_payload.get("include_followups", False),
+            "include_followups": True if "follow_up" in modes else planner_payload.get("include_followups", False),
         },
-        "intent": intent_payload["intent"],
+        "intent": "follow_up_tracking" if "follow_up" in modes else intent_payload["intent"],
         "intent_entities": intent_payload["entities"],
         "expanded_keywords": expanded_keywords[1:],
         "retrieval_modes": list(modes),
@@ -147,9 +180,10 @@ def _query_graph_search(tx, keywords: list[str]):
 
 
 def normalize_retrieval_modes(retrieval_modes) -> tuple[str, ...]:
-    supported = ("structural", "composite", "relation", "keyword")
+    default_modes = ("structural", "composite", "relation", "keyword")
+    supported = ("structural", "composite", "relation", "keyword", "follow_up")
     if retrieval_modes is None:
-        return supported
+        return default_modes
     if isinstance(retrieval_modes, str):
         raw_modes = [retrieval_modes]
     else:
@@ -159,7 +193,7 @@ def normalize_retrieval_modes(retrieval_modes) -> tuple[str, ...]:
         normalized = str(mode or "").strip().lower()
         if normalized in supported and normalized not in modes:
             modes.append(normalized)
-    return tuple(modes or supported)
+    return tuple(modes or default_modes)
 
 
 def search_meeting_items_by_query(client, query: str, limit: int) -> list[dict]:
@@ -180,7 +214,7 @@ def looks_like_meeting_item_list_query(query: str) -> bool:
 
 
 def _query_meeting_items_by_query(tx, query: str, limit: int):
-    records = tx.run(cq.QUERY_MEETING_ITEMS_BY_QUERY, query=query, terms=meeting_query_terms(query), limit=limit)
+    records = tx.run(cq.QUERY_MEETING_ITEMS_BY_QUERY, question=query, terms=meeting_query_terms(query), limit=limit)
     return [dict(record) for record in records][:limit]
 
 
@@ -390,6 +424,122 @@ def format_follow_up_result(row: dict, planner_payload: dict) -> dict:
         "retrieval_mode": "composite",
         "graph_score": 4.4,
     }
+
+
+def search_issue_timeline_graph(client, query: str, limit: int) -> list[dict]:
+    keyword = follow_up_query_keyword(query)
+    rows = client.execute_read(_query_issue_timeline_graph_search, keyword, limit) or []
+    results = [format_issue_timeline_result(row) for row in rows]
+    sequence_by_group = defaultdict(int)
+    for result in results:
+        group = result.get("timeline_group") or result.get("issue_id") or "unknown_issue"
+        sequence_by_group[group] += 1
+        result["sequence_no"] = sequence_by_group[group]
+    return results
+
+
+def _query_issue_timeline_graph_search(tx, keyword: str, limit: int):
+    records = tx.run(cq.QUERY_ISSUE_TIMELINE, keyword=str(keyword or "").strip().upper(), limit=limit)
+    return [dict(record) for record in records][:limit]
+
+
+def format_issue_timeline_result(row: dict) -> dict:
+    issue_id = row.get("issue_id") or row.get("matched_node_id") or row.get("issue_title")
+    issue_title = row.get("issue_title") or row.get("matched_entity") or issue_id
+    item_id = row.get("item_id")
+    previous_item_id = row.get("previous_item_id")
+    next_item_id = row.get("next_item_id")
+    result = {
+        "meeting_id": row.get("meeting_id"),
+        "meeting_name": row.get("meeting_name"),
+        "meeting_date": row.get("meeting_date"),
+        "item_id": item_id,
+        "item_no": row.get("item_no"),
+        "content": row.get("content"),
+        "matched_keyword": None,
+        "matched_field": "issue_timeline",
+        "matched_relation": "TRACKS_ISSUE",
+        "matched_entity": issue_title,
+        "matched_node_id": issue_id,
+        "issue_id": issue_id,
+        "issue_title": issue_title,
+        "issue_signature": row.get("issue_signature"),
+        "timeline_group": issue_id,
+        "previous_item_id": previous_item_id,
+        "previous_meeting_id": row.get("previous_meeting_id"),
+        "next_item_id": next_item_id,
+        "next_meeting_id": row.get("next_meeting_id"),
+        "evidence_relations": build_issue_timeline_evidence_relations(
+            item_id=item_id,
+            issue_id=issue_id,
+            issue_title=issue_title,
+            previous_item_id=previous_item_id,
+            next_item_id=next_item_id,
+        ),
+        "match_type": "issue_timeline",
+        "intent": "follow_up_tracking",
+        "retrieval_mode": "follow_up",
+        "graph_score": 4.7,
+    }
+    return result
+
+
+def build_issue_timeline_evidence_relations(
+    *,
+    item_id: str | None,
+    issue_id: str | None,
+    issue_title: str | None,
+    previous_item_id: str | None,
+    next_item_id: str | None,
+) -> list[dict]:
+    evidence = []
+    if item_id and issue_id:
+        evidence.append(
+            make_evidence_relation("MeetingItem", item_id, "Issue", issue_id, "TRACKS_ISSUE", issue_title)
+        )
+    if item_id and previous_item_id:
+        evidence.append(
+            make_evidence_relation("MeetingItem", item_id, "MeetingItem", previous_item_id, "FOLLOW_UP_OF")
+        )
+    if item_id and next_item_id:
+        evidence.append(
+            make_evidence_relation("MeetingItem", next_item_id, "MeetingItem", item_id, "FOLLOW_UP_OF")
+        )
+    return evidence
+
+
+def follow_up_query_keyword(query: str) -> str:
+    text = str(query or "").strip()
+    regulation = re.search(r"\b(FDA|TFDA|CFDA|PMDA|CE|ISO\s*\d*)\b", text, flags=re.I)
+    if regulation:
+        return regulation.group(1)
+    english_phrases = re.findall(r"[A-Za-z][A-Za-z0-9_-]*(?:\s+[A-Za-z][A-Za-z0-9_-]*){0,3}", text)
+    cleaned_phrases = [
+        phrase.strip()
+        for phrase in english_phrases
+        if phrase.strip().lower() not in {"follow up", "issue tracking"}
+    ]
+    if cleaned_phrases:
+        return max(cleaned_phrases, key=len)
+    cleaned = text
+    for cue in (
+        "跨會議追蹤",
+        "追蹤事項",
+        "後續追蹤",
+        "後續狀況",
+        "後來怎麼處理",
+        "後來如何處理",
+        "相關",
+        "整理",
+        "有哪些",
+        "哪些",
+        "會議",
+        "事項",
+        "狀況",
+    ):
+        cleaned = cleaned.replace(cue, " ")
+    tokens = [token.strip() for token in re.split(r"[\s,，。；;:：?？()（）\[\]【】]+", cleaned) if len(token.strip()) >= 2]
+    return tokens[0] if tokens else ""
 
 
 def graph_score_for_semantic_relation(relation: str) -> float:

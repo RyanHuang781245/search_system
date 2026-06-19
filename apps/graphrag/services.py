@@ -65,6 +65,12 @@ def answer_question(
         graph_limit,
         retrieval_modes=query_route.retrieval_modes,
     )
+    authoritative_semantic_item_ids = authoritative_semantic_graph_item_ids(query_route, graph_payload.get("results", []))
+    if authoritative_semantic_item_ids:
+        semantic_payload = dict(semantic_payload)
+        semantic_payload["results"] = [
+            result for result in semantic_payload.get("results", []) if result.get("item_id") in authoritative_semantic_item_ids
+        ]
 
     meetings = list(get_meeting_minutes_collection().find({}, {"_id": 0}))
     items = list(get_meeting_items_collection().find({}, {"_id": 0}))
@@ -78,7 +84,8 @@ def answer_question(
     structured_context = build_structured_context(ranked_item_ids, items_by_id, meetings_by_id, effective_limit)
 
     structural_fallback_context = []
-    if query_route.query_type == "structural_list" and len(structured_context) < effective_limit:
+    should_use_meeting_items_fallback = query_route.query_type == "structural_list" or is_meeting_summary_route(query_route)
+    if should_use_meeting_items_fallback and len(structured_context) < effective_limit:
         structural_fallback_context = [
             item
             for item in meeting_items_structured_context(
@@ -94,7 +101,8 @@ def answer_question(
         structured_context = structured_context[:effective_limit]
 
     keyword_fallback_context = []
-    if query_route.allow_keyword_fallback and len(structured_context) < effective_limit:
+    allow_keyword_fallback = query_route.allow_keyword_fallback and not authoritative_semantic_item_ids
+    if allow_keyword_fallback and len(structured_context) < effective_limit:
         keyword_fallback_context = [
             item
             for item in keyword_structured_context(normalized_question, meetings, items, effective_limit)
@@ -165,6 +173,8 @@ def answer_question(
     )
     raw_answer = llm_client(prompt)
     claims, claim_warnings = build_verified_answer_claims(raw_answer, evidence_set["records"], query_route)
+    if not claims:
+        claims = fallback_claims_from_evidence(evidence_set["records"])
     if claims:
         evidence_set = restrict_evidence_set_to_claims(evidence_set, claims, query_route, effective_limit * 2)
         structured_context = evidence_set["structured_context"]
@@ -313,9 +323,24 @@ def _safe_graph_search(graph_searcher, question: str, limit: int, retrieval_mode
 
 
 def graph_search_limit(query_route: QueryRoute, effective_limit: int) -> int:
-    if query_route.query_type in {"structural_list", "relation_lookup", "composite_query"}:
+    if query_route.query_type in {"structural_list", "relation_lookup", "composite_query", "follow_up_tracking"}:
         return effective_limit
     return effective_limit * 4
+
+
+def authoritative_semantic_graph_item_ids(query_route: QueryRoute, graph_results: list[dict]) -> set[str]:
+    if query_route.query_type not in {"semantic_summary", "follow_up_tracking"}:
+        return set()
+    semantic_relations = {"HAS_RISK", "HAS_DECISION", "TRACKS_ISSUE", "FOLLOW_UP_OF"}
+    return {
+        str(result.get("item_id"))
+        for result in graph_results
+        if result.get("item_id") and result.get("matched_relation") in semantic_relations
+    }
+
+
+def is_meeting_summary_route(query_route: QueryRoute) -> bool:
+    return query_route.query_type == "meeting_summary"
 
 
 def build_graphrag_trace(
@@ -366,14 +391,14 @@ def build_graphrag_trace(
             },
             {
                 "name": "mongo_structural_fallback",
-                "enabled": query_route.query_type == "structural_list",
-                "limit": effective_limit if query_route.query_type == "structural_list" else 0,
+                "enabled": query_route.query_type == "structural_list" or is_meeting_summary_route(query_route),
+                "limit": effective_limit if query_route.query_type == "structural_list" or is_meeting_summary_route(query_route) else 0,
                 "count": len(structural_fallback_context),
             },
             {
                 "name": "mongo_keyword_fallback",
-                "enabled": bool(query_route.allow_keyword_fallback),
-                "limit": effective_limit if query_route.allow_keyword_fallback else 0,
+                "enabled": bool(query_route.allow_keyword_fallback and not authoritative_semantic_graph_item_ids(query_route, graph_results)),
+                "limit": effective_limit if query_route.allow_keyword_fallback and not authoritative_semantic_graph_item_ids(query_route, graph_results) else 0,
                 "count": len(keyword_fallback_context),
             },
         ],
@@ -545,7 +570,7 @@ def complete_claims_with_evidence(
     evidence_records: list[dict],
     query_route: QueryRoute,
 ) -> list[dict]:
-    if query_route.query_type not in {"structural_list", "relation_lookup", "composite_query"}:
+    if query_route.query_type not in {"structural_list", "relation_lookup", "composite_query", "follow_up_tracking"}:
         return claims
     claimed_evidence_ids = {evidence_id for claim in claims for evidence_id in claim.get("evidence_ids", [])}
     completed = list(claims)
@@ -555,6 +580,14 @@ def complete_claims_with_evidence(
             continue
         completed.append({"claim": claim_text_from_evidence(record), "evidence_ids": [evidence_id]})
     return completed
+
+
+def fallback_claims_from_evidence(evidence_records: list[dict]) -> list[dict]:
+    return [
+        {"claim": claim_text_from_evidence(record), "evidence_ids": [record.get("evidence_id")]}
+        for record in evidence_records
+        if record.get("evidence_id")
+    ]
 
 
 def claim_text_from_evidence(record: dict) -> str:
@@ -570,6 +603,14 @@ def claim_text_from_evidence(record: dict) -> str:
         return f"完成日期 {entity}，{item_prefix}{content}"
     if relation == "RESPONSIBLE_BY":
         return f"{entity} 負責，{item_prefix}{content}"
+    if relation == "TRACKS_ISSUE":
+        sequence = payload.get("sequence_no")
+        sequence_prefix = f"追蹤序 {sequence}，" if sequence else ""
+        issue = entity or payload.get("issue_title") or payload.get("issue_id")
+        return f"{issue}：{sequence_prefix}{item_prefix}{content}"
+    if relation == "FOLLOW_UP_OF":
+        previous_item_id = payload.get("previous_item_id") or payload.get("matched_node_id")
+        return f"後續追蹤 {previous_item_id}，{item_prefix}{content}"
     if relation == "HAS_ITEM":
         return f"{item_prefix}{content}"
     if entity:
@@ -624,7 +665,7 @@ def restrict_evidence_set_to_claims(
         "structured_context": filter_context_by_item_ids(evidence_set["structured_context"], item_ids),
         "semantic_context": filter_context_by_item_ids(evidence_set["semantic_context"], item_ids),
         "graph_results": graph_results,
-        "graph_context": build_graph_context(graph_results, limit=graph_limit, query_route=query_route),
+        "graph_context": build_graph_context(graph_results, limit=graph_limit, query_route=query_route, force_complete=True),
         "sources": build_source_metadata_from_evidence(records),
     }
 
@@ -945,14 +986,27 @@ def format_structured_item(meeting: dict, item: dict) -> dict:
         "planned_date": item.get("planned_date"),
         "actual_completed_date": item.get("actual_completed_date"),
         "tracking_result": item.get("tracking_result"),
+        "status": item.get("status"),
+        "status_source": item.get("status_source"),
+        "status_confidence": item.get("status_confidence"),
     }
 
 
-def build_graph_context(graph_results: list[dict], limit: int = 10, query_route: QueryRoute | None = None) -> dict:
+def build_graph_context(
+    graph_results: list[dict],
+    limit: int = 10,
+    query_route: QueryRoute | None = None,
+    force_complete: bool = False,
+) -> dict:
     paths = []
     seen = set()
     graph_builder = EvidenceGraphBuilder()
-    evidence_selection = select_graph_evidence_results(graph_results, limit, query_route=query_route)
+    evidence_selection = select_graph_evidence_results(
+        graph_results,
+        limit,
+        query_route=query_route,
+        force_complete=force_complete,
+    )
     for result in evidence_selection["results"]:
         path = format_graph_path(result)
         if path in seen:
@@ -994,10 +1048,17 @@ def filter_graph_evidence_results(graph_results: list[dict], limit: int) -> list
     return select_graph_evidence_results(graph_results, limit)["results"]
 
 
-def select_graph_evidence_results(graph_results: list[dict], limit: int, query_route: QueryRoute | None = None) -> dict:
+def select_graph_evidence_results(
+    graph_results: list[dict],
+    limit: int,
+    query_route: QueryRoute | None = None,
+    force_complete: bool = False,
+) -> dict:
     candidates = [result for result in graph_results if result.get("meeting_id") or result.get("item_id")]
     if not candidates:
         return evidence_selection([], [], "empty", limit)
+    if force_complete:
+        return evidence_selection(candidates, candidates, "answer_evidence", limit)
     if should_keep_complete_evidence(candidates, query_route=query_route):
         return evidence_selection(candidates, candidates, "complete_evidence", limit)
     scored = [float(result.get("graph_score") or 0) for result in candidates]
@@ -1012,7 +1073,7 @@ def select_graph_evidence_results(graph_results: list[dict], limit: int, query_r
 
 
 def should_keep_complete_evidence(candidates: list[dict], query_route: QueryRoute | None = None) -> bool:
-    if query_route and query_route.query_type in {"structural_list", "relation_lookup", "composite_query"}:
+    if query_route and query_route.query_type in {"structural_list", "relation_lookup", "composite_query", "follow_up_tracking"}:
         return True
     complete_relations = {
         "HAS_ITEM",
@@ -1023,6 +1084,8 @@ def should_keep_complete_evidence(candidates: list[dict], query_route: QueryRout
         "BELONGS_TO_UNIT",
         "HAS_PLANNED_DATE",
         "HAS_COMPLETED_DATE",
+        "TRACKS_ISSUE",
+        "FOLLOW_UP_OF",
     }
     relations = {result.get("matched_relation") for result in candidates}
     modes = {result.get("retrieval_mode") for result in candidates}
@@ -1282,7 +1345,7 @@ def build_source_metadata_from_evidence(evidence_records: list[dict]) -> list[di
     seen = set()
     for record in evidence_records:
         payload = record.get("payload") or {}
-        key = (payload.get("document_id"), record.get("meeting_id"), record.get("item_id"))
+        key = record.get("evidence_id")
         if key in seen:
             continue
         seen.add(key)
@@ -1297,6 +1360,9 @@ def build_source_metadata_from_evidence(evidence_records: list[dict]) -> list[di
                 "evidence_source": record.get("evidence_source"),
                 "relation": record.get("relation"),
                 "retrieved_by": record.get("retrieved_by"),
+                "issue_id": payload.get("issue_id"),
+                "issue_title": payload.get("issue_title"),
+                "sequence_no": payload.get("sequence_no"),
             }
         )
     return sources
@@ -1352,7 +1418,9 @@ def build_graphrag_prompt(
         "2. Do not invent meeting_id, item_id, people, dates, products, or statuses.\n"
         "3. If query_type is structural_list, create one claim per relevant evidence record.\n"
         "4. If query_type is relation_lookup or composite_query, use explicit relation evidence first.\n"
-        "5. If no evidence supports an answer, return {\"claims\":[]}.\n\n"
+        "5. If query_type is meeting_summary or semantic_summary, synthesize concise summary claims across the relevant evidence_ids; do not list every item unless asked.\n"
+        "6. If query_type is follow_up_tracking, group claims by issue/timeline and keep chronological sequence from the evidence payload.\n"
+        "7. If no evidence supports an answer, return {\"claims\":[]}.\n\n"
         f"Query Route:\n{route_payload}\n\n"
         f"Question:\n{question}\n\n"
         f"Canonical Evidence Records:\n{evidence_records}\n\n"

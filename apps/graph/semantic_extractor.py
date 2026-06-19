@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import re
 
-from apps.item_status import classify_item_status, contains_any, is_meaningful_value
+from apps.item_status import contains_any, is_meaningful_value, item_status_payload
 
 from .keyword_extractor import dedupe, extract_keyword_entities, valid_person_name
 
@@ -117,7 +117,7 @@ def build_issue_descriptor(item: dict, keywords: dict, text: str) -> dict | None
 
 
 def detect_status(item: dict) -> dict:
-    return classify_item_status(item)
+    return item_status_payload(item)
 
 
 def infer_risk_severity(text: str) -> str:

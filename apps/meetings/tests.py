@@ -166,6 +166,9 @@ class MeetingMinutesAPITestCase(APISimpleTestCase):
         self.assertEqual(first_item["item_no"], "01")
         self.assertIn("工程圖發出延後", first_item["content"])
         self.assertIsNone(first_item["owner"])
+        self.assertIn("status", first_item)
+        self.assertIn("status_source", first_item)
+        self.assertIn("status_confidence", first_item)
 
         updated_document = self.documents_collection.find_one({"document_id": document["document_id"]})
         self.assertEqual(updated_document["status"], "parsed")

@@ -22,6 +22,7 @@ PRODUCT_TERMS = (
 )
 STATUS_TERMS = {
     "not_completed": ("未完成", "尚未", "沒完成", "未結案", "open", "not completed"),
+    "not_applicable": ("不適用", "不需", "無需", "not applicable", "n/a"),
     "completed": ("已完成", "實際完成", "完成日期", "完成了", "closed", "done", "completed"),
     "in_progress": ("進行中", "處理中", "pending", "ongoing", "in progress"),
 }
@@ -49,20 +50,30 @@ def deterministic_query_understanding(question: str) -> dict:
 
 
 def determine_query_type(text: str, lowered: str, entities: dict, graph_intent: str) -> str:
+    if is_follow_up_tracking_question(lowered):
+        return "follow_up_tracking"
     if graph_intent in {"person_attendance", "meeting_chair", "meeting_recorder", "unit_meetings"}:
         return "relation_lookup"
-    if is_structural_item_list_question(lowered):
-        return "structural_list"
     constraints = sum(
         bool(entities.get(key))
         for key in ("person_name", "date_value", "product_name", "regulation_name", "status")
     )
     if constraints >= 2 and has_item_scope(lowered):
         return "composite_query"
-    if graph_intent != "keyword_related":
+    if entities.get("status") and has_item_scope(lowered):
+        return "composite_query"
+    if graph_intent == "person_responsibility" and (
+        entities.get("person_name") or has_any(lowered, ("負責", "誰負責", "responsible"))
+    ):
         return "relation_lookup"
+    if is_structural_item_list_question(lowered):
+        return "structural_list"
+    if is_meeting_summary_question(lowered, entities):
+        return "meeting_summary"
     if is_semantic_summary_question(lowered):
         return "semantic_summary"
+    if graph_intent != "keyword_related":
+        return "relation_lookup"
     if is_keyword_exploration_question(text, lowered, entities):
         return "keyword_exploration"
     return "open_qa"
@@ -131,6 +142,31 @@ def is_semantic_summary_question(text: str) -> bool:
     )
 
 
+def is_follow_up_tracking_question(text: str) -> bool:
+    return has_any(
+        text,
+        (
+            "跨會議追蹤",
+            "追蹤事項",
+            "後續追蹤",
+            "後續狀況",
+            "後來怎麼處理",
+            "後來如何處理",
+            "演變",
+            "issue tracking",
+            "follow-up tracking",
+            "follow up tracking",
+        ),
+    )
+
+
+def is_meeting_summary_question(text: str, entities: dict) -> bool:
+    return bool(entities.get("meeting_hint")) and has_any(
+        text,
+        ("摘要", "整理", "重點", "summary", "summarize"),
+    )
+
+
 def is_keyword_exploration_question(text: str, lowered: str, entities: dict) -> bool:
     return bool(entities.get("regulation_name") or entities.get("product_name")) or has_any(
         lowered,
@@ -139,7 +175,7 @@ def is_keyword_exploration_question(text: str, lowered: str, entities: dict) -> 
 
 
 def has_item_scope(text: str) -> bool:
-    return has_any(text, ("項目", "事項", "item", "items", "待辦", "action", "負責", "完成", "相關"))
+    return has_any(text, ("項目", "事項", "item", "items", "待辦", "action", "負責", "完成", "相關", "適用"))
 
 
 def extract_date_value(text: str) -> str:
@@ -197,7 +233,9 @@ def extract_person_name(text: str) -> str:
         return match.group(1)
     match = re.search(r"\b(?:is|what is|what's)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:responsible|owner|attended|chair|chaired|recorder|recorded)\b", value, flags=re.I)
     if match:
-        return match.group(1)
+        candidate = match.group(1).strip()
+        if candidate.lower() not in {"which", "what", "item", "items", "included", "included in"}:
+            return candidate
     return ""
 
 
@@ -210,7 +248,7 @@ def extract_meeting_hint(text: str) -> str:
     value = str(text or "").strip()
     if "會議" not in value and "meeting" not in value.lower():
         return ""
-    cleaned = re.sub(r"(包含|有哪些|哪些|列出|討論事項|事項|項目|議題|內容|meeting|會議)", " ", value, flags=re.I)
+    cleaned = re.sub(r"(包含|有哪些|哪些|列出|討論事項|事項|項目|議題|內容|摘要|整理|重點|summary|summarize|meeting|會議)", " ", value, flags=re.I)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned[:80]
 

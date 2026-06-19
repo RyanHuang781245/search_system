@@ -10,6 +10,8 @@ const elements = {
     graphZoomOutButton: document.getElementById("graph-zoom-out-button"),
     graphLayoutSelect: document.getElementById("graph-layout-select"),
     graphLabelToggle: document.getElementById("graph-label-toggle"),
+    graphKicker: document.getElementById("graph-kicker"),
+    graphTitle: document.getElementById("graph-title"),
     toastElement: document.getElementById("status-toast"),
     toastBody: document.getElementById("status-toast-body"),
     buildGraphButton: document.getElementById("build-graph-button"),
@@ -31,6 +33,11 @@ const elements = {
     vectorLimit: document.getElementById("vector-limit"),
     vectorSearchSubmit: document.getElementById("vector-search-submit"),
     vectorResults: document.getElementById("vector-results"),
+    text2cypherForm: document.getElementById("text2cypher-form"),
+    text2cypherQuestion: document.getElementById("text2cypher-question"),
+    text2cypherLimit: document.getElementById("text2cypher-limit"),
+    text2cypherSubmit: document.getElementById("text2cypher-submit"),
+    text2cypherResults: document.getElementById("text2cypher-results"),
     evalQuestions: document.getElementById("eval-questions"),
     evalLimit: document.getElementById("eval-limit"),
     evalSeedButton: document.getElementById("eval-seed-button"),
@@ -52,6 +59,8 @@ const elements = {
     sourceList: document.getElementById("source-list"),
     warningCount: document.getElementById("warning-count"),
     warningList: document.getElementById("warning-list"),
+    diagnosticStatus: document.getElementById("diagnostic-status"),
+    diagnosticPanel: document.getElementById("diagnostic-panel"),
 };
 
 const toast = new bootstrap.Toast(elements.toastElement, { delay: 2800 });
@@ -68,17 +77,23 @@ function init() {
     renderKeywords([]);
     renderGraphResults({ expanded_keywords: [], results: [] });
     renderVectorResults([]);
+    renderText2CypherResults(null);
     renderEvalCases([]);
     renderSources([]);
     renderWarnings([]);
-    renderEvidenceGraph({ nodes: [], edges: [] });
+    renderDiagnostics(null);
+    renderEvidenceGraph({ nodes: [], edges: [] }, {
+        kicker: "證據圖譜",
+        title: "證據圖譜",
+        emptyText: "尚未有圖譜證據。",
+    });
     renderIcons();
 }
 
 function bindEvents() {
     elements.refreshButton?.addEventListener("click", () => {
-        elements.indexStatus.textContent = "控制台已重新整理。";
-        showToast("控制台已重新整理。", "success");
+        elements.indexStatus.textContent = "已就緒";
+        showToast("已就緒。", "success");
     });
 
     elements.buildGraphButton?.addEventListener("click", handleBuildGraph);
@@ -100,6 +115,7 @@ function bindEvents() {
     elements.keywordForm?.addEventListener("submit", handleExtractKeywords);
     elements.graphSearchForm?.addEventListener("submit", handleGraphSearch);
     elements.vectorSearchForm?.addEventListener("submit", handleVectorSearch);
+    elements.text2cypherForm?.addEventListener("submit", handleText2Cypher);
     elements.evalSeedButton?.addEventListener("click", handleEvalSeed);
     elements.evalRunButton?.addEventListener("click", handleEvalRun);
     elements.evalSaveButton?.addEventListener("click", handleEvalSave);
@@ -209,7 +225,7 @@ async function handleBuildGraph() {
     try {
         const result = await fetchJson("/api/graph/build/", { method: "POST" });
         elements.indexStatus.innerHTML = renderIndexSummary(result.data || {});
-        showToast(result.message || "Neo4j 圖譜已建立。", "success");
+        showToast(result.message || "Neo4j 圖譜建立完成。", "success");
     } catch (error) {
         elements.indexStatus.innerHTML = renderErrorBlock(error.message);
         showToast(error.message, "error");
@@ -221,7 +237,7 @@ async function handleBuildGraph() {
 async function handleReindexVector() {
     const batchSize = Math.max(parseInt(elements.vectorBatchSize.value || "64", 10) || 64, 1);
     setButtonLoading(elements.reindexVectorButton, "重建中...");
-    elements.indexStatus.innerHTML = renderLoadingInline("正在重建 Qdrant 向量索引...");
+    elements.indexStatus.innerHTML = renderLoadingInline("正在重建 Qdrant 索引...");
 
     try {
         const result = await fetchJson("/api/vector/reindex/", {
@@ -230,7 +246,7 @@ async function handleReindexVector() {
             body: JSON.stringify({ batch_size: batchSize }),
         });
         elements.indexStatus.innerHTML = renderIndexSummary(result.data || {});
-        showToast(result.message || "Qdrant 索引已重建。", "success");
+        showToast(result.message || "Qdrant 索引重建完成。", "success");
     } catch (error) {
         elements.indexStatus.innerHTML = renderErrorBlock(error.message);
         showToast(error.message, "error");
@@ -243,7 +259,7 @@ async function handleExtractKeywords(event) {
     event.preventDefault();
     const text = elements.keywordText.value.trim();
     if (!text) {
-        showToast("請輸入要抽取的文字。", "error");
+        showToast("請輸入文字。", "error");
         return;
     }
 
@@ -258,7 +274,7 @@ async function handleExtractKeywords(event) {
             body: JSON.stringify({ text, max_keywords: maxKeywords }),
         });
         renderKeywords(result.data?.keywords || []);
-        showToast(`抽取完成，共 ${result.data?.keyword_count || 0} 個關鍵字。`, "success");
+        showToast(`關鍵字抽取完成：${result.data?.keyword_count || 0} 個`, "success");
     } catch (error) {
         elements.keywordResults.innerHTML = renderErrorBlock(error.message);
         showToast(error.message, "error");
@@ -271,7 +287,7 @@ async function handleGraphSearch(event) {
     event.preventDefault();
     const query = elements.graphQuery.value.trim();
     if (!query) {
-        showToast("請輸入 Graph 查詢詞。", "error");
+        showToast("請輸入 Graph 查詢。", "error");
         return;
     }
 
@@ -294,7 +310,7 @@ async function handleVectorSearch(event) {
     event.preventDefault();
     const query = elements.vectorQuery.value.trim();
     if (!query) {
-        showToast("請輸入 Vector 查詢句。", "error");
+        showToast("請輸入 Vector 查詢。", "error");
         return;
     }
 
@@ -313,6 +329,39 @@ async function handleVectorSearch(event) {
     }
 }
 
+async function handleText2Cypher(event) {
+    event.preventDefault();
+    const question = elements.text2cypherQuestion.value.trim();
+    if (!question) {
+        showToast("請輸入 Text2Cypher 探索問題。", "error");
+        return;
+    }
+    const limit = Math.max(parseInt(elements.text2cypherLimit.value || "20", 10) || 20, 1);
+    setButtonLoading(elements.text2cypherSubmit, "探索中...");
+    elements.text2cypherResults.innerHTML = renderLoadingInline("正在產生並檢查 Cypher...");
+
+    try {
+        const result = await fetchJson("/api/graph/text2cypher/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question, limit }),
+        });
+        const data = result.data || {};
+        renderText2CypherResults(data);
+        renderEvidenceGraph(data.graph || {}, {
+            kicker: "Text2Cypher 圖譜",
+            title: "Text2Cypher 探索圖譜",
+            emptyText: "Text2Cypher 結果列沒有可視覺化的圖譜節點。",
+        });
+        showToast(result.message || "Text2Cypher 探索完成。", "success");
+    } catch (error) {
+        elements.text2cypherResults.innerHTML = renderErrorBlock(error.message);
+        showToast(error.message, "error");
+    } finally {
+        restoreButton(elements.text2cypherSubmit, '<i data-lucide="search-code"></i><span>探索</span>');
+    }
+}
+
 async function handleAsk(event) {
     event.preventDefault();
     const question = elements.askQuestion.value.trim();
@@ -322,11 +371,16 @@ async function handleAsk(event) {
     }
 
     const limit = elements.askLimit.value || "auto";
-    setButtonLoading(elements.askSubmit, "生成中...");
+    setButtonLoading(elements.askSubmit, "回答中...");
     elements.answerPanel.innerHTML = renderLoadingInline("正在產生 GraphRAG 回答...");
     renderSources([]);
     renderWarnings([]);
-    renderEvidenceGraph({ nodes: [], edges: [] });
+    renderDiagnostics(null, "running");
+    renderEvidenceGraph({ nodes: [], edges: [] }, {
+        kicker: "證據圖譜",
+        title: "證據圖譜",
+        emptyText: "正在建立回答證據圖...",
+    });
 
     try {
         const result = await fetchJson("/api/graphrag/ask/", {
@@ -335,13 +389,19 @@ async function handleAsk(event) {
             body: JSON.stringify({ question, limit }),
         });
         const data = result.data || {};
-        renderEvidenceGraph(data.contexts?.graph || {});
+        renderEvidenceGraph(data.contexts?.graph || {}, {
+            kicker: "證據圖譜",
+            title: "證據圖譜",
+            emptyText: "本次回答沒有圖譜證據。",
+        });
         renderAnswer(data);
         renderSources(data.sources || []);
         renderWarnings(data.warnings || []);
-        showToast(result.message || "GraphRAG 回答已生成。", "success");
+        renderDiagnostics(data);
+        showToast(result.message || "GraphRAG 回答完成。", "success");
     } catch (error) {
         elements.answerPanel.innerHTML = renderErrorBlock(error.message);
+        renderDiagnostics(null, "error");
         showToast(error.message, "error");
     } finally {
         restoreButton(elements.askSubmit, '<i data-lucide="send"></i><span>詢問</span>');
@@ -354,13 +414,13 @@ async function handleEvalSeed() {
         .map((line) => line.trim())
         .filter(Boolean);
     if (!questions.length) {
-        showToast("請輸入至少一個評估問題。", "error");
+        showToast("請輸入評估問題。", "error");
         return;
     }
 
     const limit = elements.evalLimit?.value || "auto";
     setButtonLoading(elements.evalSeedButton, "產生中...");
-    elements.evalSummary.innerHTML = renderLoadingInline("正在產生候選 golden cases...");
+    elements.evalSummary.innerHTML = renderLoadingInline("正在產生 golden cases...");
     elements.evalResults.innerHTML = "";
 
     try {
@@ -371,22 +431,22 @@ async function handleEvalSeed() {
         });
         currentEvalCases = result.data?.cases || [];
         renderEvalCases(currentEvalCases);
-        showToast(result.message || "候選案例已產生。", "success");
+        showToast(result.message || "評估案例已產生。", "success");
     } catch (error) {
         elements.evalSummary.innerHTML = renderErrorBlock(error.message);
         showToast(error.message, "error");
     } finally {
-        restoreButton(elements.evalSeedButton, '<i data-lucide="wand-sparkles"></i><span>產生候選</span>');
+        restoreButton(elements.evalSeedButton, '<i data-lucide="list-plus"></i><span>產生案例</span>');
     }
 }
 
 async function handleEvalRun() {
     if (!currentEvalCases.length) {
-        showToast("請先產生候選案例。", "error");
+        showToast("請先產生評估案例。", "error");
         return;
     }
     setButtonLoading(elements.evalRunButton, "評估中...");
-    elements.evalSummary.innerHTML = renderLoadingInline("正在執行 GraphRAG 回歸評估...");
+    elements.evalSummary.innerHTML = renderLoadingInline("正在執行 GraphRAG 評估...");
 
     try {
         const result = await fetchJson("/api/graphrag/eval/run/", {
@@ -407,11 +467,11 @@ async function handleEvalRun() {
 async function handleEvalSave() {
     const approvedCases = currentEvalCases.filter((caseItem) => caseItem.enabled || caseItem.review_status === "approved");
     if (!approvedCases.length) {
-        showToast("請先勾選要保存的正確案例。", "error");
+        showToast("請至少核准一個案例。", "error");
         return;
     }
-    setButtonLoading(elements.evalSaveButton, "保存中...");
-    elements.evalSummary.innerHTML = renderLoadingInline(`正在保存 ${approvedCases.length} 題 golden cases...`);
+    setButtonLoading(elements.evalSaveButton, "儲存中...");
+    elements.evalSummary.innerHTML = renderLoadingInline(`正在儲存 ${approvedCases.length} 筆 golden cases...`);
 
     try {
         const result = await fetchJson("/api/graphrag/eval/save/", {
@@ -421,12 +481,12 @@ async function handleEvalSave() {
         });
         const data = result.data || {};
         elements.evalSummary.innerHTML = renderSaveSummary(data);
-        showToast(result.message || "Golden cases 已保存。", "success");
+        showToast(result.message || "黃金測試案例已儲存。", "success");
     } catch (error) {
         elements.evalSummary.innerHTML = renderErrorBlock(error.message);
         showToast(error.message, "error");
     } finally {
-        restoreButton(elements.evalSaveButton, '<i data-lucide="save"></i><span>保存已確認</span>');
+        restoreButton(elements.evalSaveButton, '<i data-lucide="save"></i><span>儲存核准案例</span>');
     }
 }
 
@@ -457,7 +517,7 @@ function normalizeEvalCaseForRun(caseItem) {
 
 function renderKeywords(keywords) {
     if (!keywords.length) {
-        elements.keywordResults.innerHTML = renderEmptyBlock("尚無關鍵字。");
+        elements.keywordResults.innerHTML = renderEmptyBlock("尚未執行關鍵字抽取。");
         renderIcons();
         return;
     }
@@ -466,10 +526,10 @@ function renderKeywords(keywords) {
         <article class="keyword-result-card">
             <div class="keyword-name">${escapeHtml(keyword.name || "-")}</div>
             <div class="keyword-meta">
-                <span>${escapeHtml(keyword.type || "unknown")}</span>
+                <span>${escapeHtml(keyword.type || "未知")}</span>
                 <span>score ${formatScore(keyword.score)}</span>
             </div>
-            <div class="keyword-method">${escapeHtml(keyword.method || "unknown")}</div>
+            <div class="keyword-method">${escapeHtml(keyword.method || "未知")}</div>
         </article>
     `).join("");
 }
@@ -497,7 +557,7 @@ function renderGraphResults(payload) {
             <div class="related-reasons">
                 <span class="search-chip">${escapeHtml(item.meeting_id || "-")}</span>
                 <span class="search-chip">${escapeHtml(item.item_id || "-")}</span>
-                <span class="search-chip">${escapeHtml(item.keyword_method || "unknown")}</span>
+                <span class="search-chip">${escapeHtml(item.keyword_method || "未知")}</span>
             </div>
         </article>
     `).join("");
@@ -527,13 +587,81 @@ function renderVectorResults(results) {
     renderIcons();
 }
 
+function renderText2CypherResults(payload) {
+    if (!elements.text2cypherResults) {
+        return;
+    }
+    if (!payload) {
+        elements.text2cypherResults.innerHTML = renderEmptyBlock("尚未執行 Text2Cypher 探索。");
+        renderIcons();
+        return;
+    }
+    const warnings = payload.warnings || [];
+    const rows = payload.rows || [];
+    const statusClass = payload.blocked ? "text-danger" : "text-success";
+    elements.text2cypherResults.innerHTML = `
+        <article class="related-card related-card-static text2cypher-card">
+            <div class="related-title ${statusClass}">
+                ${payload.blocked ? "已阻擋" : "唯讀"} ${escapeHtml(String(payload.row_count ?? rows.length))} 筆結果
+            </div>
+            <div class="related-meta">
+                ${escapeHtml(payload.question || "-")} | 產生方式 ${escapeHtml(payload.generated_by || "-")}
+            </div>
+            <pre class="cypher-preview"><code>${escapeHtml(payload.cypher || "-")}</code></pre>
+            ${warnings.length ? `
+            <div class="diagnostic-subtitle">警告</div>
+                ${warnings.map((warning) => `<div class="diagnostic-warning-text">${escapeHtml(warning)}</div>`).join("")}
+            ` : ""}
+            <div class="diagnostic-subtitle">結果列</div>
+            ${renderText2CypherRows(rows)}
+        </article>
+    `;
+    renderIcons();
+}
+
+function renderText2CypherRows(rows) {
+    if (!rows.length) {
+        return '<div class="related-empty">沒有結果列。</div>';
+    }
+    const columns = Array.from(rows.reduce((set, row) => {
+        Object.keys(row || {}).forEach((key) => set.add(key));
+        return set;
+    }, new Set())).slice(0, 12);
+    return `
+        <div class="text2cypher-table-wrap">
+            <table class="text2cypher-table">
+                <thead>
+                    <tr>${columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr>
+                </thead>
+                <tbody>
+                    ${rows.map((row) => `
+                        <tr>
+                            ${columns.map((column) => `<td>${escapeHtml(formatCellValue(row?.[column]))}</td>`).join("")}
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function formatCellValue(value) {
+    if (value === null || value === undefined) {
+        return "-";
+    }
+    if (typeof value === "object") {
+        return truncateText(JSON.stringify(value), 140);
+    }
+    return truncateText(String(value), 140);
+}
+
 function renderEvalCases(cases) {
     if (!elements.evalSummary || !elements.evalResults) {
         return;
     }
     if (!cases.length) {
-        elements.evalSummary.innerHTML = "尚未產生評估案例。";
-        elements.evalResults.innerHTML = renderEmptyBlock("沒有候選案例。");
+        elements.evalSummary.innerHTML = "尚未有評估案例。";
+        elements.evalResults.innerHTML = renderEmptyBlock("沒有評估案例。");
         renderIcons();
         return;
     }
@@ -541,9 +669,9 @@ function renderEvalCases(cases) {
     const approvedCount = cases.filter((item) => item.enabled || item.review_status === "approved").length;
     elements.evalSummary.innerHTML = `
         <div class="compact-list">
-            <div class="compact-list-row"><strong>候選案例</strong><span>${cases.length}</span></div>
-            <div class="compact-list-row"><strong>證據一致</strong><span>${consistentCount}/${cases.length}</span></div>
-            <div class="compact-list-row"><strong>已確認</strong><span>${approvedCount}/${cases.length}</span></div>
+            <div class="compact-list-row"><strong>評估案例</strong><span>${cases.length}</span></div>
+            <div class="compact-list-row"><strong>一致案例</strong><span>${consistentCount}/${cases.length}</span></div>
+            <div class="compact-list-row"><strong>已核准案例</strong><span>${approvedCount}/${cases.length}</span></div>
         </div>
     `;
     elements.evalResults.innerHTML = cases.map((caseItem, index) => renderEvalCaseCard(caseItem, index)).join("");
@@ -563,17 +691,17 @@ function renderEvalCaseCard(caseItem, index) {
                 <input class="form-check-input mt-1" type="checkbox" data-eval-approve="${index}" ${checked ? "checked" : ""}>
                 <span>
                     <span class="related-title d-block">${escapeHtml(caseItem.question || "-")}</span>
-                    <span class="related-meta d-block">${checked ? "approved" : "needs_review"}</span>
+                    <span class="related-meta d-block">${checked ? "已核准" : "待檢查"}</span>
                 </span>
             </label>
             <div class="related-meta">
-                ${escapeHtml(caseItem.id || "-")} | route ${escapeHtml(route)} | ${consistency.is_consistent ? "consistent" : "inconsistent"}
+                ${escapeHtml(caseItem.id || "-")} | 路由 ${escapeHtml(route)} | ${consistency.is_consistent ? "一致" : "不一致"}
             </div>
             <div class="related-body">${escapeHtml(truncateText(caseItem.observed?.answer || "-", 220))}</div>
             <div class="related-reasons">
-                ${renderChipGroup("items", expectedItems)}
-                ${renderChipGroup("meetings", expectedMeetings)}
-                ${renderChipGroup("relations", expectedRelations)}
+                ${renderChipGroup("項目", expectedItems)}
+                ${renderChipGroup("會議", expectedMeetings)}
+                ${renderChipGroup("關係", expectedRelations)}
             </div>
         </article>
     `;
@@ -584,10 +712,10 @@ function renderEvalReport(report) {
     const results = report.results || [];
     elements.evalSummary.innerHTML = `
         <div class="compact-list">
-            <div class="compact-list-row"><strong>Passed</strong><span>${escapeHtml(String(summary.passed || 0))}</span></div>
-            <div class="compact-list-row"><strong>Failed</strong><span>${escapeHtml(String(summary.failed || 0))}</span></div>
-            <div class="compact-list-row"><strong>Skipped</strong><span>${escapeHtml(String(summary.skipped || 0))}</span></div>
-            <div class="compact-list-row"><strong>Enabled</strong><span>${escapeHtml(String(summary.enabled || 0))}</span></div>
+            <div class="compact-list-row"><strong>通過</strong><span>${escapeHtml(String(summary.passed || 0))}</span></div>
+            <div class="compact-list-row"><strong>失敗</strong><span>${escapeHtml(String(summary.failed || 0))}</span></div>
+            <div class="compact-list-row"><strong>略過</strong><span>${escapeHtml(String(summary.skipped || 0))}</span></div>
+            <div class="compact-list-row"><strong>已啟用</strong><span>${escapeHtml(String(summary.enabled || 0))}</span></div>
         </div>
     `;
     elements.evalResults.innerHTML = results.length
@@ -599,11 +727,11 @@ function renderEvalReport(report) {
 function renderSaveSummary(data) {
     return `
         <div class="compact-list">
-            <div class="compact-list-row"><strong>Saved</strong><span>${escapeHtml(String(data.saved || 0))}</span></div>
-            <div class="compact-list-row"><strong>Created</strong><span>${escapeHtml(String(data.created || 0))}</span></div>
-            <div class="compact-list-row"><strong>Updated</strong><span>${escapeHtml(String(data.updated || 0))}</span></div>
-            <div class="compact-list-row"><strong>Skipped</strong><span>${escapeHtml(String(data.skipped || 0))}</span></div>
-            <div class="compact-list-row"><strong>File</strong><span>${escapeHtml(data.path || "-")}</span></div>
+            <div class="compact-list-row"><strong>已儲存</strong><span>${escapeHtml(String(data.saved || 0))}</span></div>
+            <div class="compact-list-row"><strong>已建立</strong><span>${escapeHtml(String(data.created || 0))}</span></div>
+            <div class="compact-list-row"><strong>已更新</strong><span>${escapeHtml(String(data.updated || 0))}</span></div>
+            <div class="compact-list-row"><strong>已略過</strong><span>${escapeHtml(String(data.skipped || 0))}</span></div>
+            <div class="compact-list-row"><strong>檔案</strong><span>${escapeHtml(data.path || "-")}</span></div>
         </div>
     `;
 }
@@ -618,7 +746,7 @@ function renderEvalResultCard(result) {
             <div class="related-meta">
                 ${escapeHtml((observed.route || {}).query_type || "-")} | graph ${escapeHtml(String((observed.graph_item_ids || []).length))} items
             </div>
-            ${failures.length ? `<div class="related-body">${failures.map((failure) => escapeHtml(failure)).join("<br>")}</div>` : '<div class="related-body">通過。</div>'}
+            ${failures.length ? `<div class="related-body">${failures.map((failure) => escapeHtml(failure)).join("<br>")}</div>` : '<div class="related-body">無失敗項目。</div>'}
             <div class="related-reasons">
                 ${renderChipGroup("source items", observed.source_item_ids || [])}
                 ${renderChipGroup("relations", observed.graph_relations || [])}
@@ -642,15 +770,14 @@ function renderAnswer(data) {
             <div class="answer-title">${escapeHtml(data.question || "-")}</div>
             <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-answer-reader-open title="展開閱讀">
                 <i data-lucide="maximize-2"></i>
-                <span>閱讀</span>
-            </button>
+                <span>?梯?</span>
         </div>
         <div class="answer-body">${renderMarkdownAnswer(data.answer || "-", graph.nodes || [])}</div>
         <div class="score-grid score-grid-inline mt-3">
-            <div class="score-pill"><span class="score-pill-label">Structured</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.structured?.length || 0))}</span></div>
-            <div class="score-pill"><span class="score-pill-label">Graph</span><span class="score-pill-value">${escapeHtml(formatGraphEvidenceCount(data.contexts?.graph || {}))}</span></div>
-            <div class="score-pill"><span class="score-pill-label">Semantic</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.semantic?.length || 0))}</span></div>
-            <div class="score-pill"><span class="score-pill-label">Scope</span><span class="score-pill-value">${escapeHtml(formatAnswerScope(data))}</span></div>
+            <div class="score-pill"><span class="score-pill-label">結構</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.structured?.length || 0))}</span></div>
+            <div class="score-pill"><span class="score-pill-label">圖譜</span><span class="score-pill-value">${escapeHtml(formatGraphEvidenceCount(data.contexts?.graph || {}))}</span></div>
+            <div class="score-pill"><span class="score-pill-label">語意</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.semantic?.length || 0))}</span></div>
+            <div class="score-pill"><span class="score-pill-label">範圍</span><span class="score-pill-value">${escapeHtml(formatAnswerScope(data))}</span></div>
         </div>
         ${renderTraceSummary(data.trace)}
     `;
@@ -662,7 +789,7 @@ function formatAnswerScope(data) {
     return mode ? `${limit} ${mode}` : String(limit);
 }
 
-function renderEvidenceGraph(graph) {
+function renderEvidenceGraph(graph, options = {}) {
     const graphElement = document.getElementById("evidence-graph");
     const emptyElement = document.getElementById("evidence-graph-empty");
     const countElement = document.getElementById("evidence-graph-count");
@@ -672,6 +799,12 @@ function renderEvidenceGraph(graph) {
     const edges = graph.edges || [];
     const summary = graph.summary || {};
     evidenceGraphData = { nodes, edges, summary };
+    if (elements.graphKicker) {
+        elements.graphKicker.textContent = options.kicker || "證據圖譜";
+    }
+    if (elements.graphTitle) {
+        elements.graphTitle.textContent = options.title || "證據圖譜";
+    }
     if (countElement) {
         countElement.textContent = formatGraphEvidenceCount(graph);
         countElement.title = graphEvidenceTitle(summary, nodes, edges);
@@ -690,10 +823,10 @@ function renderEvidenceGraph(graph) {
         return;
     }
 
-    if (!nodes.length || !edges.length) {
+    if (!nodes.length) {
         graphElement.classList.add("d-none");
         emptyElement.classList.remove("d-none");
-        emptyElement.textContent = "No graph evidence for this answer.";
+        emptyElement.textContent = options.emptyText || "本次回答沒有圖譜證據。";
         if (countElement) {
             countElement.textContent = formatGraphEvidenceCount(graph);
         }
@@ -870,6 +1003,11 @@ function renderEvidenceGraph(graph) {
 
 function formatGraphEvidenceCount(graph) {
     const summary = graph?.summary || {};
+    if (summary.projection === "text2cypher_rows") {
+        const nodeCount = Number(summary.node_count ?? graph?.nodes?.length ?? 0);
+        const edgeCount = Number(summary.edge_count ?? graph?.edges?.length ?? 0);
+        return `${nodeCount}/${edgeCount}`;
+    }
     const visible = Number(summary.visible_paths ?? graph?.paths?.length ?? 0);
     const total = Number(summary.total_paths ?? graph?.paths?.length ?? visible);
     if (!Number.isFinite(total) || total <= 0) {
@@ -879,11 +1017,14 @@ function formatGraphEvidenceCount(graph) {
 }
 
 function graphEvidenceTitle(summary, nodes, edges) {
+    if (summary?.projection === "text2cypher_rows") {
+        return `${nodes.length} 個節點，${edges.length} 條關係，Text2Cypher row 投影`;
+    }
     const total = Number(summary?.total_paths || 0);
     const visible = Number(summary?.visible_paths || 0);
     const hidden = Number(summary?.hidden_paths || 0);
     const mode = summary?.selection_mode || "unknown";
-    return `${visible}/${total || visible} evidence paths, ${hidden} hidden, ${nodes.length} nodes, ${edges.length} edges, ${mode}`;
+    return `${visible}/${total || visible} 條證據路徑，隱藏 ${hidden} 條，${nodes.length} 個節點，${edges.length} 條關係，${mode}`;
 }
 
 function renderTraceSummary(trace) {
@@ -945,6 +1086,8 @@ function bindEvidenceGraphInteractions(cy, detailElement) {
         renderGraphDetail(detailElement, {
             heading: event.target.data("label"),
             type: event.target.data("type"),
+            nodeId: event.target.id(),
+            expandable: true,
             rows: {
                 id: event.target.id(),
                 title: event.target.data("title"),
@@ -955,7 +1098,7 @@ function bindEvidenceGraphInteractions(cy, detailElement) {
         selectGraphElement(cy, event.target);
         renderGraphDetail(detailElement, {
             heading: event.target.data("label"),
-            type: "Relationship",
+            type: "關係",
             rows: {
                 source: event.target.data("source"),
                 target: event.target.data("target"),
@@ -1026,7 +1169,7 @@ function renderGraphDetail(container, detail) {
     container.classList.remove("d-none");
     container.innerHTML = `
         <div class="graph-detail-head">
-            <span>${escapeHtml(detail.type || "Detail")}</span>
+            <span>${escapeHtml(detail.type || "細節")}</span>
             <button class="btn btn-light btn-sm border" type="button" data-graph-detail-close>
                 <i data-lucide="x"></i>
             </button>
@@ -1040,11 +1183,150 @@ function renderGraphDetail(container, detail) {
                 </div>
             `).join("")}
         </div>
+        ${detail.expandable && detail.nodeId ? renderGraphExpandControls(detail) : ""}
     `;
     container.querySelector("[data-graph-detail-close]")?.addEventListener("click", () => {
         container.classList.add("d-none");
     });
+    container.querySelectorAll("[data-graph-expand-node]").forEach((button) => {
+        button.addEventListener("click", handleGraphNodeExpand);
+    });
     renderIcons();
+}
+
+function renderGraphExpandControls(detail) {
+    const nodeId = escapeHtml(detail.nodeId);
+    if (detail.type === "MeetingItem") {
+        const scopes = [
+            ["meeting", "會議"],
+            ["owner", "負責人"],
+            ["dates", "日期"],
+            ["product_regulation", "產品/法規"],
+            ["keyword", "關鍵字"],
+            ["semantic", "語意"],
+        ];
+        return `
+            <div class="graph-expand-grid">
+                ${scopes.map(([scope, label]) => `
+                    <button class="btn btn-light btn-sm border graph-expand-button" type="button" data-graph-expand-node="${nodeId}" data-graph-expand-scope="${escapeHtml(scope)}">
+                        ${escapeHtml(label)}
+                    </button>
+                `).join("")}
+            </div>
+        `;
+    }
+    return `
+        <button class="btn btn-primary btn-primary-custom btn-sm graph-expand-button" type="button" data-graph-expand-node="${nodeId}" data-graph-expand-scope="default">
+            <i data-lucide="plus"></i><span>展開一層</span>
+        </button>
+    `;
+}
+
+async function handleGraphNodeExpand(event) {
+    const button = event.currentTarget;
+    const nodeId = button?.dataset?.graphExpandNode;
+    const relationScope = button?.dataset?.graphExpandScope || "default";
+    if (!nodeId) {
+        return;
+    }
+    button.disabled = true;
+    const originalHtml = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm"></span><span>展開中</span>';
+    try {
+        const result = await fetchJson("/api/graph/node/expand/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ node_id: nodeId, relation_scope: relationScope, limit: 10 }),
+        });
+        const data = result.data || {};
+        mergeGraphIntoEvidence(data.graph || {});
+        (data.warnings || []).forEach((warning) => showToast(warning, "error"));
+        showToast(result.message || "節點已展開。", "success");
+    } catch (error) {
+        showToast(error.message, "error");
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+        renderIcons();
+    }
+}
+
+function mergeGraphIntoEvidence(graph) {
+    if (!evidenceCy || !graph) {
+        return;
+    }
+    const incomingNodes = graph.nodes || [];
+    const incomingEdges = graph.edges || [];
+    const newElements = [];
+
+    for (const node of incomingNodes) {
+        if (!node?.id || evidenceCy.getElementById(node.id).length) {
+            continue;
+        }
+        newElements.push({
+            group: "nodes",
+            data: {
+                id: node.id,
+                label: node.label || node.id,
+                title: node.title || node.label || node.id,
+                type: node.type || "Entity",
+            },
+        });
+    }
+
+    for (const edge of incomingEdges) {
+        if (!edge?.id || !edge.source || !edge.target || evidenceCy.getElementById(edge.id).length) {
+            continue;
+        }
+        newElements.push({
+            group: "edges",
+            data: {
+                id: edge.id,
+                source: edge.source,
+                target: edge.target,
+                label: edge.label || "",
+                evidenceSource: edge.evidence_source || "manual_expansion",
+                title: `${edge.source} -[${edge.label || ""}]-> ${edge.target}`,
+            },
+        });
+    }
+
+    if (!newElements.length) {
+        return;
+    }
+    evidenceCy.add(newElements);
+    evidenceCy.edges().toggleClass("labels-hidden", !graphLabelsVisible);
+    evidenceGraphData.nodes = mergeGraphItemsById(evidenceGraphData.nodes || [], incomingNodes);
+    evidenceGraphData.edges = mergeGraphItemsById(evidenceGraphData.edges || [], incomingEdges);
+    updateGraphCountFromCurrentCy();
+    renderGraphLegend(evidenceGraphData.nodes, document.getElementById("graph-legend"));
+    relayoutEvidenceGraph();
+}
+
+function mergeGraphItemsById(existingItems, incomingItems) {
+    const byId = new Map();
+    for (const item of existingItems || []) {
+        if (item?.id) {
+            byId.set(item.id, item);
+        }
+    }
+    for (const item of incomingItems || []) {
+        if (item?.id && !byId.has(item.id)) {
+            byId.set(item.id, item);
+        }
+    }
+    return Array.from(byId.values());
+}
+
+function updateGraphCountFromCurrentCy() {
+    const countElement = document.getElementById("evidence-graph-count");
+    if (!countElement || !evidenceCy) {
+        return;
+    }
+    const nodeCount = evidenceCy.nodes().length;
+    const edgeCount = evidenceCy.edges().length;
+    countElement.textContent = `${nodeCount}/${edgeCount}`;
+    countElement.title = `${nodeCount} 個節點，${edgeCount} 條關係`;
 }
 
 function renderGraphLegend(nodes, container) {
@@ -1210,6 +1492,153 @@ function renderWarnings(warnings) {
         : '<div class="related-empty">沒有警告。</div>';
 }
 
+function renderDiagnostics(data, state = "idle") {
+    if (!elements.diagnosticPanel || !elements.diagnosticStatus) {
+        return;
+    }
+    if (!data) {
+        const label = state === "running" ? "執行中" : state === "error" ? "錯誤" : "待命";
+        elements.diagnosticStatus.textContent = label;
+        elements.diagnosticStatus.className = `badge border ${state === "error" ? "text-bg-danger" : "text-bg-light"}`;
+        elements.diagnosticPanel.innerHTML = state === "running"
+            ? renderLoadingInline("正在整理查詢診斷...")
+            : '<div class="related-empty">尚未有查詢診斷。</div>';
+        renderIcons();
+        return;
+    }
+
+    const trace = data.trace || {};
+    const route = data.query_route || trace.route || {};
+    const graph = data.contexts?.graph || {};
+    const graphSummary = trace.graph_summary || graph.summary || {};
+    const warnings = data.warnings || [];
+    const statusText = warnings.length ? `${warnings.length} 個警告` : route.query_type || "就緒";
+    elements.diagnosticStatus.textContent = statusText;
+    elements.diagnosticStatus.className = `badge border ${warnings.length ? "text-bg-warning" : "text-bg-light"}`;
+
+    elements.diagnosticPanel.innerHTML = `
+        <div class="diagnostic-grid">
+            ${renderDiagnosticSection("查詢路由", renderRouteDiagnostics(route, data))}
+            ${renderDiagnosticSection("實體", renderEntityDiagnostics(route.entities || {}))}
+            ${renderDiagnosticSection("檢索器", renderRetrieverDiagnostics(trace.retrievers || []))}
+            ${renderDiagnosticSection("證據", renderEvidenceDiagnostics(trace, graphSummary, graph))}
+            ${renderDiagnosticSection("警告", renderWarningDiagnostics(warnings))}
+        </div>
+    `;
+    renderIcons();
+}
+
+function renderDiagnosticSection(title, body) {
+    return `
+        <section class="diagnostic-section">
+            <div class="diagnostic-section-title">${escapeHtml(title)}</div>
+            ${body}
+        </section>
+    `;
+}
+
+function renderRouteDiagnostics(route, data) {
+    const rows = [
+        ["查詢類型", route.query_type || "-"],
+        ["路由來源", route.route_source || "-"],
+        ["信心分數", route.confidence ?? "-"],
+        ["檢索模式", (route.retrieval_modes || []).join(", ") || "-"],
+        ["回答樣式", route.answer_style || "-"],
+        ["限制筆數", data.limit ?? "-"],
+        ["限制模式", data.limit_mode || "-"],
+    ];
+    return renderDiagnosticRows(rows);
+}
+
+function renderEntityDiagnostics(entities) {
+    const entries = Object.entries(entities || {}).filter(([, value]) => String(value || "").trim());
+    if (!entries.length) {
+        return '<div class="related-empty">沒有實體資訊。</div>';
+    }
+    return `
+        <div class="diagnostic-chip-row">
+            ${entries.map(([key, value]) => `<span class="search-chip">${escapeHtml(key)}: ${escapeHtml(value)}</span>`).join("")}
+        </div>
+    `;
+}
+
+function renderRetrieverDiagnostics(retrievers) {
+    if (!retrievers.length) {
+        return '<div class="related-empty">沒有檢索器追蹤資料。</div>';
+    }
+    return retrievers.map((retriever) => {
+        const enabled = retriever.enabled !== false;
+        const mode = enabled ? "已啟用" : "已停用";
+        const chips = [
+            `筆數：${retriever.count ?? 0}`,
+            `限制：${retriever.limit ?? 0}`,
+            ...(retriever.retrieval_modes ? [`模式：${retriever.retrieval_modes.join(", ")}`] : []),
+            ...((retriever.expanded_keywords || []).length ? [`擴展關鍵字：${retriever.expanded_keywords.join(", ")}`] : []),
+        ];
+        return `
+            <article class="diagnostic-retriever ${enabled ? "" : "diagnostic-muted"}">
+                <div class="diagnostic-retriever-head">
+                    <strong>${escapeHtml(retriever.name || "-")}</strong>
+                    <span>${escapeHtml(mode)}</span>
+                </div>
+                <div class="diagnostic-chip-row">
+                    ${chips.map((chip) => `<span class="search-chip">${escapeHtml(chip)}</span>`).join("")}
+                </div>
+                ${(retriever.warnings || []).length ? `<div class="diagnostic-warning-text">${(retriever.warnings || []).map(escapeHtml).join("<br>")}</div>` : ""}
+            </article>
+        `;
+    }).join("");
+}
+
+function renderEvidenceDiagnostics(trace, graphSummary, graph) {
+    const contextCounts = trace.context_counts || {};
+    const evidence = trace.evidence || {};
+    const rows = [
+        ["structured_context", contextCounts.structured ?? 0],
+        ["graph_paths", contextCounts.graph_paths ?? graph.paths?.length ?? 0],
+        ["semantic_context", contextCounts.semantic ?? 0],
+        ["sources", contextCounts.sources ?? 0],
+        ["evidence_records", evidence.count ?? contextCounts.evidence ?? 0],
+        ["selection_mode", graphSummary.selection_mode || "-"],
+        ["visible_paths", graphSummary.visible_paths ?? graph.paths?.length ?? 0],
+        ["total_paths", graphSummary.total_paths ?? graph.paths?.length ?? 0],
+        ["hidden_paths", graphSummary.hidden_paths ?? 0],
+    ];
+    const relationChips = Object.entries(evidence.relations || {})
+        .map(([relation, count]) => `<span class="search-chip">${escapeHtml(relation)}: ${escapeHtml(count)}</span>`)
+        .join("");
+    const sourceChips = Object.entries(evidence.sources || {})
+        .map(([source, count]) => `<span class="search-chip">${escapeHtml(source)}: ${escapeHtml(count)}</span>`)
+        .join("");
+    return `
+        ${renderDiagnosticRows(rows)}
+        <div class="diagnostic-subtitle">Relations</div>
+        <div class="diagnostic-chip-row">${relationChips || '<span class="search-chip">-</span>'}</div>
+        <div class="diagnostic-subtitle">來源</div>
+        <div class="diagnostic-chip-row">${sourceChips || '<span class="search-chip">-</span>'}</div>
+    `;
+}
+
+function renderWarningDiagnostics(warnings) {
+    if (!warnings.length) {
+        return '<div class="related-empty">沒有警告。</div>';
+    }
+    return warnings.map((warning) => `<div class="diagnostic-warning-text">${escapeHtml(warning)}</div>`).join("");
+}
+
+function renderDiagnosticRows(rows) {
+    return `
+        <div class="compact-list diagnostic-rows">
+            ${rows.map(([key, value]) => `
+                <div class="compact-list-row">
+                    <strong>${escapeHtml(key)}</strong>
+                    <span>${escapeHtml(String(value ?? "-"))}</span>
+                </div>
+            `).join("")}
+        </div>
+    `;
+}
+
 function renderIndexSummary(data) {
     const rows = Object.entries(data)
         .filter(([, value]) => typeof value !== "object" || value === null)
@@ -1245,9 +1674,14 @@ function renderObjectGrid(title, payload) {
 
 async function fetchJson(url, options = {}) {
     const response = await fetch(url, options);
-    const result = await response.json();
+    let result = {};
+    try {
+        result = await response.json();
+    } catch (_error) {
+        result = { success: false, message: `${response.status} ${response.statusText || "請求失敗"}` };
+    }
     if (!response.ok || !result.success) {
-        throw new Error(result.message || "Request failed.");
+        throw new Error(result.message || "請求失敗。");
     }
     return result;
 }
@@ -1306,7 +1740,7 @@ function truncateText(value, maxLength) {
     if (text.length <= maxLength) {
         return text;
     }
-    return `${text.slice(0, Math.max(maxLength - 1, 0))}…`;
+    return `${text.slice(0, Math.max(maxLength - 3, 0))}...`;
 }
 
 function escapeHtml(value) {

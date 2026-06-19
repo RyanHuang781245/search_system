@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from apps.documents.mongo import get_documents_collection
 from apps.documents.services import _serialize_document
+from apps.item_status import apply_item_status_fields
 from apps.parser.meeting_minutes_parser import parse_meeting_minutes
 from apps.parser.pdf_text_extractor import PDFTextExtractor
 
@@ -83,7 +84,7 @@ def parse_document_meeting_minutes(document_id):
 
     meeting_items = []
     for item in parsed["meeting_items"]:
-        row = dict(item)
+        row = apply_item_status_fields(item)
         row.update({"created_at": now, "updated_at": now})
         meeting_items.append(row)
 

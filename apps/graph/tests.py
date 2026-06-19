@@ -1,16 +1,27 @@
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APISimpleTestCase
 
+from . import cypher_queries as cq
 from .graph_builder import build_graph_from_mongo
 from .graph_search import fetch_related_keywords, meeting_query_terms, search_graph
 from .intent import analyze_graph_intent
 from .keyword_extractor import extract_keyword_entities
 from .query_planner import analyze_graph_query_plan, heuristic_query_plan
 from .semantic_extractor import extract_responsible_people_from_text, extract_semantic_item
+from .text2cypher import (
+    build_text2cypher_graph,
+    build_text2cypher_prompt,
+    expand_graph_node,
+    explore_text2cypher,
+    template_cypher_for_question,
+    text2cypher_expansion_query,
+    validate_cypher,
+)
 
 
 @override_settings(KEYWORD_LLM_ENABLED=False, KEYWORD_EMBEDDING_RERANK_ENABLED=False)
@@ -89,6 +100,51 @@ class GraphAPITestCase(APISimpleTestCase):
             any(name == "Hydroxyapatite coating" or name == "Hydroxyapatite" for name in keyword_names)
         )
         self.assertTrue(all("score" in item and "method" in item for item in response.data["data"]["keywords"]))
+
+    def test_text2cypher_endpoint_returns_exploration_payload(self):
+        with patch(
+            "apps.graph.views.text2cypher_query",
+            return_value={
+                "question": "哪些產品跨最多會議被討論？",
+                "cypher": "MATCH (i:MeetingItem)-[:MENTIONS_PRODUCT]->(p:Product) RETURN p.name AS product LIMIT 5",
+                "rows": [{"product": "Conformity stem"}],
+                "row_count": 1,
+                "blocked": False,
+                "warnings": [],
+            },
+        ):
+            response = self.client.post(
+                reverse("graph-text2cypher"),
+                {"question": "哪些產品跨最多會議被討論？", "limit": 5},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["data"]["blocked"])
+        self.assertEqual(response.data["data"]["rows"][0]["product"], "Conformity stem")
+
+    def test_graph_node_expand_endpoint_returns_graph_payload(self):
+        with patch(
+            "apps.graph.views.expand_graph_node_query",
+            return_value={
+                "node_id": "Date:2017-12-15",
+                "graph": {
+                    "nodes": [{"id": "Date:2017-12-15", "type": "Date", "label": "2017-12-15"}],
+                    "edges": [],
+                    "summary": {"projection": "manual_node_expansion"},
+                },
+                "warnings": [],
+            },
+        ):
+            response = self.client.post(
+                reverse("graph-node-expand"),
+                {"node_id": "Date:2017-12-15", "limit": 5},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["node_id"], "Date:2017-12-15")
+        self.assertEqual(response.data["data"]["graph"]["summary"]["projection"], "manual_node_expansion")
 
 
 @override_settings(KEYWORD_LLM_ENABLED=False, KEYWORD_EMBEDDING_RERANK_ENABLED=False)
@@ -241,6 +297,16 @@ class GraphBuilderTestCase(SimpleTestCase):
             if "HAS_PLANNED_DATE|HAS_COMPLETED_DATE" in entry["query"]
         ]
         self.assertEqual(cleanup_runs[0]["params"]["item_id"], "item_001")
+        action_merges = [
+            entry for entry in client.runs
+            if "MERGE (a:ActionItem" in entry["query"]
+        ]
+        self.assertEqual(action_merges[0]["params"]["status"], "not_applicable")
+        item_merges = [
+            entry for entry in client.runs
+            if "MERGE (i:MeetingItem" in entry["query"]
+        ]
+        self.assertEqual(item_merges[0]["params"]["status"], "not_applicable")
 
     def test_build_graph_persists_semantic_nodes_and_follow_up_links(self):
         meetings = [
@@ -427,6 +493,95 @@ class _FakeGraphClient:
         return callback(_FakeTx(), *args)
 
 
+class _FakeText2CypherClient:
+    available = True
+
+    def execute_read(self, callback, *args):
+        return callback(_FakeText2CypherTx(), *args)
+
+
+class _FailingText2CypherClient:
+    available = True
+
+    def execute_read(self, callback, *args):
+        raise RuntimeError("Neo4j down")
+
+
+class _FakeText2CypherTx:
+    def run(self, cypher, **_params):
+        if (
+            "OPTIONAL MATCH (item)-[:RESPONSIBLE_BY]->(person:Person)" in cypher
+            and "OPTIONAL MATCH (item)-[:HAS_PLANNED_DATE]->(planned_date:Date)" in cypher
+        ):
+            return [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "Item detail review",
+                    "meeting_date": "2017-12-01",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "content": "Complete FDA package.",
+                    "people": ["Carol"],
+                    "planned_dates": ["2017-12-15"],
+                    "completed_dates": ["2018-04-13"],
+                    "products": ["Conformity stem"],
+                    "regulations": ["FDA"],
+                    "keywords": ["label"],
+                    "actions": ["Complete package"],
+                    "decisions": ["Submit package"],
+                    "risks": ["Timeline risk"],
+                    "issues": ["FDA timeline"],
+                }
+            ]
+        if "OPTIONAL MATCH (item)-[:RESPONSIBLE_BY]->(person:Person)" in cypher:
+            return [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "Item owner review",
+                    "meeting_date": "2017-12-01",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "content": "Complete FDA package.",
+                    "people": ["Carol"],
+                }
+            ]
+        if "OPTIONAL MATCH (item)-[:HAS_PLANNED_DATE]->(planned_date:Date)" in cypher:
+            return [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "Item date review",
+                    "meeting_date": "2017-12-01",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "content": "Complete FDA package.",
+                    "planned_dates": ["2017-12-15"],
+                    "completed_dates": ["2018-04-13"],
+                }
+            ]
+        if "HAS_PLANNED_DATE|HAS_COMPLETED_DATE" in cypher:
+            return [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "Date review",
+                    "meeting_date": "2017-12-01",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "content": "Complete FDA package.",
+                    "date_value": "2017-12-15",
+                    "date_relation": "HAS_PLANNED_DATE",
+                }
+            ]
+        if "MATCH (date:Date)" in cypher:
+            return [{"date_value": "2017-12-15"}]
+        if "MENTIONS_PRODUCT" in cypher and "meeting_count" in cypher:
+            return [{"product": "Conformity stem", "meeting_count": 2, "item_count": 3}]
+        if "MENTIONS_PRODUCT" in cypher:
+            return [{"product": "Conformity stem", "mentions": 2}]
+        if "MATCH (meeting:Meeting)" in cypher:
+            return [{"meeting_id": "meeting_001"}]
+        return []
+
+
 class _FakeCollection:
     def __init__(self, documents):
         self.documents = documents
@@ -488,7 +643,7 @@ class _FakeTx:
         if "QUERY_MEETING_ITEMS_BY_QUERY" in cypher:
             return []
 
-        if "WHERE toUpper($query) CONTAINS toUpper(meeting.meeting_name)" in cypher:
+        if "MATCH (candidate:Meeting)" in cypher and "best_score" in cypher:
             return [
                 {
                     "meeting_id": "meet_items",
@@ -502,6 +657,48 @@ class _FakeTx:
                     "matched_field": "meeting_items",
                 }
                 for index in range(1, 6)
+            ]
+
+        if "MATCH (issue:Issue)<-[:TRACKS_ISSUE]-(item:MeetingItem)" in cypher:
+            if normalized_keyword and normalized_keyword not in {"FDA", "CONFORMITY STEM"}:
+                return []
+            return [
+                {
+                    "meeting_id": "meet_006",
+                    "meeting_name": "Initial issue meeting",
+                    "meeting_date": "2018-04-08",
+                    "item_id": "item_006",
+                    "item_no": "06",
+                    "content": "FDA timeline needs follow-up.",
+                    "issue_id": "issue_fda",
+                    "issue_title": "FDA timeline",
+                    "issue_signature": "fda_timeline",
+                    "matched_entity": "FDA timeline",
+                    "matched_relation": "TRACKS_ISSUE",
+                    "matched_node_id": "issue_fda",
+                    "matched_field": "issue_timeline",
+                    "previous_item_id": None,
+                    "next_item_id": "item_007",
+                    "next_meeting_id": "meet_007",
+                },
+                {
+                    "meeting_id": "meet_007",
+                    "meeting_name": "Follow up meeting",
+                    "meeting_date": "2018-04-09",
+                    "item_id": "item_007",
+                    "item_no": "07",
+                    "content": "Follow up FDA action.",
+                    "issue_id": "issue_fda",
+                    "issue_title": "FDA timeline",
+                    "issue_signature": "fda_timeline",
+                    "matched_entity": "FDA timeline",
+                    "matched_relation": "TRACKS_ISSUE",
+                    "matched_node_id": "issue_fda",
+                    "matched_field": "issue_timeline",
+                    "previous_item_id": "item_006",
+                    "previous_meeting_id": "meet_006",
+                    "next_item_id": None,
+                },
             ]
 
         if "OPTIONAL MATCH (item)-[:HAS_ACTION]->(action:ActionItem)" in cypher:
@@ -641,6 +838,22 @@ class _FakeTx:
 
 
 class GraphSearchTestCase(SimpleTestCase):
+    def test_composite_query_uses_cypher_string_literals_for_status_filters(self):
+        query = cq.QUERY_COMPOSITE_GRAPH_SEARCH
+
+        for literal in ("action_items", "completed", "not_applicable", "pending"):
+            self.assertIn(f"'{literal}'", query)
+            self.assertNotIn(f'"{literal}"', query)
+        self.assertIn(
+            "OPTIONAL MATCH (item)-[:TRACKS_ISSUE]->(issue:Issue)\n"
+            "WITH meeting, item, action, decision, risk, issue\n"
+            "WHERE",
+            query,
+        )
+        self.assertIn("$target <> 'action_items' OR action IS NOT NULL", query)
+        self.assertIn("$status = 'completed'", query)
+        self.assertIn("$status = 'not_applicable'", query)
+
     def test_query_planner_parses_composite_constraints(self):
         payload = analyze_graph_query_plan(
             "Carol is responsible for FDA not completed Conformity stem items",
@@ -668,6 +881,42 @@ class GraphSearchTestCase(SimpleTestCase):
         payload = heuristic_query_plan("2017 年 12 月 15 日要完成哪些事項")
 
         self.assertEqual(payload["constraints"]["status"], "")
+
+    def test_analyze_query_plan_uses_deterministic_plan_for_chinese_status_items(self):
+        payload = analyze_graph_query_plan(
+            "已完成的事項有哪些",
+            llm_client=lambda _question: self.fail("Chinese status item query should not require LLM"),
+        )
+
+        self.assertEqual(payload["target"], "action_items")
+        self.assertEqual(payload["constraints"]["status"], "completed")
+
+    def test_analyze_query_plan_uses_deterministic_plan_for_chinese_mixed_constraints(self):
+        payload = analyze_graph_query_plan(
+            "陳聖昌 FDA Conformity stem 未完成事項",
+            llm_client=lambda _question: self.fail("Chinese mixed constraint query should not require LLM"),
+        )
+
+        self.assertEqual(payload["target"], "action_items")
+        self.assertEqual(payload["constraints"]["person_name"], "陳聖昌")
+        self.assertEqual(payload["constraints"]["regulation_name"], "FDA")
+        self.assertEqual(payload["constraints"]["product_name"], "Conformity stem")
+        self.assertEqual(payload["constraints"]["status"], "not_completed")
+
+    def test_analyze_query_plan_uses_deterministic_plan_for_chinese_semantic_targets(self):
+        cases = [
+            ("FDA 相關風險整理", "risks"),
+            ("有哪些決議", "decisions"),
+            ("跨會議追蹤整理", "issues"),
+        ]
+
+        for question, target in cases:
+            with self.subTest(question=question):
+                payload = analyze_graph_query_plan(
+                    question,
+                    llm_client=lambda _question: self.fail("Chinese semantic summary should not require LLM"),
+                )
+                self.assertEqual(payload["target"], target)
 
     def test_analyze_graph_intent_parses_llm_json(self):
         payload = analyze_graph_intent(
@@ -793,6 +1042,28 @@ class GraphSearchTestCase(SimpleTestCase):
 
                 self.assertEqual(payload["results"][0]["matched_relation"], relation)
 
+    def test_search_graph_returns_date_relation_before_composite_status_results(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "2018-04-13 實際完成哪些事項",
+            limit=10,
+            intent_analyzer=lambda _query: {
+                "intent": "completed_date",
+                "entities": {"date_value": "2018-04-13"},
+                "warnings": [],
+            },
+            query_planner=lambda _query: {
+                "target": "action_items",
+                "constraints": {"status": "completed"},
+                "include_followups": False,
+                "warnings": [],
+            },
+        )
+
+        self.assertEqual(payload["intent"], "completed_date")
+        self.assertEqual(payload["results"][0]["matched_relation"], "HAS_COMPLETED_DATE")
+        self.assertTrue(all(result["retrieval_mode"] == "relation" for result in payload["results"]))
+
     def test_search_graph_uses_composite_query_plan_for_mixed_constraints(self):
         payload = search_graph(
             _FakeGraphClient(),
@@ -821,6 +1092,23 @@ class GraphSearchTestCase(SimpleTestCase):
         self.assertIn("RESPONSIBLE_BY", evidence_labels)
         self.assertIn("MENTIONS_REGULATION", evidence_labels)
         self.assertIn("MENTIONS_PRODUCT", evidence_labels)
+
+    def test_search_graph_returns_issue_timeline_for_follow_up_mode(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "FDA 相關追蹤事項",
+            limit=10,
+            retrieval_modes=("follow_up",),
+        )
+
+        self.assertEqual(payload["intent"], "follow_up_tracking")
+        self.assertEqual(payload["query_plan"]["target"], "issues")
+        self.assertEqual([result["sequence_no"] for result in payload["results"]], [1, 2])
+        self.assertTrue(all(result["matched_relation"] == "TRACKS_ISSUE" for result in payload["results"]))
+        self.assertTrue(all(result["retrieval_mode"] == "follow_up" for result in payload["results"]))
+        evidence_labels = {relation["relation"] for relation in payload["results"][0]["evidence_relations"]}
+        self.assertIn("TRACKS_ISSUE", evidence_labels)
+        self.assertIn("FOLLOW_UP_OF", evidence_labels)
 
     def test_search_graph_uses_has_item_for_meeting_item_list_questions(self):
         payload = search_graph(
@@ -869,4 +1157,319 @@ class GraphSearchTestCase(SimpleTestCase):
         )
 
         self.assertEqual(payload["results"][0]["matched_relation"], "RESPONSIBLE_BY")
+
+
+class Text2CypherTestCase(SimpleTestCase):
+    def test_text2cypher_timeout_setting_has_exploration_default(self):
+        self.assertGreaterEqual(settings.TEXT2CYPHER_LLM_TIMEOUT, 45)
+        self.assertGreaterEqual(settings.TEXT2CYPHER_MAX_LIMIT, 1)
+
+    def test_validate_cypher_blocks_write_operations(self):
+        payload = validate_cypher("MATCH (m:Meeting) DELETE m RETURN m")
+
+        self.assertFalse(payload["is_valid"])
+        self.assertTrue(any("DELETE" in warning for warning in payload["warnings"]))
+
+    def test_validate_cypher_blocks_unknown_schema(self):
+        payload = validate_cypher("MATCH (x:Secret)-[:HACKS]->(m:Meeting) RETURN x LIMIT 5")
+
+        self.assertFalse(payload["is_valid"])
+        self.assertTrue(any("Unsupported labels" in warning for warning in payload["warnings"]))
+        self.assertTrue(any("Unsupported relationships" in warning for warning in payload["warnings"]))
+
+    def test_explore_text2cypher_executes_safe_read_query(self):
+        client = _FakeText2CypherClient()
+        payload = explore_text2cypher(
+            client,
+            "哪些產品跨最多會議被討論？",
+            limit=5,
+            llm_client=lambda _question, _limit: self.fail("template example should avoid LLM"),
+        )
+
+        self.assertFalse(payload["blocked"])
+        self.assertEqual(payload["generated_by"], "example_template")
+        self.assertIn("LIMIT 5", payload["cypher"])
+        self.assertEqual(payload["rows"], [{"product": "Conformity stem", "meeting_count": 2, "item_count": 3}])
+        self.assertEqual(payload["graph"]["nodes"][0]["type"], "Product")
+
+    def test_explore_text2cypher_still_uses_llm_for_unknown_exploration(self):
+        payload = explore_text2cypher(
+            _FakeText2CypherClient(),
+            "列出最近的會議",
+            limit=5,
+            llm_client=lambda _question, _limit: (
+                '{"cypher":"MATCH (meeting:Meeting) RETURN meeting.meeting_id AS meeting_id '
+                'ORDER BY meeting.meeting_date DESC"}'
+            ),
+        )
+
+        self.assertFalse(payload["blocked"])
+        self.assertEqual(payload["generated_by"], "llm")
+        self.assertIn("LIMIT 5", payload["cypher"])
+
+    def test_text2cypher_prompt_includes_schema_and_few_shot_examples(self):
+        prompt = build_text2cypher_prompt("哪些人負責最多事項？", 10)
+
+        self.assertIn("Core graph patterns", prompt)
+        self.assertIn("(Meeting)-[:HAS_ITEM]->(MeetingItem)", prompt)
+        self.assertIn("MATCH path = (...)", prompt)
+        self.assertIn("RETURN path plus scalar fields", prompt)
+        self.assertIn("Few-shot examples", prompt)
+        self.assertIn("哪些產品跨最多會議被討論", prompt)
+
+    def test_template_cypher_covers_common_exploration_questions(self):
+        cases = [
+            "哪些產品跨最多會議被討論？",
+            "哪些人負責最多事項？",
+            "哪些會議同時提到 FDA 和 TFDA？",
+            "哪些 issue 沒有 follow-up？",
+            "哪些產品和法規最常一起出現？",
+            "哪些人和 Conformity stem 最常一起出現？",
+        ]
+
+        for question in cases:
+            with self.subTest(question=question):
+                self.assertTrue(template_cypher_for_question(question))
+
+    def test_build_text2cypher_graph_projects_rows_to_nodes_and_edges(self):
+        graph = build_text2cypher_graph(
+            [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "FDA meeting",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "product": "Conformity stem",
+                    "regulation": "FDA",
+                    "person": "Carol",
+                }
+            ]
+        )
+
+        node_types = {node["type"] for node in graph["nodes"]}
+        edge_labels = {edge["label"] for edge in graph["edges"]}
+        self.assertIn("Meeting", node_types)
+        self.assertIn("MeetingItem", node_types)
+        self.assertIn("Product", node_types)
+        self.assertIn("Regulation", node_types)
+        self.assertIn("Person", node_types)
+        self.assertIn("HAS_ITEM", edge_labels)
+        self.assertIn("MENTIONS_PRODUCT", edge_labels)
+        self.assertIn("MENTIONS_REGULATION", edge_labels)
+        self.assertIn("RESPONSIBLE_BY", edge_labels)
+
+    def test_build_text2cypher_graph_projects_serialized_neo4j_nodes(self):
+        graph = build_text2cypher_graph(
+            [
+                {
+                    "meeting": {
+                        "_labels": ["Meeting"],
+                        "meeting_id": "meeting_001",
+                        "meeting_name": "Date review",
+                    },
+                    "item": {
+                        "_labels": ["MeetingItem"],
+                        "item_id": "item_001",
+                        "item_no": "01",
+                        "content": "Complete FDA package.",
+                    },
+                    "date": {"_labels": ["Date"], "date_value": "2017-12-15"},
+                    "date_relation": "HAS_PLANNED_DATE",
+                }
+            ]
+        )
+
+        edge_labels = {edge["label"] for edge in graph["edges"]}
+        node_types = {node["type"] for node in graph["nodes"]}
+        self.assertIn("Meeting", node_types)
+        self.assertIn("MeetingItem", node_types)
+        self.assertIn("Date", node_types)
+        self.assertIn("HAS_ITEM", edge_labels)
+        self.assertIn("HAS_PLANNED_DATE", edge_labels)
+
+    def test_build_text2cypher_graph_projects_serialized_paths(self):
+        graph = build_text2cypher_graph(
+            [
+                {
+                    "path": {
+                        "_type": "Path",
+                        "nodes": [
+                            {
+                                "_type": "Node",
+                                "_labels": ["Meeting"],
+                                "meeting_id": "meeting_001",
+                                "meeting_name": "Date review",
+                            },
+                            {
+                                "_type": "Node",
+                                "_labels": ["MeetingItem"],
+                                "item_id": "item_001",
+                                "item_no": "01",
+                                "content": "Complete FDA package.",
+                            },
+                            {
+                                "_type": "Node",
+                                "_labels": ["Date"],
+                                "date_value": "2017-12-15",
+                            },
+                        ],
+                        "relationships": [
+                            {
+                                "_type": "Relationship",
+                                "_relationship_type": "HAS_ITEM",
+                                "_source_index": 0,
+                                "_target_index": 1,
+                            },
+                            {
+                                "_type": "Relationship",
+                                "_relationship_type": "HAS_PLANNED_DATE",
+                                "_source_index": 1,
+                                "_target_index": 2,
+                            },
+                        ],
+                    },
+                    "meeting_id": "meeting_001",
+                    "item_id": "item_001",
+                    "date_value": "2017-12-15",
+                }
+            ]
+        )
+
+        edge_labels = {edge["label"] for edge in graph["edges"]}
+        node_ids = {node["id"] for node in graph["nodes"]}
+        self.assertIn("Meeting:meeting_001", node_ids)
+        self.assertIn("MeetingItem:item_001", node_ids)
+        self.assertIn("Date:2017-12-15", node_ids)
+        self.assertIn("HAS_ITEM", edge_labels)
+        self.assertIn("HAS_PLANNED_DATE", edge_labels)
+        self.assertEqual(graph["summary"]["path_count"], 1)
+
+    def test_explore_text2cypher_does_not_expand_isolated_nodes_by_default(self):
+        payload = explore_text2cypher(
+            _FakeText2CypherClient(),
+            "list dates",
+            limit=5,
+            llm_client=lambda _question, _limit: (
+                '{"cypher":"MATCH (date:Date) RETURN date.date_value AS date_value"}'
+            ),
+        )
+
+        edge_labels = {edge["label"] for edge in payload["graph"]["edges"]}
+        node_types = {node["type"] for node in payload["graph"]["nodes"]}
+        self.assertFalse(payload["blocked"])
+        self.assertIn("Date", node_types)
+        self.assertNotIn("HAS_ITEM", edge_labels)
+        self.assertTrue(any("without paths" in warning for warning in payload["warnings"]))
+
+    @override_settings(TEXT2CYPHER_ENABLE_NODE_EXPANSION=True)
+    def test_explore_text2cypher_can_expand_isolated_date_nodes_when_enabled(self):
+        payload = explore_text2cypher(
+            _FakeText2CypherClient(),
+            "list dates",
+            limit=5,
+            llm_client=lambda _question, _limit: (
+                '{"cypher":"MATCH (date:Date) RETURN date.date_value AS date_value"}'
+            ),
+        )
+
+        edge_labels = {edge["label"] for edge in payload["graph"]["edges"]}
+        node_types = {node["type"] for node in payload["graph"]["nodes"]}
+        self.assertFalse(payload["blocked"])
+        self.assertIn("Meeting", node_types)
+        self.assertIn("MeetingItem", node_types)
+        self.assertIn("Date", node_types)
+        self.assertIn("HAS_ITEM", edge_labels)
+        self.assertIn("HAS_PLANNED_DATE", edge_labels)
+        self.assertEqual(payload["graph"]["summary"]["expansion"], "deterministic_node_expansion")
+
+    def test_text2cypher_expansion_uses_exact_matching_to_avoid_unrelated_graph(self):
+        date_query = text2cypher_expansion_query("Date")
+        item_query = text2cypher_expansion_query("MeetingItem")
+
+        self.assertIn("date.date_value, '') = $value", date_query)
+        self.assertIn("item.item_id, '')) = $value_upper", item_query)
+        self.assertNotIn("CONTAINS $value", date_query)
+        self.assertNotIn("coalesce(item.item_no", item_query)
+        self.assertNotIn("coalesce(item.content", item_query)
+
+    def test_expand_graph_node_returns_manual_expansion_graph(self):
+        payload = expand_graph_node(_FakeText2CypherClient(), "Date:2017-12-15", limit=5)
+
+        edge_labels = {edge["label"] for edge in payload["graph"]["edges"]}
+        self.assertEqual(payload["node_type"], "Date")
+        self.assertEqual(payload["graph"]["summary"]["projection"], "manual_node_expansion")
+        self.assertIn("HAS_ITEM", edge_labels)
+        self.assertIn("HAS_PLANNED_DATE", edge_labels)
+
+    def test_expand_meeting_item_can_expand_owner_and_dates_separately(self):
+        owner_payload = expand_graph_node(
+            _FakeText2CypherClient(),
+            "MeetingItem:item_001",
+            limit=5,
+            relation_scope="owner",
+        )
+        date_payload = expand_graph_node(
+            _FakeText2CypherClient(),
+            "MeetingItem:item_001",
+            limit=5,
+            relation_scope="dates",
+        )
+
+        owner_edge_labels = {edge["label"] for edge in owner_payload["graph"]["edges"]}
+        date_edge_labels = {edge["label"] for edge in date_payload["graph"]["edges"]}
+        owner_node_types = {node["type"] for node in owner_payload["graph"]["nodes"]}
+        date_node_types = {node["type"] for node in date_payload["graph"]["nodes"]}
+        self.assertEqual(owner_payload["node_type"], "MeetingItem")
+        self.assertEqual(owner_payload["relation_scope"], "owner")
+        self.assertEqual(date_payload["relation_scope"], "dates")
+        self.assertIn("Meeting", owner_node_types)
+        self.assertIn("Person", owner_node_types)
+        self.assertIn("Date", date_node_types)
+        self.assertIn("HAS_ITEM", owner_edge_labels)
+        self.assertIn("RESPONSIBLE_BY", owner_edge_labels)
+        self.assertIn("HAS_PLANNED_DATE", date_edge_labels)
+        self.assertIn("HAS_COMPLETED_DATE", date_edge_labels)
+        self.assertNotIn("HAS_PLANNED_DATE", owner_edge_labels)
+        self.assertNotIn("RESPONSIBLE_BY", date_edge_labels)
+
+    def test_expand_meeting_item_can_expand_all_relations_when_requested(self):
+        payload = expand_graph_node(
+            _FakeText2CypherClient(),
+            "MeetingItem:item_001",
+            limit=5,
+            relation_scope="all",
+        )
+
+        edge_labels = {edge["label"] for edge in payload["graph"]["edges"]}
+        node_types = {node["type"] for node in payload["graph"]["nodes"]}
+        self.assertEqual(payload["relation_scope"], "all")
+        self.assertIn("Meeting", node_types)
+        self.assertIn("Person", node_types)
+        self.assertIn("Date", node_types)
+        self.assertIn("Product", node_types)
+        self.assertIn("Regulation", node_types)
+        self.assertIn("HAS_ITEM", edge_labels)
+        self.assertIn("RESPONSIBLE_BY", edge_labels)
+        self.assertIn("HAS_PLANNED_DATE", edge_labels)
+        self.assertIn("HAS_COMPLETED_DATE", edge_labels)
+        self.assertIn("MENTIONS_PRODUCT", edge_labels)
+        self.assertIn("MENTIONS_REGULATION", edge_labels)
+
+    def test_expand_graph_node_returns_warning_on_query_failure(self):
+        payload = expand_graph_node(_FailingText2CypherClient(), "Date:2017-12-15", limit=5)
+
+        self.assertEqual(payload["graph"]["nodes"], [])
+        self.assertTrue(any("Unable to expand graph node" in warning for warning in payload["warnings"]))
+
+    def test_explore_text2cypher_returns_blocked_payload_for_unsafe_query(self):
+        payload = explore_text2cypher(
+            _FakeText2CypherClient(),
+            "刪除資料",
+            limit=5,
+            llm_client=lambda _question, _limit: '{"cypher":"MATCH (m:Meeting) DETACH DELETE m"}',
+        )
+
+        self.assertTrue(payload["blocked"])
+        self.assertEqual(payload["rows"], [])
+        self.assertTrue(payload["warnings"])
 

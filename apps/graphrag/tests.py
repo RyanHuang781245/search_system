@@ -25,6 +25,7 @@ from .services import (
     augment_graph_results_with_structured_context,
     build_graph_context,
     build_graphrag_prompt,
+    build_source_metadata_from_evidence,
     determine_effective_limit,
     graph_search_limit,
     meeting_items_structured_context,
@@ -116,6 +117,63 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertTrue(payload["contexts"]["graph"]["nodes"])
         self.assertTrue(payload["contexts"]["graph"]["edges"])
         self.assertEqual(payload["sources"][0]["document_id"], "doc_001")
+
+    def test_answer_question_falls_back_to_evidence_claims_when_llm_returns_plain_text(self):
+        meetings = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "meeting_name": "FDA label review meeting",
+                "meeting_date": "2018-04-03",
+            }
+        ]
+        items = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "item_id": "item_001",
+                "item_no": "01",
+                "content": "UPD checks FDA label submission requirements.",
+                "owner": "Carol",
+                "planned_date": "2018-04-20",
+                "actual_completed_date": None,
+                "tracking_result": None,
+            }
+        ]
+        graph_payload = {
+            "query": "FDA label related overview",
+            "expanded_keywords": ["FDA"],
+            "results": [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "FDA label review meeting",
+                    "item_id": "item_001",
+                    "item_no": "01",
+                    "content": "UPD checks FDA label submission requirements.",
+                    "matched_keyword": "FDA",
+                    "matched_relation": "MENTIONS",
+                    "matched_field": "content",
+                    "match_type": "direct",
+                    "graph_score": 3.0,
+                }
+            ],
+        }
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "FDA label related overview",
+                semantic_searcher=lambda question, limit: {"query": question, "results": []},
+                graph_searcher=lambda question, limit: graph_payload,
+                llm_client=lambda prompt: "This is plain text without evidence ids.",
+            )
+
+        self.assertIn("UPD checks FDA label submission requirements.", payload["answer"])
+        self.assertEqual(payload["trace"]["answer_claims"]["evidence_ids"], ["evidence_001"])
+        self.assertEqual([path["evidence_id"] for path in payload["contexts"]["graph"]["paths"]], ["evidence_001"])
+        self.assertEqual([source["evidence_id"] for source in payload["sources"]], ["evidence_001"])
+        self.assertTrue(validate_response_evidence_consistency(payload)["is_consistent"])
 
     def test_answer_question_prioritizes_intent_graph_matches_for_structured_context(self):
         meetings = [
@@ -424,6 +482,230 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(payload["contexts"]["graph"]["paths"][0]["evidence_source"], "mongo_structural_fallback")
         self.assertIn("mongo_structural_fallback", payload["contexts"]["graph"]["paths"][0]["path"])
 
+    def test_meeting_summary_uses_full_meeting_items_as_rag_evidence(self):
+        meetings = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_p1812",
+                "meeting_name": "P1812 Coformity stem器械進度 會議",
+                "meeting_date": "2018-04-03",
+            }
+        ]
+        items = [
+            {"meeting_id": "meeting_p1812", "item_id": "item_001", "item_no": "01", "content": "工程圖發出延後，FDA優先。"},
+            {"meeting_id": "meeting_p1812", "item_id": "item_002", "item_no": "02", "content": "Modular handle 需確認功能與材質。"},
+        ]
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "P1812 Coformity stem器械進度 會議摘要",
+                semantic_searcher=lambda question, limit: {"query": question, "results": []},
+                graph_searcher=lambda question, limit, retrieval_modes=None: {"query": question, "results": []},
+                llm_client=lambda _prompt: (
+                    '{"claims":[{"claim":"本次會議重點是工程圖時程延後、FDA優先，以及 Modular handle 設計確認。",'
+                    '"evidence_ids":["evidence_001","evidence_002"]}]}'
+                ),
+                limit="auto",
+            )
+
+        self.assertEqual(payload["query_route"]["query_type"], "meeting_summary")
+        self.assertEqual(payload["limit_mode"], "auto:meeting_summary")
+        self.assertEqual({item["item_id"] for item in payload["contexts"]["structured"]}, {"item_001", "item_002"})
+        self.assertEqual({path["item_id"] for path in payload["contexts"]["graph"]["paths"]}, {"item_001", "item_002"})
+        structural_trace = next(
+            retriever for retriever in payload["trace"]["retrievers"] if retriever["name"] == "mongo_structural_fallback"
+        )
+        self.assertTrue(structural_trace["enabled"])
+        self.assertEqual(structural_trace["count"], 2)
+        self.assertIn("本次會議重點", payload["answer"])
+
+    def test_semantic_summary_prefers_authoritative_graph_semantic_evidence(self):
+        meetings = [
+            {
+                "document_id": "doc_001",
+                "meeting_id": "meeting_001",
+                "meeting_name": "FDA risk review",
+            }
+        ]
+        items = [
+            {
+                "meeting_id": "meeting_001",
+                "item_id": "item_risk",
+                "item_no": "01",
+                "content": "FDA submission delay risk needs owner review.",
+            },
+            {
+                "meeting_id": "meeting_001",
+                "item_id": "item_keyword",
+                "item_no": "02",
+                "content": "FDA label wording update.",
+            },
+            {
+                "meeting_id": "meeting_001",
+                "item_id": "item_vector",
+                "item_no": "03",
+                "content": "Vector-only similar context.",
+            },
+        ]
+        graph_payload = {
+            "query": "FDA 相關風險整理",
+            "results": [
+                {
+                    "meeting_id": "meeting_001",
+                    "meeting_name": "FDA risk review",
+                    "item_id": "item_risk",
+                    "item_no": "01",
+                    "content": "FDA submission delay risk needs owner review.",
+                    "matched_relation": "HAS_RISK",
+                    "matched_entity": "FDA submission delay risk",
+                    "retrieval_mode": "composite",
+                    "graph_score": 4.9,
+                }
+            ],
+        }
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "FDA 相關風險整理",
+                semantic_searcher=lambda question, limit: {
+                    "query": question,
+                    "results": [
+                        {"meeting_id": "meeting_001", "item_id": "item_vector", "content": "Vector-only similar context."}
+                    ],
+                },
+                graph_searcher=lambda question, limit, retrieval_modes=None: graph_payload,
+                llm_client=lambda _prompt: '{"claims":[]}',
+                limit="auto",
+            )
+
+        self.assertEqual(payload["query_route"]["query_type"], "semantic_summary")
+        self.assertEqual({item["item_id"] for item in payload["contexts"]["structured"]}, {"item_risk"})
+        self.assertEqual(payload["contexts"]["semantic"], [])
+        self.assertEqual({path["matched_relation"] for path in payload["contexts"]["graph"]["paths"]}, {"HAS_RISK"})
+        keyword_trace = next(
+            retriever for retriever in payload["trace"]["retrievers"] if retriever["name"] == "mongo_keyword_fallback"
+        )
+        self.assertFalse(keyword_trace["enabled"])
+        self.assertTrue(validate_response_evidence_consistency(payload)["is_consistent"])
+
+    def test_follow_up_tracking_uses_issue_timeline_as_authoritative_evidence(self):
+        meetings = [
+            {"document_id": "doc_001", "meeting_id": "meeting_001", "meeting_name": "FDA initial", "meeting_date": "2018-04-01"},
+            {"document_id": "doc_002", "meeting_id": "meeting_002", "meeting_name": "FDA follow up", "meeting_date": "2018-04-08"},
+        ]
+        items = [
+            {"meeting_id": "meeting_001", "item_id": "item_001", "item_no": "01", "content": "FDA issue is opened."},
+            {"meeting_id": "meeting_002", "item_id": "item_002", "item_no": "02", "content": "FDA issue follow-up is updated."},
+            {"meeting_id": "meeting_002", "item_id": "item_noise", "item_no": "03", "content": "Semantic noise."},
+        ]
+        captured = {}
+
+        def graph_searcher(question, limit, retrieval_modes=None):
+            captured["retrieval_modes"] = retrieval_modes
+            return {
+                "query": question,
+                "results": [
+                    {
+                        "meeting_id": "meeting_001",
+                        "meeting_name": "FDA initial",
+                        "meeting_date": "2018-04-01",
+                        "item_id": "item_001",
+                        "item_no": "01",
+                        "content": "FDA issue is opened.",
+                        "matched_relation": "TRACKS_ISSUE",
+                        "matched_entity": "FDA issue",
+                        "matched_node_id": "issue_fda",
+                        "issue_id": "issue_fda",
+                        "issue_title": "FDA issue",
+                        "timeline_group": "issue_fda",
+                        "sequence_no": 1,
+                        "next_item_id": "item_002",
+                        "retrieval_mode": "follow_up",
+                        "graph_score": 4.7,
+                        "evidence_relations": [
+                            {
+                                "source_type": "MeetingItem",
+                                "source_value": "item_001",
+                                "target_type": "Issue",
+                                "target_value": "issue_fda",
+                                "target_label": "FDA issue",
+                                "relation": "TRACKS_ISSUE",
+                            },
+                            {
+                                "source_type": "MeetingItem",
+                                "source_value": "item_002",
+                                "target_type": "MeetingItem",
+                                "target_value": "item_001",
+                                "relation": "FOLLOW_UP_OF",
+                            },
+                        ],
+                    },
+                    {
+                        "meeting_id": "meeting_002",
+                        "meeting_name": "FDA follow up",
+                        "meeting_date": "2018-04-08",
+                        "item_id": "item_002",
+                        "item_no": "02",
+                        "content": "FDA issue follow-up is updated.",
+                        "matched_relation": "TRACKS_ISSUE",
+                        "matched_entity": "FDA issue",
+                        "matched_node_id": "issue_fda",
+                        "issue_id": "issue_fda",
+                        "issue_title": "FDA issue",
+                        "timeline_group": "issue_fda",
+                        "sequence_no": 2,
+                        "previous_item_id": "item_001",
+                        "retrieval_mode": "follow_up",
+                        "graph_score": 4.7,
+                        "evidence_relations": [
+                            {
+                                "source_type": "MeetingItem",
+                                "source_value": "item_002",
+                                "target_type": "Issue",
+                                "target_value": "issue_fda",
+                                "target_label": "FDA issue",
+                                "relation": "TRACKS_ISSUE",
+                            },
+                            {
+                                "source_type": "MeetingItem",
+                                "source_value": "item_002",
+                                "target_type": "MeetingItem",
+                                "target_value": "item_001",
+                                "relation": "FOLLOW_UP_OF",
+                            },
+                        ],
+                    },
+                ],
+            }
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "FDA 相關追蹤事項",
+                semantic_searcher=lambda question, limit: {
+                    "query": question,
+                    "results": [
+                        {"meeting_id": "meeting_002", "item_id": "item_noise", "content": "Semantic noise."}
+                    ],
+                },
+                graph_searcher=graph_searcher,
+                llm_client=lambda _prompt: '{"claims":[]}',
+                limit="auto",
+            )
+
+        self.assertEqual(payload["query_route"]["query_type"], "follow_up_tracking")
+        self.assertEqual(captured["retrieval_modes"], ("follow_up",))
+        self.assertEqual({item["item_id"] for item in payload["contexts"]["structured"]}, {"item_001", "item_002"})
+        self.assertEqual(payload["contexts"]["semantic"], [])
+        self.assertEqual({path["matched_relation"] for path in payload["contexts"]["graph"]["paths"]}, {"TRACKS_ISSUE"})
+        self.assertIn("FOLLOW_UP_OF", {edge["label"] for edge in payload["contexts"]["graph"]["edges"]})
+        self.assertTrue(validate_response_evidence_consistency(payload)["is_consistent"])
+
     def test_answer_question_adds_structured_answer_items_to_evidence_graph(self):
         meetings = [
             {
@@ -681,6 +963,14 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(route.entities["meeting_hint"], "P1812")
         self.assertEqual(route.confidence, 0.88)
 
+    def test_analyze_query_route_uses_deterministic_route_without_llm_for_clear_questions(self):
+        route = analyze_query_route("2017 年 12 月 15 日要完成哪些事項")
+
+        self.assertEqual(route.query_type, "relation_lookup")
+        self.assertEqual(route.route_source, "heuristic")
+        self.assertEqual(route.entities["date_value"], "2017-12-15")
+        self.assertEqual(route.warnings, ())
+
     def test_analyze_query_route_falls_back_for_invalid_llm_json(self):
         route = analyze_query_route("P1812 會議的討論事項", llm_client=lambda _question: "not json")
 
@@ -737,6 +1027,32 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertIn("RESPONSIBLE_BY", payload["paths"][0]["path"])
         self.assertIn("MENTIONS_REGULATION", payload["paths"][0]["path"])
 
+    def test_source_metadata_preserves_relation_level_evidence_ids(self):
+        records = [
+            {
+                "evidence_id": "evidence_001",
+                "meeting_id": "meeting_001",
+                "item_id": "item_001",
+                "relation": "MENTIONS_REGULATION",
+                "evidence_source": "neo4j",
+                "retrieved_by": "relation",
+                "payload": {"document_id": "doc_001", "item_no": "01", "meeting_name": "FDA review"},
+            },
+            {
+                "evidence_id": "evidence_002",
+                "meeting_id": "meeting_001",
+                "item_id": "item_001",
+                "relation": "MENTIONS_REGULATION",
+                "evidence_source": "neo4j",
+                "retrieved_by": "relation",
+                "payload": {"document_id": "doc_001", "item_no": "01", "meeting_name": "FDA review"},
+            },
+        ]
+
+        sources = build_source_metadata_from_evidence(records)
+
+        self.assertEqual([source["evidence_id"] for source in sources], ["evidence_001", "evidence_002"])
+
     def test_graph_context_keeps_only_strong_evidence_results(self):
         payload = build_graph_context(
             [
@@ -773,6 +1089,28 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertNotIn("meeting_999", payload["paths"][0]["path"])
         item_nodes = [node for node in payload["nodes"] if node["type"] == "MeetingItem"]
         self.assertTrue(any("01\n" in node["label"] for node in item_nodes))
+
+    def test_graph_context_force_complete_keeps_all_answer_evidence(self):
+        results = [
+            {
+                "evidence_id": f"evidence_{index:03d}",
+                "meeting_id": "meeting_001",
+                "meeting_name": "FDA review",
+                "item_id": f"item_{index:03d}",
+                "item_no": f"{index:02d}",
+                "content": f"Evidence item {index}.",
+                "matched_relation": "MENTIONS_REGULATION",
+                "matched_entity": "FDA",
+                "graph_score": 1.0,
+            }
+            for index in range(1, 9)
+        ]
+
+        payload = build_graph_context(results, limit=5, force_complete=True)
+
+        self.assertEqual(len(payload["paths"]), 8)
+        self.assertFalse(payload["summary"]["is_truncated"])
+        self.assertEqual(payload["summary"]["selection_mode"], "answer_evidence")
 
     def test_graph_context_keeps_complete_relation_lookup_evidence(self):
         payload = build_graph_context(
@@ -856,6 +1194,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(determine_effective_limit("FDA related status overview", "auto"), (20, "auto:relation"))
         self.assertEqual(determine_effective_limit("Is Carol responsible for FDA?", "auto"), (20, "auto:relation"))
         self.assertEqual(determine_effective_limit("Owner review meeting includes which items", "auto"), (50, "auto:structural_list"))
+        self.assertEqual(determine_effective_limit("P1812 會議摘要", "auto"), (50, "auto:meeting_summary"))
         self.assertEqual(determine_effective_limit("manual", 15), (15, "manual"))
         self.assertEqual(determine_effective_limit("manual", "broad"), (12, "broad"))
 
@@ -863,8 +1202,12 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(route_question("Owner review meeting includes which items").query_type, "structural_list")
         self.assertEqual(route_question("P1812 會議的討論事項").query_type, "structural_list")
         self.assertEqual(route_question("P1812 會議有哪些議題").query_type, "structural_list")
+        self.assertEqual(route_question("P1812 會議摘要").query_type, "meeting_summary")
+        self.assertEqual(route_question("跨會議追蹤整理").query_type, "follow_up_tracking")
+        self.assertEqual(route_question("FDA 相關追蹤事項").query_type, "follow_up_tracking")
         self.assertEqual(route_question("2017 年 12 月 15 日要完成哪些事項").query_type, "relation_lookup")
         self.assertEqual(route_question("Carol").query_type, "relation_lookup")
+        self.assertEqual(route_question("廖漢星負責些會議項目").query_type, "relation_lookup")
         self.assertEqual(route_question("Carol FDA not completed items").query_type, "composite_query")
         self.assertEqual(route_question("FDA related status overview").query_type, "relation_lookup")
 
@@ -877,6 +1220,15 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(parsed["entities"]["regulation_name"].upper(), "FDA")
         self.assertEqual(parsed["entities"]["product_name"], "Conformity stem")
         self.assertEqual(parsed["entities"]["status"], "not_completed")
+
+    def test_deterministic_query_understanding_routes_status_item_queries_to_composite(self):
+        completed = deterministic_query_understanding("已完成的事項有哪些")
+        not_applicable = deterministic_query_understanding("不適用的事項有哪些")
+
+        self.assertEqual(completed["query_type"], "composite_query")
+        self.assertEqual(completed["entities"]["status"], "completed")
+        self.assertEqual(not_applicable["query_type"], "composite_query")
+        self.assertEqual(not_applicable["entities"]["status"], "not_applicable")
 
     def test_deterministic_query_understanding_distinguishes_meeting_person_relations(self):
         cases = [
@@ -905,6 +1257,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
     def test_graph_search_limit_aligns_explicit_queries_with_answer_scope(self):
         self.assertEqual(graph_search_limit(route_question("Carol"), 20), 20)
         self.assertEqual(graph_search_limit(route_question("Carol FDA not completed items"), 15), 15)
+        self.assertEqual(graph_search_limit(route_question("FDA 相關追蹤事項"), 30), 30)
         self.assertEqual(graph_search_limit(route_question("FDA related overview"), 10), 10)
 
 

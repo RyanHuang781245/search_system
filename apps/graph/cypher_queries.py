@@ -21,7 +21,10 @@ MERGE (i:MeetingItem {item_id: $item_id})
 SET i.item_no = $item_no,
     i.content = $content,
     i.planned_date = $planned_date,
-    i.actual_completed_date = $actual_completed_date
+    i.actual_completed_date = $actual_completed_date,
+    i.status = $status,
+    i.status_source = $status_source,
+    i.status_confidence = $status_confidence
 """
 
 MERGE_DATE = """
@@ -299,12 +302,20 @@ RETURN meeting.meeting_id AS meeting_id,
 """
 
 QUERY_MEETING_ITEMS_BY_QUERY = """
-MATCH (meeting:Meeting)-[:HAS_ITEM]->(item:MeetingItem)
-WHERE toUpper($query) CONTAINS toUpper(meeting.meeting_name)
-   OR toUpper($query) CONTAINS toUpper(meeting.meeting_id)
-   OR toUpper(meeting.meeting_name) CONTAINS toUpper($query)
-   OR any(term IN $terms WHERE toUpper(meeting.meeting_name) CONTAINS term)
-   OR any(term IN $terms WHERE toUpper(meeting.meeting_id) CONTAINS term)
+MATCH (candidate:Meeting)
+WITH candidate,
+     CASE
+       WHEN toUpper($question) CONTAINS toUpper(candidate.meeting_name) THEN 100
+       WHEN toUpper($question) CONTAINS toUpper(candidate.meeting_id) THEN 95
+       WHEN toUpper(candidate.meeting_name) CONTAINS toUpper($question) THEN 90
+       ELSE size([term IN $terms WHERE toUpper(candidate.meeting_name) CONTAINS term OR toUpper(candidate.meeting_id) CONTAINS term])
+     END AS match_score
+WHERE match_score > 0
+WITH max(match_score) AS best_score, collect({meeting: candidate, score: match_score}) AS candidates
+UNWIND candidates AS candidate
+WITH candidate.meeting AS meeting, candidate.score AS match_score, best_score
+WHERE match_score = best_score
+MATCH (meeting)-[:HAS_ITEM]->(item:MeetingItem)
 RETURN meeting.meeting_id AS meeting_id,
        meeting.meeting_name AS meeting_name,
        meeting.meeting_date AS meeting_date,
@@ -404,12 +415,13 @@ OPTIONAL MATCH (item)-[:HAS_ACTION]->(action:ActionItem)
 OPTIONAL MATCH (item)-[:HAS_DECISION]->(decision:Decision)
 OPTIONAL MATCH (item)-[:HAS_RISK]->(risk:Risk)
 OPTIONAL MATCH (item)-[:TRACKS_ISSUE]->(issue:Issue)
-WHERE ($target <> "action_items" OR action IS NOT NULL)
-  AND ($target <> "decisions" OR decision IS NOT NULL)
-  AND ($target <> "risks" OR risk IS NOT NULL)
-  AND ($target <> "issues" OR issue IS NOT NULL)
+WITH meeting, item, action, decision, risk, issue
+WHERE ($target <> 'action_items' OR action IS NOT NULL)
+  AND ($target <> 'decisions' OR decision IS NOT NULL)
+  AND ($target <> 'risks' OR risk IS NOT NULL)
+  AND ($target <> 'issues' OR issue IS NOT NULL)
   AND (
-    $person = "" OR
+    $person = '' OR
     EXISTS {
       MATCH (item)-[:RESPONSIBLE_BY]->(owner:Person)
       WHERE toUpper(owner.name) CONTAINS $person
@@ -420,14 +432,14 @@ WHERE ($target <> "action_items" OR action IS NOT NULL)
     }
   )
   AND (
-    $unit = "" OR
+    $unit = '' OR
     EXISTS {
       MATCH (meeting)-[:BELONGS_TO_UNIT]->(unit:Unit)
       WHERE toUpper(unit.name) CONTAINS $unit
     }
   )
   AND (
-    $product = "" OR
+    $product = '' OR
     EXISTS {
       MATCH (item)-[:MENTIONS_PRODUCT]->(product:Product)
       WHERE toUpper(product.name) CONTAINS $product
@@ -438,7 +450,7 @@ WHERE ($target <> "action_items" OR action IS NOT NULL)
     }
   )
   AND (
-    $regulation = "" OR
+    $regulation = '' OR
     EXISTS {
       MATCH (item)-[:MENTIONS_REGULATION]->(regulation:Regulation)
       WHERE toUpper(regulation.name) CONTAINS $regulation
@@ -449,28 +461,28 @@ WHERE ($target <> "action_items" OR action IS NOT NULL)
     }
   )
   AND (
-    $status = "" OR
-    ($status = "completed" AND (
-      (coalesce(item.actual_completed_date, "") <> "" AND NOT (replace(trim(toLower(coalesce(item.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"])) OR
-      (coalesce(action.actual_completed_date, "") <> "" AND NOT (replace(trim(toLower(coalesce(action.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"])) OR
-      (action.status = "completed" AND action.status_confidence = "high")
+    $status = '' OR
+    ($status = 'completed' AND (
+      (coalesce(item.actual_completed_date, '') <> '' AND NOT (replace(trim(toLower(coalesce(item.actual_completed_date, ''))), ' ', '') IN ['-', '--', 'na', 'n/a', 'none', 'null'])) OR
+      (coalesce(action.actual_completed_date, '') <> '' AND NOT (replace(trim(toLower(coalesce(action.actual_completed_date, ''))), ' ', '') IN ['-', '--', 'na', 'n/a', 'none', 'null'])) OR
+      (action.status = 'completed' AND action.status_confidence = 'high')
     )) OR
-    ($status = "in_progress" AND action.status = "in_progress") OR
-    ($status = "pending" AND action.status = "pending") OR
-    ($status = "not_completed" AND (
-      coalesce(item.actual_completed_date, "") = "" OR replace(trim(toLower(coalesce(item.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"]
+    ($status = 'in_progress' AND action.status = 'in_progress') OR
+    ($status = 'pending' AND action.status = 'pending') OR
+    ($status = 'not_completed' AND (
+      coalesce(item.actual_completed_date, '') = '' OR replace(trim(toLower(coalesce(item.actual_completed_date, ''))), ' ', '') IN ['-', '--', 'na', 'n/a', 'none', 'null']
     ) AND (
-      coalesce(action.actual_completed_date, "") = "" OR replace(trim(toLower(coalesce(action.actual_completed_date, ""))), " ", "") IN ["-", "--", "na", "n/a", "none", "null"]
-    ) AND NOT (coalesce(action.status, "pending") IN ["completed", "not_applicable"])) OR
-    ($status = "not_applicable" AND action.status = "not_applicable")
+      coalesce(action.actual_completed_date, '') = '' OR replace(trim(toLower(coalesce(action.actual_completed_date, ''))), ' ', '') IN ['-', '--', 'na', 'n/a', 'none', 'null']
+    ) AND NOT (coalesce(action.status, 'pending') IN ['completed', 'not_applicable'])) OR
+    ($status = 'not_applicable' AND action.status = 'not_applicable')
   )
   AND (
-    $keyword = "" OR
-    toUpper(coalesce(item.content, "")) CONTAINS $keyword OR
-    toUpper(coalesce(action.title, "")) CONTAINS $keyword OR
-    toUpper(coalesce(decision.title, "")) CONTAINS $keyword OR
-    toUpper(coalesce(risk.name, "")) CONTAINS $keyword OR
-    toUpper(coalesce(issue.title, "")) CONTAINS $keyword OR
+    $keyword = '' OR
+    toUpper(coalesce(item.content, '')) CONTAINS $keyword OR
+    toUpper(coalesce(action.title, '')) CONTAINS $keyword OR
+    toUpper(coalesce(decision.title, '')) CONTAINS $keyword OR
+    toUpper(coalesce(risk.name, '')) CONTAINS $keyword OR
+    toUpper(coalesce(issue.title, '')) CONTAINS $keyword OR
     EXISTS {
       MATCH (item)-[:MENTIONS]->(keyword:Keyword)
       WHERE toUpper(keyword.name) CONTAINS $keyword
@@ -483,27 +495,27 @@ RETURN meeting.meeting_id AS meeting_id,
        item.item_no AS item_no,
        item.content AS content,
        CASE $target
-         WHEN "decisions" THEN decision.title
-         WHEN "risks" THEN risk.name
-         WHEN "issues" THEN issue.title
+         WHEN 'decisions' THEN decision.title
+         WHEN 'risks' THEN risk.name
+         WHEN 'issues' THEN issue.title
          ELSE action.title
        END AS matched_entity,
        CASE $target
-         WHEN "decisions" THEN "HAS_DECISION"
-         WHEN "risks" THEN "HAS_RISK"
-         WHEN "issues" THEN "TRACKS_ISSUE"
-         ELSE "HAS_ACTION"
+         WHEN 'decisions' THEN 'HAS_DECISION'
+         WHEN 'risks' THEN 'HAS_RISK'
+         WHEN 'issues' THEN 'TRACKS_ISSUE'
+         ELSE 'HAS_ACTION'
        END AS matched_relation,
        CASE $target
-         WHEN "decisions" THEN decision.decision_id
-         WHEN "risks" THEN risk.risk_id
-         WHEN "issues" THEN issue.issue_id
+         WHEN 'decisions' THEN decision.decision_id
+         WHEN 'risks' THEN risk.risk_id
+         WHEN 'issues' THEN issue.issue_id
          ELSE action.action_id
        END AS matched_node_id,
        $target AS matched_field,
-       coalesce(action.status, "") AS semantic_status,
-       coalesce(action.status_source, "") AS semantic_status_source,
-       coalesce(action.status_confidence, "") AS semantic_status_confidence,
+       coalesce(action.status, '') AS semantic_status,
+       coalesce(action.status_source, '') AS semantic_status_source,
+       coalesce(action.status_confidence, '') AS semantic_status_confidence,
        [(item)-[:RESPONSIBLE_BY]->(owner:Person) | owner.name] AS owner_names,
        [(action)-[:ASSIGNED_TO]->(assignee:Person) | assignee.name] AS assignee_names,
        [(meeting)-[:BELONGS_TO_UNIT]->(unit:Unit) | unit.name] AS unit_names,
@@ -538,5 +550,56 @@ RETURN meeting.meeting_id AS meeting_id,
        "follow_up" AS matched_field,
        previous_meeting.meeting_id AS previous_meeting_id
 ORDER BY meeting.meeting_date DESC, item.item_no ASC
+LIMIT $limit
+"""
+
+QUERY_ISSUE_TIMELINE = """
+MATCH (issue:Issue)<-[:TRACKS_ISSUE]-(item:MeetingItem)<-[:HAS_ITEM]-(meeting:Meeting)
+WHERE (
+    $keyword = '' OR
+    toUpper(coalesce(issue.title, '')) CONTAINS $keyword OR
+    toUpper(coalesce(issue.signature, '')) CONTAINS $keyword OR
+    toUpper(coalesce(item.content, '')) CONTAINS $keyword OR
+    EXISTS {
+      MATCH (item)-[:MENTIONS]->(keyword:Keyword)
+      WHERE toUpper(keyword.name) CONTAINS $keyword
+    } OR
+    EXISTS {
+      MATCH (item)-[:MENTIONS_PRODUCT]->(product:Product)
+      WHERE toUpper(product.name) CONTAINS $keyword
+    } OR
+    EXISTS {
+      MATCH (item)-[:MENTIONS_REGULATION]->(regulation:Regulation)
+      WHERE toUpper(regulation.name) CONTAINS $keyword
+    }
+  )
+OPTIONAL MATCH (item)-[:FOLLOW_UP_OF]->(previous:MeetingItem)
+OPTIONAL MATCH (previous_meeting:Meeting)-[:HAS_ITEM]->(previous)
+OPTIONAL MATCH (next:MeetingItem)-[:FOLLOW_UP_OF]->(item)
+OPTIONAL MATCH (next_meeting:Meeting)-[:HAS_ITEM]->(next)
+WITH issue, item, meeting, previous, previous_meeting, next, next_meeting,
+     coalesce(issue.issue_id, issue.signature, issue.title, elementId(issue)) AS issue_id
+RETURN meeting.meeting_id AS meeting_id,
+       meeting.meeting_name AS meeting_name,
+       meeting.meeting_date AS meeting_date,
+       item.item_id AS item_id,
+       item.item_no AS item_no,
+       item.content AS content,
+       issue_id AS issue_id,
+       issue.title AS issue_title,
+       issue.signature AS issue_signature,
+       issue_id AS matched_node_id,
+       issue.title AS matched_entity,
+       'TRACKS_ISSUE' AS matched_relation,
+       'issue_timeline' AS matched_field,
+       previous.item_id AS previous_item_id,
+       previous.content AS previous_content,
+       previous_meeting.meeting_id AS previous_meeting_id,
+       previous_meeting.meeting_name AS previous_meeting_name,
+       next.item_id AS next_item_id,
+       next.content AS next_content,
+       next_meeting.meeting_id AS next_meeting_id,
+       next_meeting.meeting_name AS next_meeting_name
+ORDER BY issue_id ASC, meeting.meeting_date ASC, item.item_no ASC
 LIMIT $limit
 """

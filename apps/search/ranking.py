@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 from django.utils import timezone
 
-from apps.item_status import BLANK_VALUES, is_meaningful_value
+from apps.item_status import BLANK_VALUES, is_meaningful_value, item_status_payload
 
 
 MEETING_KEYWORD_WEIGHTS = {
@@ -123,7 +123,7 @@ def score_task(item: dict, query: str = "") -> float:
         score += 2
     if has_value(item.get("planned_date")):
         score += 2
-    if not has_value(item.get("actual_completed_date")):
+    if item_status_payload(item)["status"] != "completed":
         score += 2
     if not has_value(item.get("tracking_result")):
         score += 1

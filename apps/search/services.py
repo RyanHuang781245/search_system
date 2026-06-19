@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from apps.meetings.services import _serialize_mongo_document
 from apps.graph.services import get_graph_score_context
+from apps.item_status import item_status_payload
 
 from .feedback import build_feedback_context, score_item_feedback, score_meeting_feedback
 from .highlighter import collect_matched_snippets
@@ -115,6 +116,9 @@ def search_meeting_minutes(
                     "planned_date": item.get("planned_date"),
                     "actual_completed_date": item.get("actual_completed_date"),
                     "tracking_result": item.get("tracking_result"),
+                    "status": item_status_payload(item)["status"],
+                    "status_source": item_status_payload(item)["source"],
+                    "status_confidence": item_status_payload(item)["confidence"],
                     "final_score": item_final_score,
                     "score_detail": _round_score_detail(item_score_detail),
                 }
@@ -267,7 +271,8 @@ def _item_matches_filters(item, owner, has_owner, has_planned_date, is_completed
 
     owner_present = has_owner_value(item.get("owner"))
     planned_date_present = has_value(item.get("planned_date"))
-    completed = has_value(item.get("actual_completed_date"))
+    status_payload = item_status_payload(item)
+    completed = status_payload["status"] == "completed"
     tracking_result_present = has_value(item.get("tracking_result"))
 
     if has_owner is True and not owner_present:

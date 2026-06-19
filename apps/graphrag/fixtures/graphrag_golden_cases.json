@@ -3,51 +3,319 @@
   "cases": [
     {
       "id": "person_responsibility_chen_sheng_chang",
-      "enabled": false,
+      "enabled": true,
       "question": "陳聖昌負責哪些項目",
       "limit": "auto",
       "expected_item_ids": [
-        "item_c1fe50de8197"
+        "item_192305dd4712",
+        "item_20c62093285a",
+        "item_3a653efd73b0",
+        "item_98796d628d2e",
+        "item_c1fe50de8197",
+        "item_d6352bc92ec6"
+      ],
+      "expected_meeting_ids": [
+        "meeting_8788c83b0cf4",
+        "meeting_a008ed15ea74",
+        "meeting_b6f94d9c0eaa"
       ],
       "expected_relations": [
         "RESPONSIBLE_BY"
       ],
       "unexpected_item_ids": [],
-      "require_consistency": true
+      "require_consistency": true,
+      "review_status": "approved"
     },
     {
       "id": "planned_date_2017_12_15",
-      "enabled": false,
+      "enabled": true,
       "question": "2017 年 12 月 15 日要完成哪些事項",
       "limit": "auto",
-      "expected_item_ids": [],
+      "expected_item_ids": [
+        "item_54f5e883a7d5",
+        "item_61a8d073c2e5",
+        "item_8cfbc332f483",
+        "item_8d1f11a31d47",
+        "item_d0475e769dff"
+      ],
+      "expected_meeting_ids": [
+        "meeting_803b9445578b"
+      ],
       "expected_relations": [
         "HAS_PLANNED_DATE"
       ],
       "unexpected_item_ids": [],
-      "require_consistency": true
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "planned_date_2018_04_13",
+      "enabled": true,
+      "question": "2018-04-13 要完成哪些事項",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_f73aa995ac21"
+      ],
+      "expected_meeting_ids": [
+        "meeting_eb1a387b7913"
+      ],
+      "expected_relations": [
+        "HAS_PLANNED_DATE"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "completed_date_2018_04_13",
+      "enabled": true,
+      "question": "2018-04-13 實際完成哪些事項",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_f73aa995ac21"
+      ],
+      "expected_meeting_ids": [
+        "meeting_eb1a387b7913"
+      ],
+      "expected_relations": [
+        "HAS_COMPLETED_DATE"
+      ],
+      "unexpected_item_ids": [
+        "item_18bc9ebf3370"
+      ],
+      "require_consistency": true,
+      "review_status": "approved"
     },
     {
       "id": "meeting_items_p1812",
-      "enabled": false,
+      "enabled": true,
       "question": "P1812 Coformity stem器械進度 會議包含哪些事項",
       "limit": "auto",
       "expected_meeting_ids": [
         "meeting_b6f94d9c0eaa"
       ],
-      "expected_item_ids": [],
+      "expected_item_ids": [
+        "item_4bde33f64fc3",
+        "item_c1fe50de8197",
+        "item_dcad4ce5ca00",
+        "item_e67f10746216"
+      ],
       "expected_relations": [
         "HAS_ITEM"
       ],
-      "require_consistency": true
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "meeting_items_p1420_design_transfer",
+      "enabled": true,
+      "question": "P1420 Locking cage_設計移轉會議包含哪些事項",
+      "limit": "auto",
+      "expected_meeting_ids": [
+        "meeting_d8ae802319ee"
+      ],
+      "expected_item_ids": [
+        "item_18bc9ebf3370",
+        "item_5806bc7ad9b3",
+        "item_5ca4e4b1509f",
+        "item_80c464c5f5b2",
+        "item_862c9626fd45",
+        "item_9f49b54ebfb3",
+        "item_cd3001ac441b"
+      ],
+      "expected_relations": [
+        "HAS_ITEM"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "meeting_summary_p1812",
+      "enabled": true,
+      "question": "P1812 Coformity stem器械進度 會議摘要",
+      "limit": "auto",
+      "expected_meeting_ids": [
+        "meeting_b6f94d9c0eaa"
+      ],
+      "expected_item_ids": [
+        "item_4bde33f64fc3",
+        "item_c1fe50de8197",
+        "item_dcad4ce5ca00",
+        "item_e67f10746216"
+      ],
+      "expected_relations": [
+        "HAS_ITEM"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "semantic_summary_fda_risks",
+      "enabled": true,
+      "question": "FDA 相關風險整理",
+      "limit": "auto",
+      "expected_meeting_ids": [
+        "meeting_b6f94d9c0eaa"
+      ],
+      "expected_item_ids": [
+        "item_c1fe50de8197"
+      ],
+      "expected_relations": [
+        "HAS_RISK"
+      ],
+      "unexpected_item_ids": [
+        "item_abf6c673202e"
+      ],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "semantic_summary_decisions",
+      "enabled": true,
+      "question": "有哪些決議",
+      "limit": "auto",
+      "expected_meeting_ids": [
+        "meeting_8788c83b0cf4",
+        "meeting_a008ed15ea74"
+      ],
+      "expected_item_ids": [
+        "item_179d13448618",
+        "item_54c6ec394efb",
+        "item_98796d628d2e",
+        "item_e260e05c1e3f"
+      ],
+      "expected_relations": [
+        "HAS_DECISION"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "follow_up_tracking_all",
+      "enabled": true,
+      "question": "跨會議追蹤整理",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_0723bab0ab00",
+        "item_179d13448618",
+        "item_20c62093285a"
+      ],
+      "expected_meeting_ids": [
+        "meeting_8788c83b0cf4"
+      ],
+      "expected_relations": [
+        "TRACKS_ISSUE"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "follow_up_tracking_fda",
+      "enabled": true,
+      "question": "FDA 相關追蹤事項",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_abf6c673202e",
+        "item_c1fe50de8197",
+        "item_d3702b3d59db",
+        "item_f73aa995ac21"
+      ],
+      "expected_meeting_ids": [
+        "meeting_b6f94d9c0eaa",
+        "meeting_ce06d760b9e1",
+        "meeting_eb1a387b7913"
+      ],
+      "expected_relations": [
+        "TRACKS_ISSUE"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "follow_up_tracking_conformity_stem",
+      "enabled": true,
+      "question": "Conformity stem 的後續追蹤狀況",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_453e223d1365",
+        "item_c3f2098771e8"
+      ],
+      "expected_meeting_ids": [
+        "meeting_ce06d760b9e1"
+      ],
+      "expected_relations": [
+        "TRACKS_ISSUE"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "completed_items",
+      "enabled": true,
+      "question": "已完成的事項有哪些",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_1ea439252b5d",
+        "item_36e0580bef56",
+        "item_5806bc7ad9b3",
+        "item_5ca4e4b1509f",
+        "item_80c464c5f5b2",
+        "item_862c9626fd45",
+        "item_9f49b54ebfb3",
+        "item_cd3001ac441b",
+        "item_e260e05c1e3f",
+        "item_f73aa995ac21"
+      ],
+      "expected_meeting_ids": [
+        "meeting_8788c83b0cf4",
+        "meeting_97971cebd76e",
+        "meeting_d8ae802319ee",
+        "meeting_eb1a387b7913"
+      ],
+      "expected_relations": [
+        "HAS_ACTION"
+      ],
+      "unexpected_item_ids": [
+        "item_18bc9ebf3370"
+      ],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "not_applicable_items",
+      "enabled": true,
+      "question": "不適用的事項有哪些",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_18bc9ebf3370"
+      ],
+      "expected_meeting_ids": [
+        "meeting_d8ae802319ee"
+      ],
+      "expected_relations": [
+        "HAS_ACTION"
+      ],
+      "unexpected_item_ids": [
+        "item_5806bc7ad9b3"
+      ],
+      "require_consistency": true,
+      "review_status": "approved"
     },
     {
       "id": "insufficient_unknown_person",
-      "enabled": false,
+      "enabled": true,
       "question": "不存在的人名負責哪些項目",
       "limit": "auto",
       "expect_insufficient": true,
-      "require_consistency": true
+      "require_consistency": true,
+      "review_status": "approved"
     },
     {
       "id": "seed_001_張志豪負責哪些事項",
@@ -64,6 +332,55 @@
       ],
       "expected_meeting_ids": [
         "meeting_8788c83b0cf4"
+      ],
+      "expected_relations": [
+        "RESPONSIBLE_BY"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "seed_001_倪仲達負責哪些項目",
+      "enabled": true,
+      "question": "倪仲達負責哪些項目",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_03c10c5bb250",
+        "item_47b0477ca4eb",
+        "item_4c8234285102",
+        "item_5720d670ad03",
+        "item_6734ab6d70ff",
+        "item_7889557508e4",
+        "item_8cbab0a39674",
+        "item_8cfbc332f483",
+        "item_c978fcdbd69e",
+        "item_def69aedbfaa",
+        "item_f73aa995ac21"
+      ],
+      "expected_meeting_ids": [
+        "meeting_803b9445578b",
+        "meeting_ce06d760b9e1",
+        "meeting_eb1a387b7913"
+      ],
+      "expected_relations": [
+        "RESPONSIBLE_BY"
+      ],
+      "unexpected_item_ids": [],
+      "require_consistency": true,
+      "review_status": "approved"
+    },
+    {
+      "id": "seed_001_廖漢星負責些會議項目",
+      "enabled": true,
+      "question": "廖漢星負責些會議項目",
+      "limit": "auto",
+      "expected_item_ids": [
+        "item_1a7ec9e768b2",
+        "item_1ea439252b5d"
+      ],
+      "expected_meeting_ids": [
+        "meeting_97971cebd76e"
       ],
       "expected_relations": [
         "RESPONSIBLE_BY"

@@ -1169,6 +1169,26 @@ main.app-shell:has(.graphrag-workspace) {
     word-break: break-word;
 }
 
+.graph-expand-button {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.graph-expand-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+}
+
+.graph-expand-grid .graph-expand-button {
+    margin-top: 0;
+    min-height: 2rem;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
 .answer-node-link {
     display: inline;
     border: 0;
@@ -1213,6 +1233,137 @@ main.app-shell:has(.graphrag-workspace) {
     border-top: 1px solid #e2e8f0;
     margin-top: 0.8rem;
     padding-top: 0.8rem;
+}
+
+.diagnostic-panel {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.diagnostic-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.diagnostic-section {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    padding: 0.75rem;
+}
+
+.diagnostic-section-title {
+    color: #334155;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.55rem;
+    text-transform: uppercase;
+}
+
+.diagnostic-rows {
+    background: transparent;
+}
+
+.diagnostic-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.diagnostic-retriever {
+    display: grid;
+    gap: 0.45rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.55rem;
+}
+
+.diagnostic-retriever:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.diagnostic-retriever-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: #1e293b;
+    font-size: 0.82rem;
+}
+
+.diagnostic-retriever-head span {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.diagnostic-muted {
+    opacity: 0.68;
+}
+
+.diagnostic-subtitle {
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 900;
+    margin: 0.65rem 0 0.35rem;
+}
+
+.diagnostic-warning-text {
+    border-radius: 10px;
+    border: 1px solid #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    padding: 0.55rem 0.65rem;
+    word-break: break-word;
+}
+
+.cypher-preview {
+    max-height: 220px;
+    overflow: auto;
+    border-radius: 12px;
+    border: 1px solid #1e293b;
+    background: #111827;
+    color: #e5e7eb;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin: 0.75rem 0 0;
+    padding: 0.75rem;
+    white-space: pre-wrap;
+}
+
+.text2cypher-table-wrap {
+    overflow: auto;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+
+.text2cypher-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+.text2cypher-table th,
+.text2cypher-table td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
+    min-width: 110px;
+}
+
+.text2cypher-table th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 900;
+}
+
+.text2cypher-table tr:last-child td {
+    border-bottom: 0;
 }
 
 .evidence-graph-shell {

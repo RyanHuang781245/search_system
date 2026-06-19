@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from itertools import combinations
 
-from apps.item_status import is_meaningful_value
+from apps.item_status import apply_item_status_fields, is_meaningful_value
 from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_collection
 
 from . import cypher_queries as cq
@@ -74,6 +74,7 @@ def build_graph_from_mongo(client) -> dict:
         )
 
         for item in items_by_meeting_id.get(meeting_id, []):
+            item = apply_item_status_fields(item)
             item_id = item.get("item_id")
             _write(client, _merge_meeting_item, item)
             node_counts["MeetingItem"] += 1
@@ -339,6 +340,9 @@ def _merge_meeting_item(tx, item):
         content=item.get("content"),
         planned_date=item.get("planned_date"),
         actual_completed_date=item.get("actual_completed_date"),
+        status=item.get("status"),
+        status_source=item.get("status_source"),
+        status_confidence=item.get("status_confidence"),
     )
 
 

@@ -16,7 +16,7 @@
                     <i data-lucide="sliders-horizontal"></i>
                     <span>進階</span>
                 </button>
-                <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理">
+                <button id="refresh-button" class="btn btn-light btn-sm border app-refresh-btn" type="button" aria-label="重新整理狀態">
                     <i data-lucide="refresh-cw"></i>
                 </button>
             </div>
@@ -30,10 +30,10 @@
                 placeholder="例如：FDA 相關項目有哪些？Carol 負責哪些項目？"
             ></textarea>
             <div class="input-group">
-                <span class="input-group-text">Scope</span>
+                <span class="input-group-text">範圍</span>
                 <select id="ask-limit" class="form-select">
-                    <option value="auto" selected>Auto</option>
-                    <option value="focused">精準</option>
+                    <option value="auto" selected>自動</option>
+                    <option value="focused">聚焦</option>
                     <option value="balanced">平衡</option>
                     <option value="broad">廣泛</option>
                     <option value="5">5</option>
@@ -54,7 +54,17 @@
         <div class="graphrag-meta-panel">
             <details class="preview-section">
                 <summary class="preview-section-head">
-                    <span>Sources</span>
+                    <span>診斷</span>
+                    <span id="diagnostic-status" class="badge text-bg-light border">待命</span>
+                </summary>
+                <div id="diagnostic-panel" class="diagnostic-panel mt-3">
+                    <div class="related-empty">尚未有查詢診斷資料。</div>
+                </div>
+            </details>
+
+            <details class="preview-section">
+                <summary class="preview-section-head">
+                    <span>來源</span>
                     <span id="source-count" class="badge text-bg-light border">0</span>
                 </summary>
                 <div id="source-list" class="related-list mt-3"></div>
@@ -62,7 +72,7 @@
 
             <details class="preview-section">
                 <summary class="preview-section-head">
-                    <span>Warnings</span>
+                    <span>警告</span>
                     <span id="warning-count" class="badge text-bg-light border">0</span>
                 </summary>
                 <div id="warning-list" class="related-list mt-3"></div>
@@ -73,28 +83,28 @@
     <section class="graphrag-graph-panel">
         <div class="graphrag-graph-head">
             <div>
-                <div class="page-kicker">Evidence Graph</div>
-                <h2 class="graphrag-graph-title">本次回答依據的圖譜關聯</h2>
+                <div id="graph-kicker" class="page-kicker">證據圖譜</div>
+                <h2 id="graph-title" class="graphrag-graph-title">本次回答依據的圖譜關聯</h2>
             </div>
             <div class="graph-toolbar">
-                <select id="graph-layout-select" class="form-select form-select-sm graph-layout-select" title="Layout">
-                    <option value="cose">Cose</option>
-                    <option value="breadthfirst">Tree</option>
-                    <option value="circle">Circle</option>
+                <select id="graph-layout-select" class="form-select form-select-sm graph-layout-select" title="圖譜排列方式">
+                    <option value="cose">力導向</option>
+                    <option value="breadthfirst">樹狀</option>
+                    <option value="circle">圓形</option>
                 </select>
-                <button id="graph-label-toggle" class="btn btn-light btn-sm border" type="button" title="Toggle relation labels">
+                <button id="graph-label-toggle" class="btn btn-light btn-sm border" type="button" title="顯示或隱藏關係標籤">
                     <i data-lucide="tag"></i>
                 </button>
-                <button id="graph-fit-button" class="btn btn-light btn-sm border" type="button" title="Fit to view">
+                <button id="graph-fit-button" class="btn btn-light btn-sm border" type="button" title="符合視窗">
                     <i data-lucide="scan"></i>
                 </button>
-                <button id="graph-layout-button" class="btn btn-light btn-sm border" type="button" title="Re-layout">
+                <button id="graph-layout-button" class="btn btn-light btn-sm border" type="button" title="重新排列">
                     <i data-lucide="refresh-cw"></i>
                 </button>
-                <button id="graph-zoom-in-button" class="btn btn-light btn-sm border" type="button" title="Zoom in">
+                <button id="graph-zoom-in-button" class="btn btn-light btn-sm border" type="button" title="放大">
                     <i data-lucide="zoom-in"></i>
                 </button>
-                <button id="graph-zoom-out-button" class="btn btn-light btn-sm border" type="button" title="Zoom out">
+                <button id="graph-zoom-out-button" class="btn btn-light btn-sm border" type="button" title="縮小">
                     <i data-lucide="zoom-out"></i>
                 </button>
                 <span id="evidence-graph-count" class="badge text-bg-light border">0</span>
@@ -113,8 +123,8 @@
 <aside id="advanced-panel" class="advanced-console-panel d-none" aria-hidden="true">
     <div class="advanced-panel-head">
         <div>
-            <div class="page-kicker">Advanced</div>
-            <h2 class="advanced-panel-title">進階檢索與索引工具</h2>
+            <div class="page-kicker">進階</div>
+            <h2 class="advanced-panel-title">檢索與索引工具</h2>
         </div>
         <button id="advanced-close" class="btn btn-light btn-sm border" type="button" aria-label="關閉進階工具">
             <i data-lucide="x"></i>
@@ -138,7 +148,7 @@
                     </button>
 
                     <div class="input-group">
-                        <span class="input-group-text">Batch</span>
+                        <span class="input-group-text">批次</span>
                         <input id="vector-batch-size" class="form-control" type="number" min="1" value="64">
                         <button id="reindex-vector-button" class="btn btn-outline-primary" type="button">
                             <i data-lucide="database-zap"></i>
@@ -157,7 +167,7 @@
                     <i data-lucide="tags"></i>
                     關鍵字抽取
                 </h2>
-                <span class="small text-muted">keyword preview</span>
+                <span class="small text-muted">關鍵字預覽</span>
             </div>
             <div class="app-card-body">
                 <form id="keyword-form" class="d-grid gap-3">
@@ -192,8 +202,8 @@
                 <form id="graph-search-form" class="d-grid gap-3">
                     <div class="input-group">
                         <input id="graph-query" class="form-control" type="text" placeholder="FDA">
-                        <input id="graph-limit" class="form-control graph-limit-input" type="number" min="1" value="10">
-                        <button id="graph-search-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                        <input id="graph-limit" class="form-control graph-limit-input" type="number" min="1" value="10" aria-label="Graph 檢索限制筆數">
+                        <button id="graph-search-submit" class="btn btn-primary btn-primary-custom" type="submit" aria-label="執行 Graph 檢索">
                             <i data-lucide="search"></i>
                         </button>
                     </div>
@@ -214,8 +224,8 @@
                 <form id="vector-search-form" class="d-grid gap-3">
                     <div class="input-group">
                         <input id="vector-query" class="form-control" type="text" placeholder="標籤送件要誰負責？">
-                        <input id="vector-limit" class="form-control graph-limit-input" type="number" min="1" value="10">
-                        <button id="vector-search-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                        <input id="vector-limit" class="form-control graph-limit-input" type="number" min="1" value="10" aria-label="Vector 檢索限制筆數">
+                        <button id="vector-search-submit" class="btn btn-primary btn-primary-custom" type="submit" aria-label="執行 Vector 檢索">
                             <i data-lucide="search"></i>
                         </button>
                     </div>
@@ -227,8 +237,37 @@
         <section class="app-card">
             <div class="app-card-header">
                 <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i data-lucide="terminal-square"></i>
+                    Text2Cypher 探索
+                </h2>
+                <span class="small text-muted">Neo4j Schema</span>
+            </div>
+            <div class="app-card-body">
+                <form id="text2cypher-form" class="d-grid gap-3">
+                    <textarea
+                        id="text2cypher-question"
+                        class="form-control"
+                        rows="3"
+                        placeholder="例如：列出提到 Corail stem 的會議與項目"
+                    ></textarea>
+                    <div class="input-group">
+                        <span class="input-group-text">限制</span>
+                        <input id="text2cypher-limit" class="form-control" type="number" min="1" value="20">
+                        <button id="text2cypher-submit" class="btn btn-primary btn-primary-custom" type="submit">
+                            <i data-lucide="search-code"></i>
+                            <span>探索</span>
+                        </button>
+                    </div>
+                </form>
+                <div id="text2cypher-results" class="result-list mt-4"></div>
+            </div>
+        </section>
+
+        <section class="app-card">
+            <div class="app-card-header">
+                <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
                     <i data-lucide="clipboard-check"></i>
-                    回歸評估
+                    自動評估
                 </h2>
                 <span class="small text-muted">Golden cases</span>
             </div>
@@ -237,31 +276,36 @@
                     <textarea
                         id="eval-questions"
                         class="form-control"
-                        rows="5"
-                        placeholder="一行一題，例如：&#10;陳聖昌負責哪些項目&#10;2017 年 12 月 15 日要完成哪些事項"
+                        rows="4"
+                        placeholder="每行一個測試問題，例如：2017 年 12 月 15 日要完成哪些事項？"
                     ></textarea>
                     <div class="input-group">
-                        <span class="input-group-text">Scope</span>
+                        <span class="input-group-text">範圍</span>
                         <select id="eval-limit" class="form-select">
-                            <option value="auto" selected>Auto</option>
+                            <option value="auto" selected>自動</option>
                             <option value="focused">聚焦</option>
                             <option value="balanced">平衡</option>
                             <option value="broad">廣泛</option>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
                         </select>
-                        <button id="eval-seed-button" class="btn btn-primary btn-primary-custom" type="button">
-                            <i data-lucide="wand-sparkles"></i>
-                            <span>產生候選</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button id="eval-seed-button" class="btn btn-light border" type="button">
+                            <i data-lucide="list-plus"></i>
+                            <span>產生案例</span>
                         </button>
-                        <button id="eval-run-button" class="btn btn-outline-primary" type="button">
+                        <button id="eval-run-button" class="btn btn-primary btn-primary-custom" type="button">
                             <i data-lucide="play"></i>
                             <span>執行評估</span>
                         </button>
-                        <button id="eval-save-button" class="btn btn-outline-success" type="button">
+                        <button id="eval-save-button" class="btn btn-outline-primary" type="button">
                             <i data-lucide="save"></i>
-                            <span>保存已確認</span>
+                            <span>儲存核准案例</span>
                         </button>
                     </div>
-                    <div id="eval-summary" class="operation-log">尚未產生評估案例。</div>
+                    <div id="eval-summary" class="operation-log">尚未執行評估。</div>
                     <div id="eval-results" class="result-list"></div>
                 </div>
             </div>
@@ -270,17 +314,17 @@
 </aside>
 
 <div id="answer-reader-backdrop" class="answer-reader-backdrop d-none"></div>
-<aside id="answer-reader" class="answer-reader d-none" aria-hidden="true" aria-label="Answer reading mode">
+<aside id="answer-reader" class="answer-reader d-none" aria-hidden="true">
     <div class="answer-reader-head">
         <div>
-            <div class="page-kicker">Reading Mode</div>
+            <div class="page-kicker">閱讀模式</div>
             <h2 id="answer-reader-question" class="answer-reader-title">-</h2>
         </div>
-        <button id="answer-reader-close" class="btn btn-light btn-sm border" type="button" aria-label="Close reading mode">
+        <button id="answer-reader-close" class="btn btn-light btn-sm border" type="button" aria-label="關閉閱讀模式">
             <i data-lucide="x"></i>
         </button>
     </div>
-    <div id="answer-reader-body" class="answer-body answer-reader-body"></div>
+    <div id="answer-reader-body" class="answer-reader-body"></div>
 </aside>
 {% endblock %}
 
@@ -288,5 +332,5 @@
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
-<script src="{% static 'js/graphrag-page.js' %}?v=20260614-auto-limit-1"></script>
+<script src="{% static 'js/graphrag-page.js' %}?v=20260619-manual-expand-zh-1"></script>
 {% endblock %}
