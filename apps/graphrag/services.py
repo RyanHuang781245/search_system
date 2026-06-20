@@ -42,6 +42,7 @@ def answer_question(
     graph_searcher=None,
     query_analyzer=None,
     llm_client=None,
+    evidence_selector_client=None,
 ) -> dict:
     normalized_question = str(question or "").strip()
     if not normalized_question:
@@ -52,7 +53,12 @@ def answer_question(
 
     semantic_searcher = semantic_searcher or semantic_search
     graph_searcher = graph_searcher or graph_search_query
+    injected_llm_client = llm_client
     llm_client = llm_client or ollama_answer
+    selector_enabled = True
+    if evidence_selector_client is None and injected_llm_client is not None:
+        selector_enabled = False
+    evidence_selector_client = evidence_selector_client or ollama_evidence_selector
 
     semantic_payload = (
         _safe_semantic_search(semantic_searcher, normalized_question, effective_limit)
@@ -121,6 +127,15 @@ def answer_question(
         query_route=query_route,
         graph_limit=effective_limit * 2,
     )
+    candidate_evidence_set = evidence_set
+    evidence_set, selection_warnings, evidence_selection = select_answer_evidence_set(
+        evidence_set=evidence_set,
+        question=normalized_question,
+        query_route=query_route,
+        effective_limit=effective_limit,
+        selector_client=evidence_selector_client,
+        selector_enabled=selector_enabled,
+    )
     structured_context = evidence_set["structured_context"]
     semantic_context = evidence_set["semantic_context"]
     graph_context = evidence_set["graph_context"]
@@ -142,6 +157,8 @@ def answer_question(
         semantic_context=semantic_context,
         source_metadata=source_metadata,
         evidence_set=evidence_set,
+        candidate_evidence_set=candidate_evidence_set,
+        evidence_selection=evidence_selection,
     )
 
     if not structured_context and not graph_context["paths"] and not semantic_context:
@@ -172,7 +189,9 @@ def answer_question(
         evidence_records=evidence_set["records"],
     )
     raw_answer = llm_client(prompt)
-    claims, claim_warnings = build_verified_answer_claims(raw_answer, evidence_set["records"], query_route)
+    parsed_answer_payload = parse_claim_response(raw_answer)
+    grounded_answer_text = extract_grounded_answer_text(parsed_answer_payload)
+    claims, claim_warnings = build_verified_answer_claims(parsed_answer_payload, evidence_set["records"], query_route)
     if not claims:
         claims = fallback_claims_from_evidence(evidence_set["records"])
     if claims:
@@ -181,7 +200,10 @@ def answer_question(
         semantic_context = evidence_set["semantic_context"]
         graph_context = evidence_set["graph_context"]
         source_metadata = evidence_set["sources"]
-        answer = render_answer_from_claims(claims, evidence_set["records"])
+        if grounded_answer_text and should_use_grounded_answer_text(normalized_question, query_route):
+            answer = append_evidence_reference_summary(grounded_answer_text, claims, evidence_set["records"])
+        else:
+            answer = render_answer_from_claims(claims, evidence_set["records"], query_route=query_route)
         trace = build_graphrag_trace(
             question=normalized_question,
             query_route=query_route,
@@ -199,6 +221,8 @@ def answer_question(
             semantic_context=semantic_context,
             source_metadata=source_metadata,
             evidence_set=evidence_set,
+            candidate_evidence_set=candidate_evidence_set,
+            evidence_selection=evidence_selection,
         )
         trace["answer_claims"] = {
             "count": len(claims),
@@ -220,7 +244,7 @@ def answer_question(
             "semantic": semantic_context,
         },
         "sources": source_metadata,
-        "warnings": build_warnings(query_route, semantic_payload, graph_payload) + claim_warnings,
+        "warnings": build_warnings(query_route, semantic_payload, graph_payload) + selection_warnings + claim_warnings,
     }
 
 
@@ -361,12 +385,21 @@ def build_graphrag_trace(
     semantic_context: list[dict],
     source_metadata: list[dict],
     evidence_set: dict | None = None,
+    candidate_evidence_set: dict | None = None,
+    evidence_selection: dict | None = None,
 ) -> dict:
     semantic_results = semantic_payload.get("results", [])
     graph_results = graph_payload.get("results", [])
     evidence_records = (evidence_set or {}).get("records", [])
+    candidate_records = (candidate_evidence_set or evidence_set or {}).get("records", [])
     evidence_sources = Counter(record.get("evidence_source") for record in evidence_records)
     evidence_relations = Counter(record.get("relation") for record in evidence_records)
+    selection_payload = evidence_selection or {
+        "mode": "not_applied",
+        "candidate_count": len(candidate_records),
+        "selected_count": len(evidence_records),
+        "selected_evidence_ids": [record.get("evidence_id") for record in evidence_records if record.get("evidence_id")],
+    }
     return {
         "question": question,
         "route": query_route.to_dict(),
@@ -412,11 +445,14 @@ def build_graphrag_trace(
             "semantic": len(semantic_context),
             "sources": len(source_metadata),
             "evidence": len(evidence_records),
+            "candidate_evidence": len(candidate_records),
         },
         "evidence": {
             "count": len(evidence_records),
+            "candidate_count": len(candidate_records),
             "sources": {key: value for key, value in evidence_sources.items() if key},
             "relations": {key: value for key, value in evidence_relations.items() if key},
+            "selection": selection_payload,
         },
         "graph_summary": graph_context.get("summary", {}),
         "is_insufficient": False,
@@ -471,6 +507,155 @@ def build_answer_evidence_set(
     }
 
 
+def select_answer_evidence_set(
+    *,
+    evidence_set: dict,
+    question: str,
+    query_route: QueryRoute,
+    effective_limit: int,
+    selector_client=None,
+    selector_enabled: bool = True,
+) -> tuple[dict, list[str], dict]:
+    records = evidence_set.get("records", [])
+    candidate_ids = [record.get("evidence_id") for record in records if record.get("evidence_id")]
+    if not records:
+        return evidence_set, [], evidence_selection_trace("empty", candidate_ids, [], "no evidence")
+    if not should_use_llm_evidence_selector(query_route):
+        return evidence_set, [], evidence_selection_trace(
+            "complete_route",
+            candidate_ids,
+            candidate_ids,
+            f"{query_route.query_type} keeps complete retrieved evidence",
+        )
+    if not selector_enabled:
+        return evidence_set, [], evidence_selection_trace(
+            "disabled_injected_llm",
+            candidate_ids,
+            candidate_ids,
+            "selector disabled because answer llm client was injected",
+        )
+    if not getattr(settings, "GRAPHRAG_EVIDENCE_SELECTOR_ENABLED", True):
+        return evidence_set, [], evidence_selection_trace("disabled", candidate_ids, candidate_ids, "selector disabled")
+
+    selector_client = selector_client or ollama_evidence_selector
+    try:
+        raw_selection = selector_client(build_evidence_selector_prompt(question, query_route, records, effective_limit))
+        selected_ids, reason = parse_evidence_selection(raw_selection, records)
+    except Exception as exc:
+        return evidence_set, [f"Evidence selector unavailable: {exc}"], evidence_selection_trace(
+            "fallback_all",
+            candidate_ids,
+            candidate_ids,
+            "selector failed; kept all candidate evidence",
+        )
+    if not selected_ids:
+        return evidence_set, ["Evidence selector returned no valid evidence; kept all candidates."], evidence_selection_trace(
+            "fallback_all",
+            candidate_ids,
+            candidate_ids,
+            "selector returned no valid evidence",
+        )
+    selected_set = restrict_evidence_set_to_evidence_ids(evidence_set, set(selected_ids), query_route, effective_limit * 2)
+    return selected_set, [], evidence_selection_trace("llm", candidate_ids, selected_ids, reason)
+
+
+def should_use_llm_evidence_selector(query_route: QueryRoute) -> bool:
+    return query_route.query_type in {"meeting_summary", "semantic_summary", "keyword_exploration", "open_qa", "composite_query"}
+
+
+def evidence_selection_trace(mode: str, candidate_ids: list[str], selected_ids: list[str], reason: str) -> dict:
+    return {
+        "mode": mode,
+        "candidate_count": len(candidate_ids),
+        "selected_count": len(selected_ids),
+        "candidate_evidence_ids": list(candidate_ids),
+        "selected_evidence_ids": list(selected_ids),
+        "reason": reason,
+    }
+
+
+def build_evidence_selector_prompt(question: str, query_route: QueryRoute, evidence_records: list[dict], effective_limit: int) -> str:
+    compact_records = [compact_evidence_record_for_llm(record) for record in evidence_records]
+    return (
+        "You are the evidence selector for a meeting-record GraphRAG system.\n"
+        "Select only evidence records that are directly useful for answering the user question.\n"
+        "Do not answer the question. Do not invent evidence ids.\n"
+        "Return JSON only with this exact shape:\n"
+        '{"selected_evidence_ids":["evidence_001"],"reason":"short reason"}\n'
+        "Selection rules:\n"
+        "- Prefer precise relation/path evidence over generic keyword evidence.\n"
+        "- For summaries, choose evidence that supports the main themes, not unrelated mentions.\n"
+        "- For exact filtered questions, keep every record that satisfies the filter.\n"
+        f"- Select at most {max(effective_limit, 1)} evidence records unless all candidates are clearly needed.\n\n"
+        f"Question:\n{question}\n\n"
+        f"Query route:\n{query_route.to_dict()}\n\n"
+        f"Candidate evidence records:\n{json.dumps(compact_records, ensure_ascii=False, default=str)}"
+    )
+
+
+def compact_evidence_record_for_llm(record: dict) -> dict:
+    payload = record.get("payload") or {}
+    return {
+        "evidence_id": record.get("evidence_id"),
+        "source": record.get("evidence_source"),
+        "retriever": record.get("retrieved_by"),
+        "relation": record.get("relation"),
+        "entity": record.get("entity"),
+        "meeting_id": record.get("meeting_id"),
+        "meeting_name": payload.get("meeting_name"),
+        "meeting_date": payload.get("meeting_date"),
+        "item_id": record.get("item_id"),
+        "item_no": payload.get("item_no"),
+        "content": payload.get("content"),
+        "owner": payload.get("owner"),
+        "planned_date": payload.get("planned_date"),
+        "actual_completed_date": payload.get("actual_completed_date"),
+        "tracking_result": payload.get("tracking_result"),
+        "matched_field": payload.get("matched_field"),
+        "matched_keyword": payload.get("matched_keyword"),
+        "score": record.get("confidence"),
+    }
+
+
+def parse_evidence_selection(raw_selection: str, evidence_records: list[dict]) -> tuple[list[str], str]:
+    payload = parse_claim_response(raw_selection)
+    if not isinstance(payload, dict):
+        raise ValueError("Evidence selector response was not valid JSON.")
+    valid_ids = [record.get("evidence_id") for record in evidence_records if record.get("evidence_id")]
+    valid_id_set = set(valid_ids)
+    selected = []
+    for evidence_id in payload.get("selected_evidence_ids") or payload.get("evidence_ids") or []:
+        evidence_id = str(evidence_id or "").strip()
+        if evidence_id in valid_id_set and evidence_id not in selected:
+            selected.append(evidence_id)
+    return selected, str(payload.get("reason") or "").strip()
+
+
+def restrict_evidence_set_to_evidence_ids(
+    evidence_set: dict,
+    evidence_ids: set[str],
+    query_route: QueryRoute,
+    graph_limit: int,
+) -> dict:
+    if not evidence_ids:
+        return evidence_set
+    records = [record for record in evidence_set["records"] if record.get("evidence_id") in evidence_ids]
+    graph_results = [
+        result
+        for result in evidence_set["graph_results"]
+        if result.get("evidence_id") in evidence_ids
+    ]
+    item_ids = {record.get("item_id") for record in records if record.get("item_id")}
+    return {
+        "records": records,
+        "structured_context": filter_context_by_item_ids(evidence_set["structured_context"], item_ids),
+        "semantic_context": filter_context_by_item_ids(evidence_set["semantic_context"], item_ids),
+        "graph_results": graph_results,
+        "graph_context": build_graph_context(graph_results, limit=graph_limit, query_route=query_route, force_complete=True),
+        "sources": build_source_metadata_from_evidence(records),
+    }
+
+
 def build_evidence_records(graph_evidence_results: list[dict]) -> tuple[list[dict], list[dict]]:
     records = []
     annotated_results = []
@@ -508,12 +693,12 @@ def build_evidence_records(graph_evidence_results: list[dict]) -> tuple[list[dic
 
 
 def build_verified_answer_claims(
-    raw_answer: str,
+    raw_answer,
     evidence_records: list[dict],
     query_route: QueryRoute,
 ) -> tuple[list[dict], list[str]]:
     warnings = []
-    payload = parse_claim_response(raw_answer)
+    payload = raw_answer if isinstance(raw_answer, (dict, list)) else parse_claim_response(raw_answer)
     claims = normalize_answer_claims(payload, evidence_records)
     claims = complete_claims_with_evidence(claims, evidence_records, query_route)
     return claims, warnings
@@ -563,6 +748,32 @@ def normalize_answer_claims(payload, evidence_records: list[dict]) -> list[dict]
         seen.add(key)
         claims.append({"claim": claim_text, "evidence_ids": evidence_ids})
     return claims
+
+
+def extract_grounded_answer_text(payload) -> str:
+    if not isinstance(payload, dict):
+        return ""
+    answer = str(payload.get("answer") or payload.get("summary") or "").strip()
+    return answer
+
+
+def should_use_grounded_answer_text(question: str, query_route: QueryRoute) -> bool:
+    if query_route.query_type in {"meeting_summary", "semantic_summary"}:
+        return True
+    text = str(question or "").lower()
+    summary_markers = (
+        "摘要",
+        "整理",
+        "統整",
+        "總結",
+        "重點",
+        "說明",
+        "分析",
+        "summary",
+        "summarize",
+        "overview",
+    )
+    return any(marker in text for marker in summary_markers)
 
 
 def complete_claims_with_evidence(
@@ -618,7 +829,9 @@ def claim_text_from_evidence(record: dict) -> str:
     return f"{item_prefix}{content}"
 
 
-def render_answer_from_claims(claims: list[dict], evidence_records: list[dict]) -> str:
+def render_answer_from_claims(claims: list[dict], evidence_records: list[dict], query_route: QueryRoute | None = None) -> str:
+    if query_route and query_route.query_type in {"meeting_summary", "semantic_summary"}:
+        return render_summary_answer_from_claims(claims, evidence_records)
     evidence_by_id = {record.get("evidence_id"): record for record in evidence_records}
     lines = ["根據會議記錄，相關事項如下：", ""]
     for index, claim in enumerate(claims, start=1):
@@ -631,6 +844,60 @@ def render_answer_from_claims(claims: list[dict], evidence_records: list[dict]) 
         suffix = f"（來源：{source_text}）" if source_text else ""
         lines.append(f"{index}. {claim.get('claim')}{suffix}")
     return "\n".join(lines)
+
+
+def render_summary_answer_from_claims(claims: list[dict], evidence_records: list[dict]) -> str:
+    if not claims:
+        return "無法由現有會議記錄整理摘要。"
+    evidence_by_id = {record.get("evidence_id"): record for record in evidence_records}
+    meeting_names = []
+    for claim in claims:
+        for evidence_id in claim.get("evidence_ids", []):
+            record = evidence_by_id.get(evidence_id) or {}
+            payload = record.get("payload") or {}
+            meeting_name = payload.get("meeting_name")
+            if meeting_name and meeting_name not in meeting_names:
+                meeting_names.append(meeting_name)
+    intro = "根據會議記錄，"
+    if meeting_names:
+        intro = f"根據 {'、'.join(meeting_names[:3])} 的會議記錄，"
+    claim_texts = [str(claim.get("claim") or "").strip().rstrip("。") for claim in claims if str(claim.get("claim") or "").strip()]
+    if not claim_texts:
+        return "無法由現有會議記錄整理摘要。"
+    if len(claim_texts) == 1:
+        return append_evidence_reference_summary(f"{intro}{claim_texts[0]}。", claims, evidence_records)
+    body = "；".join(claim_texts[:5])
+    if len(claim_texts) > 5:
+        body += f"；另有 {len(claim_texts) - 5} 項相關紀錄可作為補充"
+    return append_evidence_reference_summary(f"{intro}重點可整理為：{body}。", claims, evidence_records)
+
+
+def append_evidence_reference_summary(answer: str, claims: list[dict], evidence_records: list[dict]) -> str:
+    reference_text = evidence_reference_summary(claims, evidence_records)
+    if not reference_text:
+        return answer
+    if reference_text in answer:
+        return answer
+    return f"{answer}\n\n依據：{reference_text}"
+
+
+def evidence_reference_summary(claims: list[dict], evidence_records: list[dict]) -> str:
+    evidence_by_id = {record.get("evidence_id"): record for record in evidence_records}
+    references = []
+    seen = set()
+    for claim in claims:
+        for evidence_id in claim.get("evidence_ids", []):
+            record = evidence_by_id.get(evidence_id) or {}
+            meeting_id = record.get("meeting_id")
+            item_id = record.get("item_id")
+            if not meeting_id and not item_id:
+                continue
+            label = f"{meeting_id or 'unknown_meeting'} / {item_id or 'unknown_item'}"
+            if label in seen:
+                continue
+            seen.add(label)
+            references.append(label)
+    return "；".join(references)
 
 
 def source_label_for_evidence(record: dict) -> str:
@@ -653,21 +920,7 @@ def restrict_evidence_set_to_claims(
     used_evidence_ids = {evidence_id for claim in claims for evidence_id in claim.get("evidence_ids", [])}
     if not used_evidence_ids:
         return evidence_set
-    records = [record for record in evidence_set["records"] if record.get("evidence_id") in used_evidence_ids]
-    graph_results = [
-        result
-        for result in evidence_set["graph_results"]
-        if result.get("evidence_id") in used_evidence_ids
-    ]
-    item_ids = {record.get("item_id") for record in records if record.get("item_id")}
-    return {
-        "records": records,
-        "structured_context": filter_context_by_item_ids(evidence_set["structured_context"], item_ids),
-        "semantic_context": filter_context_by_item_ids(evidence_set["semantic_context"], item_ids),
-        "graph_results": graph_results,
-        "graph_context": build_graph_context(graph_results, limit=graph_limit, query_route=query_route, force_complete=True),
-        "sources": build_source_metadata_from_evidence(records),
-    }
+    return restrict_evidence_set_to_evidence_ids(evidence_set, used_evidence_ids, query_route, graph_limit)
 
 
 def filter_context_by_item_ids(context: list[dict], item_ids: set[str]) -> list[dict]:
@@ -1000,7 +1253,7 @@ def build_graph_context(
 ) -> dict:
     paths = []
     seen = set()
-    graph_builder = EvidenceGraphBuilder()
+    graph_builder = EvidenceGraphBuilder(query_route=query_route)
     evidence_selection = select_graph_evidence_results(
         graph_results,
         limit,
@@ -1107,9 +1360,10 @@ def evidence_selection(candidates: list[dict], selected: list[dict], mode: str, 
 
 
 class EvidenceGraphBuilder:
-    def __init__(self):
+    def __init__(self, query_route: QueryRoute | None = None):
         self._nodes = {}
         self._edges = {}
+        self.query_route = query_route
 
     def add_result(self, result: dict) -> None:
         meeting_id = result.get("meeting_id")
@@ -1159,6 +1413,8 @@ class EvidenceGraphBuilder:
             return
 
         if relation == "FOLLOW_UP_OF":
+            if self.should_hide_semantic_node("MeetingItem", relation):
+                return
             previous_item_id = result.get("matched_node_id") or result.get("matched_entity")
             if previous_item_id and item_id:
                 self.add_node("MeetingItem", previous_item_id, previous_item_id, previous_item_id)
@@ -1170,6 +1426,8 @@ class EvidenceGraphBuilder:
             return
 
         entity_type = entity_type_for_relation(relation)
+        if self.should_hide_semantic_node(entity_type, relation):
+            return
         entity_value = result.get("matched_node_id") or entity
         self.add_node(entity_type, entity_value, entity, entity)
         if relation in {"ATTENDED_BY", "CHAIRED_BY", "RECORDED_BY", "BELONGS_TO_UNIT"} and meeting_id:
@@ -1184,6 +1442,8 @@ class EvidenceGraphBuilder:
         target_value = evidence_relation.get("target_value")
         relation = evidence_relation.get("relation")
         if not all([source_type, source_value, target_type, target_value, relation]):
+            return
+        if self.should_hide_semantic_node(source_type, relation) or self.should_hide_semantic_node(target_type, relation):
             return
         self.add_node(source_type, source_value, evidence_relation.get("source_label") or source_value, source_value)
         self.add_node(target_type, target_value, evidence_relation.get("target_label") or target_value, target_value)
@@ -1226,6 +1486,15 @@ class EvidenceGraphBuilder:
 
     def edges(self) -> list[dict]:
         return list(self._edges.values())
+
+    def should_hide_semantic_node(self, node_type: str, relation: str) -> bool:
+        semantic_node_types = {"ActionItem", "Decision", "Risk", "Issue"}
+        semantic_relations = {"HAS_ACTION", "HAS_DECISION", "HAS_RISK", "TRACKS_ISSUE", "FOLLOW_UP_OF"}
+        if node_type not in semantic_node_types and relation not in semantic_relations:
+            return False
+        if self.query_route and self.query_route.query_type in {"semantic_summary", "follow_up_tracking"}:
+            return False
+        return True
 
 
 def make_graph_node_id(node_type: str, value) -> str:
@@ -1411,19 +1680,20 @@ def build_graphrag_prompt(
     return (
         "You are a source-grounded meeting-record GraphRAG claim extractor.\n"
         "Return JSON only. Do not return markdown or prose outside JSON.\n"
-        "Use only Canonical Evidence Records.\n"
-        'JSON shape: {"claims":[{"claim":"...","evidence_ids":["evidence_001"]}]}\n'
+        "Use only the selected Canonical Evidence Records.\n"
+        'JSON shape: {"answer":"optional concise Traditional Chinese answer",'
+        '"claims":[{"claim":"...","evidence_ids":["evidence_001"]}]}\n'
         "Rules:\n"
         "1. Each claim must be directly supported by one or more evidence_ids.\n"
         "2. Do not invent meeting_id, item_id, people, dates, products, or statuses.\n"
         "3. If query_type is structural_list, create one claim per relevant evidence record.\n"
         "4. If query_type is relation_lookup or composite_query, use explicit relation evidence first.\n"
-        "5. If query_type is meeting_summary or semantic_summary, synthesize concise summary claims across the relevant evidence_ids; do not list every item unless asked.\n"
+        "5. If query_type is meeting_summary or semantic_summary, or the question asks to summarize/organize, set answer to a concise Traditional Chinese summary and keep claims as its evidence backing.\n"
         "6. If query_type is follow_up_tracking, group claims by issue/timeline and keep chronological sequence from the evidence payload.\n"
         "7. If no evidence supports an answer, return {\"claims\":[]}.\n\n"
         f"Query Route:\n{route_payload}\n\n"
         f"Question:\n{question}\n\n"
-        f"Canonical Evidence Records:\n{evidence_records}\n\n"
+        f"Selected Canonical Evidence Records:\n{evidence_records}\n\n"
         f"Structured Context:\n{structured_context}\n\n"
         f"Graph Context:\n{graph_context}\n\n"
         f"Semantic Context:\n{semantic_context}\n\n"
@@ -1462,6 +1732,41 @@ def ollama_answer(prompt: str) -> str:
     content = (payload.get("message") or {}).get("content")
     if not content:
         raise GraphRagServiceError("Ollama response did not include answer content.")
+    return content
+
+
+def ollama_evidence_selector(prompt: str) -> str:
+    try:
+        import requests
+    except Exception as exc:
+        raise GraphRagServiceError("requests is not installed.") from exc
+
+    url = f"http://{settings.OLLAMA_HOST}:{settings.OLLAMA_PORT}/api/chat"
+    try:
+        response = requests.post(
+            url,
+            json={
+                "model": settings.OLLAMA_INFERENCE_MODEL,
+                "stream": False,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Select evidence ids only. Return JSON only.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "options": {"temperature": 0},
+            },
+            timeout=int(getattr(settings, "GRAPHRAG_EVIDENCE_SELECTOR_TIMEOUT", 20)),
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except Exception as exc:
+        raise GraphRagServiceError(f"Unable to select GraphRAG evidence: {exc}") from exc
+
+    content = (payload.get("message") or {}).get("content")
+    if not content:
+        raise GraphRagServiceError("Ollama evidence selector response did not include content.")
     return content
 
 

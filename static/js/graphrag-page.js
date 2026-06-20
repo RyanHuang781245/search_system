@@ -770,7 +770,7 @@ function renderAnswer(data) {
             <div class="answer-title">${escapeHtml(data.question || "-")}</div>
             <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-answer-reader-open title="展開閱讀">
                 <i data-lucide="maximize-2"></i>
-                <span>?梯?</span>
+                <span>展開</span>
         </div>
         <div class="answer-body">${renderMarkdownAnswer(data.answer || "-", graph.nodes || [])}</div>
         <div class="score-grid score-grid-inline mt-3">
