@@ -107,7 +107,7 @@ def answer_question(
         structured_context = structured_context[:effective_limit]
 
     keyword_fallback_context = []
-    allow_keyword_fallback = query_route.allow_keyword_fallback and not authoritative_semantic_item_ids
+    allow_keyword_fallback = should_allow_keyword_fallback(query_route, authoritative_semantic_item_ids)
     if allow_keyword_fallback and len(structured_context) < effective_limit:
         keyword_fallback_context = [
             item
@@ -329,6 +329,19 @@ def build_warnings(query_route: QueryRoute, semantic_payload: dict, graph_payloa
     ]
 
 
+def should_allow_keyword_fallback(query_route: QueryRoute, authoritative_semantic_item_ids: set[str]) -> bool:
+    if not query_route.allow_keyword_fallback or authoritative_semantic_item_ids:
+        return False
+    if query_route.query_type == "relation_lookup" and any(
+        str(query_route.entities.get(key) or "").strip()
+        for key in ("person_name", "unit_name", "date_value")
+    ):
+        return False
+    if query_route.query_type == "composite_query" and str(query_route.entities.get("person_name") or "").strip():
+        return False
+    return True
+
+
 def _safe_graph_search(graph_searcher, question: str, limit: int, retrieval_modes=None) -> dict:
     try:
         try:
@@ -430,8 +443,14 @@ def build_graphrag_trace(
             },
             {
                 "name": "mongo_keyword_fallback",
-                "enabled": bool(query_route.allow_keyword_fallback and not authoritative_semantic_graph_item_ids(query_route, graph_results)),
-                "limit": effective_limit if query_route.allow_keyword_fallback and not authoritative_semantic_graph_item_ids(query_route, graph_results) else 0,
+                "enabled": should_allow_keyword_fallback(
+                    query_route,
+                    authoritative_semantic_graph_item_ids(query_route, graph_results),
+                ),
+                "limit": effective_limit if should_allow_keyword_fallback(
+                    query_route,
+                    authoritative_semantic_graph_item_ids(query_route, graph_results),
+                ) else 0,
                 "count": len(keyword_fallback_context),
             },
         ],
@@ -1626,9 +1645,20 @@ def build_source_metadata_from_evidence(evidence_records: list[dict]) -> list[di
                 "item_id": record.get("item_id"),
                 "item_no": payload.get("item_no"),
                 "meeting_name": payload.get("meeting_name"),
+                "meeting_date": payload.get("meeting_date"),
+                "content": payload.get("content"),
                 "evidence_source": record.get("evidence_source"),
                 "relation": record.get("relation"),
                 "retrieved_by": record.get("retrieved_by"),
+                "confidence": record.get("confidence"),
+                "reason": record.get("reason"),
+                "matched_field": payload.get("matched_field"),
+                "matched_keyword": payload.get("matched_keyword"),
+                "matched_entity": payload.get("matched_entity"),
+                "owner": payload.get("owner"),
+                "planned_date": payload.get("planned_date"),
+                "actual_completed_date": payload.get("actual_completed_date"),
+                "tracking_result": payload.get("tracking_result"),
                 "issue_id": payload.get("issue_id"),
                 "issue_title": payload.get("issue_title"),
                 "sequence_no": payload.get("sequence_no"),

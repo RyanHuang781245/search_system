@@ -2,3 +2,6 @@ uploads/
 __pycache__/
 .env
 pdf/
+deidentification_mapping*.json
+deidentify_mapping*.json
+docs/

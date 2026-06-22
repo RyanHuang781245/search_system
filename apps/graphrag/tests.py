@@ -29,6 +29,7 @@ from .services import (
     determine_effective_limit,
     graph_search_limit,
     meeting_items_structured_context,
+    should_allow_keyword_fallback,
     validate_response_evidence_consistency,
 )
 
@@ -117,6 +118,8 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertTrue(payload["contexts"]["graph"]["nodes"])
         self.assertTrue(payload["contexts"]["graph"]["edges"])
         self.assertEqual(payload["sources"][0]["document_id"], "doc_001")
+        self.assertEqual(payload["sources"][0]["content"], "UPD checks FDA label submission requirements.")
+        self.assertEqual(payload["sources"][0]["evidence_source"], "neo4j")
 
     def test_answer_question_falls_back_to_evidence_claims_when_llm_returns_plain_text(self):
         meetings = [
@@ -1508,6 +1511,17 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(graph_search_limit(route_question("Carol FDA not completed items"), 15), 15)
         self.assertEqual(graph_search_limit(route_question("FDA 相關追蹤事項"), 30), 30)
         self.assertEqual(graph_search_limit(route_question("FDA related overview"), 10), 10)
+
+    def test_pseudonym_person_responsibility_is_precise_relation_lookup(self):
+        route = route_question("Person_366B42697E 負責什麼項目")
+        parsed = deterministic_query_understanding("Person_366B42697E 負責什麼項目")
+
+        self.assertEqual(parsed["query_type"], "relation_lookup")
+        self.assertEqual(parsed["graph_intent"], "person_responsibility")
+        self.assertEqual(parsed["entities"]["person_name"], "Person_366B42697E")
+        self.assertEqual(route.query_type, "relation_lookup")
+        self.assertEqual(route.entities["person_name"], "Person_366B42697E")
+        self.assertFalse(should_allow_keyword_fallback(route, set()))
 
 
 class GraphRagEvaluationTestCase(SimpleTestCase):

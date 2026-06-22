@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from pymongo import ReturnDocument
 
+from apps.privacy.deidentification import deidentify_document_record
+
 from .mongo import get_documents_collection
 
 
@@ -113,6 +115,7 @@ def create_document_record(
         "deleted_at": None,
         "is_deleted": False,
     }
+    document = deidentify_document_record(document)
 
     collection.insert_one(document)
     return _serialize_document(document)

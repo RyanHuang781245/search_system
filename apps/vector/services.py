@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from uuid import NAMESPACE_URL, uuid5
 
 from django.conf import settings
@@ -10,6 +11,9 @@ from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_
 
 class VectorServiceError(Exception):
     """Raised when vector indexing or retrieval cannot be completed."""
+
+
+PSEUDONYM_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-F0-9]{10}(?![A-Za-z0-9_])")
 
 
 def index_meeting_items(batch_size: int = 64, client=None, embedder=None) -> dict:
@@ -79,13 +83,13 @@ def build_meeting_item_embedding_text(meeting: dict, item: dict) -> str:
     parts = [
         ("meeting_name", meeting.get("meeting_name")),
         ("meeting_date", meeting.get("meeting_date")),
-        ("responsible_unit", meeting.get("responsible_unit")),
+        ("responsible_unit", semantic_text_value(meeting.get("responsible_unit"))),
         ("item_no", item.get("item_no")),
-        ("content", item.get("content")),
-        ("owner", item.get("owner")),
+        ("content", semantic_text_value(item.get("content"))),
+        ("owner", semantic_text_value(item.get("owner"))),
         ("planned_date", item.get("planned_date")),
         ("actual_completed_date", item.get("actual_completed_date")),
-        ("tracking_result", item.get("tracking_result")),
+        ("tracking_result", semantic_text_value(item.get("tracking_result"))),
         ("status", item_status_payload(item)["status"]),
     ]
     lines = [f"{field}: {value}" for field, value in parts if has_text(value)]
@@ -225,3 +229,25 @@ def serialize_scored_point(point) -> dict:
 
 def has_text(value) -> bool:
     return is_meaningful_value(value)
+
+
+def semantic_text_value(value):
+    if not isinstance(value, str):
+        return value
+    if PSEUDONYM_TOKEN_PATTERN.fullmatch(value.strip()):
+        return None
+    return PSEUDONYM_TOKEN_PATTERN.sub(lambda match: neutral_text_placeholder(match.group(1)), value)
+
+
+def neutral_text_placeholder(kind: str) -> str:
+    return {
+        "Person": "人員",
+        "Unit": "單位",
+        "Company": "公司",
+        "File": "文件",
+        "Ref": "編號",
+        "Email": "電子郵件",
+        "Phone": "電話",
+        "ID": "身分識別碼",
+        "Token": "識別碼",
+    }.get(kind, "識別碼")

@@ -153,7 +153,11 @@ function openAnswerReader() {
     if (elements.answerReaderQuestion) {
         elements.answerReaderQuestion.textContent = currentAnswerData.question || "-";
     }
-    elements.answerReaderBody.innerHTML = renderMarkdownAnswer(currentAnswerData.answer || "-", graph.nodes || []);
+    elements.answerReaderBody.innerHTML = `
+        <div class="answer-body">${renderMarkdownAnswer(currentAnswerData.answer || "-", graph.nodes || [])}</div>
+        ${renderAnswerMetrics(currentAnswerData)}
+        ${renderAnswerSources(currentAnswerData.sources || [], { inline: false })}
+    `;
     elements.answerReaderBackdrop?.classList.remove("d-none");
     elements.answerReader.classList.remove("d-none");
     elements.answerReader.setAttribute("aria-hidden", "false");
@@ -771,18 +775,26 @@ function renderAnswer(data) {
             <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-answer-reader-open title="展開閱讀">
                 <i data-lucide="maximize-2"></i>
                 <span>展開</span>
+            </button>
         </div>
         <div class="answer-body">${renderMarkdownAnswer(data.answer || "-", graph.nodes || [])}</div>
+        ${renderAnswerSources(data.sources || [], { inline: true })}
+        ${renderAnswerMetrics(data)}
+        ${renderTraceSummary(data.trace)}
+    `;
+    renderIcons();
+}
+
+function renderAnswerMetrics(data) {
+    return `
         <div class="score-grid score-grid-inline mt-3">
             <div class="score-pill"><span class="score-pill-label">結構</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.structured?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">圖譜</span><span class="score-pill-value">${escapeHtml(formatGraphEvidenceCount(data.contexts?.graph || {}))}</span></div>
             <div class="score-pill"><span class="score-pill-label">語意</span><span class="score-pill-value">${escapeHtml(String(data.contexts?.semantic?.length || 0))}</span></div>
             <div class="score-pill"><span class="score-pill-label">範圍</span><span class="score-pill-value">${escapeHtml(formatAnswerScope(data))}</span></div>
         </div>
-        ${renderTraceSummary(data.trace)}
     `;
 }
-
 function formatAnswerScope(data) {
     const limit = data.limit || "-";
     const mode = String(data.limit_mode || "").replace("auto:", "");
@@ -1472,17 +1484,54 @@ function graphNodeValue(nodeId) {
     return parts.length > 1 ? parts.slice(1).join(":") : nodeId;
 }
 
+function renderAnswerSources(sources, options = {}) {
+    const normalizedSources = sources || [];
+    const inlineClass = options.inline ? " answer-source-block-inline" : "";
+    return `
+        <section class="answer-source-block${inlineClass}">
+            <div class="answer-source-head">
+                <span>檢索來源</span>
+                <span class="badge text-bg-light border">${escapeHtml(String(normalizedSources.length))}</span>
+            </div>
+            <div class="answer-source-list">
+                ${normalizedSources.length ? normalizedSources.map(renderSourceCard).join("") : '<div class="related-empty">沒有來源資料。</div>'}
+            </div>
+        </section>
+    `;
+}
+
 function renderSources(sources) {
     elements.sourceCount.textContent = String(sources.length);
     elements.sourceList.innerHTML = sources.length
-        ? sources.map((source) => `
-            <article class="related-card related-card-static">
-                <div class="related-title">${escapeHtml(source.meeting_name || source.meeting_id || "-")}</div>
-                <div class="related-meta">${escapeHtml(source.evidence_id || "-")} | ${escapeHtml(source.relation || "-")} | ${escapeHtml(source.item_id || "-")}</div>
-                <div class="related-body">${escapeHtml(source.content || source.snippet || "-")}</div>
-            </article>
-        `).join("")
+        ? sources.map(renderSourceCard).join("")
         : '<div class="related-empty">沒有來源資料。</div>';
+}
+
+function renderSourceCard(source) {
+    const title = source.meeting_name || source.meeting_id || source.document_id || "-";
+    const meta = [
+        source.evidence_id,
+        source.evidence_source ? `來源 ${source.evidence_source}` : "",
+        source.retrieved_by ? `檢索器 ${source.retrieved_by}` : "",
+        source.relation,
+        source.item_no ? `item_no ${source.item_no}` : "",
+        source.item_id,
+        source.meeting_date,
+    ].filter(Boolean);
+    const chips = [
+        source.matched_field ? `欄位: ${source.matched_field}` : "",
+        source.matched_keyword ? `關鍵字: ${source.matched_keyword}` : "",
+        source.matched_entity ? `實體: ${source.matched_entity}` : "",
+        Number.isFinite(Number(source.confidence)) ? `score ${formatScore(source.confidence)}` : "",
+    ].filter(Boolean);
+    return `
+        <article class="answer-source-card">
+            <div class="answer-source-title">${escapeHtml(title)}</div>
+            <div class="answer-source-meta">${escapeHtml(meta.join(" | ") || "-")}</div>
+            <div class="answer-source-body">${escapeHtml(source.content || source.snippet || source.issue_title || "-")}</div>
+            ${chips.length ? `<div class="related-reasons">${chips.map((chip) => `<span class="search-chip">${escapeHtml(chip)}</span>`).join("")}</div>` : ""}
+        </article>
+    `;
 }
 
 function renderWarnings(warnings) {

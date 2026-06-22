@@ -123,6 +123,26 @@ class VectorServiceTestCase(SimpleTestCase):
         self.assertIn("item_no: 01", text)
         self.assertIn("owner: 陳文全", text)
 
+    def test_embedding_text_omits_structured_pseudonym_tokens(self):
+        text = build_meeting_item_embedding_text(
+            {
+                "meeting_name": "Conformity stem 原型確認會議",
+                "meeting_date": "2018-04-03",
+                "responsible_unit": "Unit_575D5850E2",
+            },
+            {
+                "item_no": "03",
+                "content": "請Person_366B42697E協助確認是否有日本送件需求",
+                "owner": "Person_366B42697E",
+            },
+        )
+
+        self.assertNotIn("Person_366B42697E", text)
+        self.assertNotIn("Unit_575D5850E2", text)
+        self.assertNotIn("owner:", text)
+        self.assertNotIn("responsible_unit:", text)
+        self.assertIn("人員", text)
+
 
 class VectorAPITestCase(APISimpleTestCase):
     def test_reindex_endpoint_returns_summary(self):

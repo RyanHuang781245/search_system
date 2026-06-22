@@ -26,6 +26,7 @@ STATUS_TERMS = {
     "completed": ("已完成", "實際完成", "完成日期", "完成了", "closed", "done", "completed"),
     "in_progress": ("進行中", "處理中", "pending", "ongoing", "in progress"),
 }
+PSEUDONYM_PERSON_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person_[A-F0-9]{10})(?![A-Za-z0-9_])", flags=re.I)
 
 
 def deterministic_query_understanding(question: str) -> dict:
@@ -223,6 +224,9 @@ def extract_status(text: str) -> str:
 
 def extract_person_name(text: str) -> str:
     value = str(text or "").strip()
+    pseudonym_match = PSEUDONYM_PERSON_PATTERN.search(value)
+    if pseudonym_match:
+        return normalize_pseudonym_person(pseudonym_match.group(1))
     if is_probable_person_name(value):
         return value
     match = re.search(r"([\u4e00-\u9fff]{2,4})(?:負責|出席|參加|主持|記錄|紀錄)", value)
@@ -257,11 +261,18 @@ def is_probable_person_name(text: str) -> bool:
     value = str(text or "").strip()
     if not value or contains_regulation(value) or contains_date(value):
         return False
+    if PSEUDONYM_PERSON_PATTERN.fullmatch(value):
+        return True
     if re.fullmatch(r"[\u4e00-\u9fff]{2,4}", value):
         return True
     if re.fullmatch(r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?", value):
         return True
     return False
+
+
+def normalize_pseudonym_person(value: str) -> str:
+    prefix, digest = str(value or "").split("_", 1)
+    return f"{prefix[:1].upper()}{prefix[1:].lower()}_{digest.upper()}"
 
 
 def has_any(text: str, terms: tuple[str, ...]) -> bool:

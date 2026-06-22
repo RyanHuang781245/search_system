@@ -40,6 +40,21 @@ STOPWORDS = {
     "n/a",
     "none",
     "null",
+    "person",
+    "unit",
+    "company",
+    "file",
+    "email",
+    "phone",
+    "token",
+    "人員",
+    "單位",
+    "公司",
+    "文件",
+    "電子郵件",
+    "電話",
+    "識別碼",
+    "身分識別碼",
 }
 JIEBA_ALLOWED_POS = ("n", "nz", "eng", "vn")
 SUPPORTED_LLM_TYPES = {
@@ -53,6 +68,8 @@ SUPPORTED_LLM_TYPES = {
     "chinese_term",
     "domain_term",
 }
+PSEUDONYM_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(?:Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-F0-9]{10}(?![A-Za-z0-9_])")
+HASH_FRAGMENT_PATTERN = re.compile(r"\b[A-F0-9]{6,10}\b")
 
 
 def extract_keyword_entities(
@@ -349,7 +366,8 @@ def extract_person_names(meeting: dict, item: dict | None = None) -> list[str]:
 
 
 def normalize_source(text: str | None) -> str:
-    return re.sub(r"\s+", " ", str(text or "")).strip()
+    source = PSEUDONYM_TOKEN_PATTERN.sub(" ", str(text or ""))
+    return re.sub(r"\s+", " ", source).strip()
 
 
 def normalize_phrase(value: str | None) -> str:
@@ -407,6 +425,10 @@ def is_valid_keyword(term: str) -> bool:
     if len(normalized) < 2 or len(normalized) > 80:
         return False
     if normalized.isdigit():
+        return False
+    if PSEUDONYM_TOKEN_PATTERN.fullmatch(term):
+        return False
+    if HASH_FRAGMENT_PATTERN.fullmatch(term):
         return False
     if re.fullmatch(r"[-_/.,;:()\s]+", normalized):
         return False

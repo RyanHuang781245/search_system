@@ -10,6 +10,7 @@ from apps.documents.services import _serialize_document
 from apps.item_status import apply_item_status_fields
 from apps.parser.meeting_minutes_parser import parse_meeting_minutes
 from apps.parser.pdf_text_extractor import PDFTextExtractor
+from apps.privacy.deidentification import deidentify_parsed_meeting_payload
 
 from .mongo import get_meeting_items_collection, get_meeting_minutes_collection
 
@@ -49,6 +50,7 @@ def parse_document_meeting_minutes(document_id):
 
     payload = PDFTextExtractor(absolute_path).extract()
     parsed = parse_meeting_minutes(payload, document_id=document_id)
+    parsed = deidentify_parsed_meeting_payload(parsed)
 
     documents_collection = get_documents_collection()
     minutes_collection = get_meeting_minutes_collection()
