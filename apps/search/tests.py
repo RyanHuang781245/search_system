@@ -1,6 +1,7 @@
 from datetime import datetime, timezone as dt_timezone
 from unittest.mock import patch
 
+from django.utils import timezone
 from django.urls import reverse
 from django.test import SimpleTestCase
 from rest_framework import status
@@ -272,6 +273,31 @@ class SearchAPITestCase(APISimpleTestCase):
         self.assertEqual(result["score_detail"]["graph_score"], 2.5)
         matched_item = next(item for item in result["matched_items"] if item["item_id"] == "item_003")
         self.assertEqual(matched_item["score_detail"]["graph_score"], 1.5)
+
+    def test_search_query_requires_non_recency_evidence(self):
+        self.meeting_minutes_collection.insert_one(
+            {
+                "meeting_id": "meet_recent",
+                "document_id": "doc_recent",
+                "meeting_name": "Recent unrelated meeting",
+                "meeting_date": timezone.localdate().isoformat(),
+                "responsible_unit": "UR9",
+            }
+        )
+        self.meeting_items_collection.insert_one(
+            {
+                "item_id": "item_recent",
+                "meeting_id": "meet_recent",
+                "document_id": "doc_recent",
+                "item_no": "01",
+                "content": "Completely unrelated agenda item.",
+            }
+        )
+
+        response = self.client.get(reverse("meeting-minutes-search"), {"q": "dsjfjslkf"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["total"], 0)
 
     def test_related_meetings_returns_reasoned_matches(self):
         response = self.client.get(reverse("related-meetings", args=["meet_001"]))

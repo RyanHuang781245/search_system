@@ -14,6 +14,7 @@ class VectorServiceError(Exception):
 
 
 PSEUDONYM_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-F0-9]{10}(?![A-Za-z0-9_])")
+PSEUDONYM_LIKE_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-Za-z0-9]+(?![A-Za-z0-9_])")
 
 
 def index_meeting_items(batch_size: int = 64, client=None, embedder=None) -> dict:
@@ -65,16 +66,28 @@ def semantic_search(query: str, limit: int = 10, client=None, embedder=None) -> 
     if not normalized_query:
         raise VectorServiceError("Query is required.")
 
+    collection_name = settings.QDRANT_COLLECTION_NAME
+    score_threshold = float(getattr(settings, "QDRANT_SCORE_THRESHOLD", 0.0) or 0.0)
+    if has_malformed_pseudonym_token(normalized_query):
+        return {
+            "query": normalized_query,
+            "collection_name": collection_name,
+            "score_threshold": score_threshold,
+            "results": [],
+            "warnings": ["Malformed pseudonym token; exact entity lookup was blocked."],
+        }
+
     client = client or get_qdrant_client()
     embedder = embedder or ollama_embedding
-    collection_name = settings.QDRANT_COLLECTION_NAME
     vector = embedder(normalized_query)
     validate_vector(vector, settings.QDRANT_VECTOR_DIMENSION)
 
-    points = search_points(client, collection_name, vector, limit=limit)
+    points = search_points(client, collection_name, vector, limit=limit, score_threshold=score_threshold)
+    points = [point for point in points if scored_point_meets_threshold(point, score_threshold)]
     return {
         "query": normalized_query,
         "collection_name": collection_name,
+        "score_threshold": score_threshold,
         "results": [serialize_scored_point(point) for point in points],
     }
 
@@ -175,12 +188,28 @@ def upsert_points(client, collection_name: str, points: list) -> None:
         raise VectorServiceError(f"Unable to upsert vectors into '{collection_name}': {exc}") from exc
 
 
-def search_points(client, collection_name: str, vector: list[float], limit: int):
+def search_points(client, collection_name: str, vector: list[float], limit: int, score_threshold: float | None = None):
     try:
         if hasattr(client, "query_points"):
-            result = client.query_points(collection_name=collection_name, query=vector, limit=limit)
+            try:
+                result = client.query_points(
+                    collection_name=collection_name,
+                    query=vector,
+                    limit=limit,
+                    score_threshold=score_threshold,
+                )
+            except TypeError:
+                result = client.query_points(collection_name=collection_name, query=vector, limit=limit)
             return getattr(result, "points", result)
-        return client.search(collection_name=collection_name, query_vector=vector, limit=limit)
+        try:
+            return client.search(
+                collection_name=collection_name,
+                query_vector=vector,
+                limit=limit,
+                score_threshold=score_threshold,
+            )
+        except TypeError:
+            return client.search(collection_name=collection_name, query_vector=vector, limit=limit)
     except Exception as exc:
         raise VectorServiceError(f"Unable to search Qdrant collection '{collection_name}': {exc}") from exc
 
@@ -225,6 +254,25 @@ def serialize_scored_point(point) -> dict:
         score = point.get("score")
     payload["semantic_score"] = float(score or 0)
     return payload
+
+
+def scored_point_meets_threshold(point, score_threshold: float | None) -> bool:
+    if not score_threshold:
+        return True
+    score = getattr(point, "score", None)
+    if score is None and isinstance(point, dict):
+        score = point.get("score")
+    try:
+        return float(score) >= float(score_threshold)
+    except (TypeError, ValueError):
+        return False
+
+
+def has_malformed_pseudonym_token(text: str) -> bool:
+    for match in PSEUDONYM_LIKE_PATTERN.finditer(str(text or "")):
+        if not PSEUDONYM_TOKEN_PATTERN.fullmatch(match.group(0)):
+            return True
+    return False
 
 
 def has_text(value) -> bool:

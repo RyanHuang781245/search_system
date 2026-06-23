@@ -232,6 +232,11 @@ def extract_person_name(text: str) -> str:
     match = re.search(r"([\u4e00-\u9fff]{2,4})(?:負責|出席|參加|主持|記錄|紀錄)", value)
     if match:
         return match.group(1)
+    match = re.search(r"\b([A-Za-z][A-Za-z0-9_-]{1,})\s*(?:負責|出席|參加|主持|記錄|紀錄)", value)
+    if match:
+        candidate = match.group(1).strip()
+        if not is_question_placeholder(candidate):
+            return candidate
     match = re.search(r"^([\u4e00-\u9fff]{2,4})(?=\s|,|，|FDA|TFDA|CFDA|PMDA|CE|Conformity|stem|cage|handle|未完成|已完成|負責|出席|主持|記錄|紀錄)", value, flags=re.I)
     if match:
         return match.group(1)
@@ -241,6 +246,19 @@ def extract_person_name(text: str) -> str:
         if candidate.lower() not in {"which", "what", "item", "items", "included", "included in"}:
             return candidate
     return ""
+
+
+def is_question_placeholder(value: str) -> bool:
+    return str(value or "").strip().lower() in {
+        "who",
+        "what",
+        "which",
+        "whose",
+        "item",
+        "items",
+        "owner",
+        "responsible",
+    }
 
 
 def extract_unit_name(text: str) -> str:

@@ -139,7 +139,7 @@ def search_meeting_minutes(
         }
         final_score = finalize_meeting_score(meeting_total_score_detail)
 
-        if query and final_score <= 0:
+        if query and not has_query_evidence(meeting_total_score_detail):
             continue
 
         if not query and not item_filters_active and not owner:
@@ -344,6 +344,13 @@ def _round_score_detail(score_detail):
         for key, value in score_detail.items()
         if isinstance(value, (int, float))
     }
+
+
+def has_query_evidence(score_detail: dict) -> bool:
+    return any(
+        float(score_detail.get(key) or 0) > 0
+        for key in ("keyword_score", "structure_score", "task_score", "feedback_score", "graph_score")
+    )
 
 
 def _get_safe_graph_context(query: str) -> dict:

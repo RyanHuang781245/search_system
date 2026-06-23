@@ -26,17 +26,42 @@ def analyze_graph_query_plan(question: str, llm_client=None) -> dict:
         return default_plan()
 
     heuristic_plan = heuristic_query_plan(normalized_question)
-    if should_use_deterministic_plan(normalized_question, heuristic_plan):
+    mode = query_planner_mode()
+    if mode == "deterministic_only":
+        return heuristic_plan
+    if not query_planner_llm_available(llm_client):
+        return heuristic_plan
+    if mode == "deterministic_first" and should_use_deterministic_plan(normalized_question, heuristic_plan):
         return heuristic_plan
 
+    fallback_plan = default_plan() if mode == "llm_only" else heuristic_plan
     try:
         content = (llm_client or ollama_graph_query_plan)(normalized_question)
         payload = parse_query_plan_json(content)
     except Exception as exc:
-        heuristic_plan["warnings"] = [f"Graph query planning unavailable: {exc}"]
-        return heuristic_plan
+        fallback_plan["warnings"] = [f"Graph query planning unavailable: {exc}"]
+        return fallback_plan
 
-    return normalize_query_plan(payload, normalized_question)
+    return normalize_query_plan(payload, normalized_question, fallback_plan=fallback_plan)
+
+
+def query_planner_mode() -> str:
+    raw_mode = str(getattr(settings, "GRAPH_QUERY_PLANNER_MODE", "deterministic_first") or "").strip().lower()
+    aliases = {
+        "heuristic_first": "deterministic_first",
+        "rules_first": "deterministic_first",
+        "llm": "llm_first",
+        "heuristic_only": "deterministic_only",
+        "rules_only": "deterministic_only",
+    }
+    mode = aliases.get(raw_mode, raw_mode)
+    if mode not in {"deterministic_first", "llm_first", "deterministic_only", "llm_only"}:
+        return "deterministic_first"
+    return mode
+
+
+def query_planner_llm_available(llm_client=None) -> bool:
+    return llm_client is not None or getattr(settings, "GRAPH_QUERY_PLANNER_LLM_ENABLED", True)
 
 
 def default_plan() -> dict:
@@ -114,9 +139,9 @@ def parse_query_plan_json(content: str) -> dict:
     return payload
 
 
-def normalize_query_plan(payload: dict, question: str = "") -> dict:
+def normalize_query_plan(payload: dict, question: str = "", fallback_plan: dict | None = None) -> dict:
     source = payload if isinstance(payload, dict) else {}
-    fallback = heuristic_query_plan(question)
+    fallback = fallback_plan or heuristic_query_plan(question)
     target = str(source.get("target") or fallback["target"]).strip()
     constraints_source = source.get("constraints") if isinstance(source.get("constraints"), dict) else {}
     constraints = {key: str(constraints_source.get(key) or fallback["constraints"].get(key) or "").strip() for key in CONSTRAINT_KEYS}
@@ -170,4 +195,54 @@ def heuristic_query_plan(question: str) -> dict:
             plan["constraints"][constraint_key] = entities[entity_key]
     if parsed["graph_intent"] == "person_responsibility":
         plan["target"] = "action_items"
+    if should_extract_residual_keyword(plan["constraints"]):
+        plan["constraints"]["keyword"] = extract_residual_keyword(question)
     return plan
+
+
+def should_extract_residual_keyword(constraints: dict) -> bool:
+    return not any(
+        str(constraints.get(key) or "").strip()
+        for key in ("person_name", "unit_name", "product_name", "regulation_name", "keyword")
+    )
+
+
+def extract_residual_keyword(question: str) -> str:
+    text = str(question or "")
+    for cue in (
+        "是否已完成",
+        "是否完成",
+        "已完成",
+        "實際完成",
+        "完成日期",
+        "完成了",
+        "未完成",
+        "尚未完成",
+        "尚未",
+        "沒完成",
+        "不適用",
+        "進行中",
+        "處理中",
+        "有哪些",
+        "哪些",
+        "是否",
+        "決議",
+        "決定",
+        "事項",
+        "項目",
+        "風險",
+        "問題",
+        "追蹤",
+        "摘要",
+        "整理",
+        "相關",
+        "關於",
+        "的",
+        "嗎",
+        "？",
+        "?",
+    ):
+        text = text.replace(cue, " ")
+    text = re.sub(r"[\s,，。；;：:（）()\[\]{}<>《》\"'`~!@#$%^&*_+=|\\/.-]+", " ", text)
+    tokens = [token.strip() for token in text.split() if len(token.strip()) >= 2]
+    return tokens[0] if tokens else ""

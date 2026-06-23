@@ -18,6 +18,10 @@ class GraphRagServiceError(Exception):
     """Raised when GraphRAG answer generation cannot be completed."""
 
 
+PSEUDONYM_LIKE_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-Za-z0-9]+(?![A-Za-z0-9_])")
+VALID_PSEUDONYM_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-F0-9]{10}(?![A-Za-z0-9_])", flags=re.I)
+
+
 @dataclass(frozen=True)
 class EvidenceRecord:
     evidence_id: str
@@ -50,6 +54,16 @@ def answer_question(
     query_route = _safe_query_route(query_analyzer or analyze_query_route, normalized_question)
     effective_limit, limit_mode = determine_effective_limit(normalized_question, limit, query_route=query_route)
     graph_limit = graph_search_limit(query_route, effective_limit)
+    if has_malformed_pseudonym_token(normalized_question):
+        trace = insufficient_trace(
+            normalized_question,
+            query_route,
+            effective_limit,
+            limit_mode,
+            graph_limit,
+            ["Malformed pseudonym token; exact entity lookup was blocked."],
+        )
+        return insufficient_payload(normalized_question, effective_limit, limit_mode, query_route, trace, trace["warnings"])
 
     semantic_searcher = semantic_searcher or semantic_search
     graph_searcher = graph_searcher or graph_search_query
@@ -278,11 +292,98 @@ def auto_limit_for_question(question: str, query_route: QueryRoute | None = None
 
 def _safe_semantic_search(semantic_searcher, question: str, limit: int) -> dict:
     try:
-        return semantic_searcher(question, limit=limit)
+        return filter_semantic_payload_by_score(semantic_searcher(question, limit=limit))
     except VectorServiceError as exc:
         return {"query": question, "results": [], "warnings": [str(exc)]}
     except Exception as exc:
         return {"query": question, "results": [], "warnings": [f"Semantic search unavailable: {exc}"]}
+
+
+def filter_semantic_payload_by_score(payload: dict) -> dict:
+    if not isinstance(payload, dict):
+        return {"query": "", "results": [], "warnings": ["Semantic search returned an invalid payload."]}
+    threshold = float(getattr(settings, "GRAPHRAG_SEMANTIC_SCORE_THRESHOLD", 0.0) or 0.0)
+    results = []
+    dropped = 0
+    for result in payload.get("results") or []:
+        if semantic_result_meets_threshold(result, threshold):
+            results.append(result)
+        else:
+            dropped += 1
+    filtered = dict(payload)
+    filtered["results"] = results
+    filtered["score_threshold"] = threshold
+    if dropped:
+        filtered["warnings"] = [
+            *(payload.get("warnings") or []),
+            f"Dropped {dropped} semantic result(s) below score threshold {threshold}.",
+        ]
+    return filtered
+
+
+def semantic_result_meets_threshold(result: dict, threshold: float) -> bool:
+    if not threshold:
+        return True
+    try:
+        return float(result.get("semantic_score", result.get("score"))) >= threshold
+    except (AttributeError, TypeError, ValueError):
+        return False
+
+
+def has_malformed_pseudonym_token(question: str) -> bool:
+    for match in PSEUDONYM_LIKE_PATTERN.finditer(str(question or "")):
+        if not VALID_PSEUDONYM_PATTERN.fullmatch(match.group(0)):
+            return True
+    return False
+
+
+def insufficient_trace(
+    question: str,
+    query_route: QueryRoute,
+    effective_limit: int,
+    limit_mode: str,
+    graph_limit: int,
+    warnings: list[str] | None = None,
+) -> dict:
+    return {
+        "question": question,
+        "route": query_route.to_dict(),
+        "effective_limit": effective_limit,
+        "limit_mode": limit_mode,
+        "graph_limit": graph_limit,
+        "retrievers": [],
+        "warnings": list(warnings or []),
+        "corpus_counts": {"meetings": 0, "items": 0},
+        "context_counts": {"structured": 0, "graph_paths": 0, "semantic": 0, "sources": 0, "evidence": 0, "candidate_evidence": 0},
+        "evidence": {"count": 0, "candidate_count": 0, "sources": {}, "relations": {}, "selection": {}},
+        "graph_summary": {},
+        "is_insufficient": True,
+    }
+
+
+def insufficient_payload(
+    question: str,
+    effective_limit: int,
+    limit_mode: str,
+    query_route: QueryRoute,
+    trace: dict,
+    warnings: list[str] | None = None,
+) -> dict:
+    return {
+        "question": question,
+        "limit": effective_limit,
+        "limit_mode": limit_mode,
+        "query_route": query_route.to_dict(),
+        "trace": trace,
+        "answer": "Insufficient meeting-record context to answer.",
+        "contexts": {
+            "structured": [],
+            "graph": {"nodes": [], "edges": [], "paths": [], "summary": {"total_paths": 0, "visible_paths": 0, "is_truncated": False}},
+            "semantic": [],
+        },
+        "sources": [],
+        "warnings": list(warnings or []),
+    }
 
 
 def _safe_query_route(query_analyzer, question: str) -> QueryRoute:
@@ -1074,6 +1175,7 @@ def structured_item_graph_result(item: dict, evidence_source: str) -> dict:
 
 
 def semantic_item_graph_result(item: dict) -> dict:
+    semantic_score = float(item.get("semantic_score", item.get("score", 0)) or 0)
     return {
         "document_id": item.get("document_id"),
         "meeting_id": item.get("meeting_id"),
@@ -1090,7 +1192,7 @@ def semantic_item_graph_result(item: dict) -> dict:
         "intent": "semantic_context",
         "retrieval_mode": "semantic",
         "evidence_source": "semantic_context",
-        "graph_score": float(item.get("score") or 3.0),
+        "graph_score": semantic_score,
     }
 
 

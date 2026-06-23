@@ -40,6 +40,7 @@ const elements = {
     text2cypherResults: document.getElementById("text2cypher-results"),
     evalQuestions: document.getElementById("eval-questions"),
     evalLimit: document.getElementById("eval-limit"),
+    evalLimitCustom: document.getElementById("eval-limit-custom"),
     evalSeedButton: document.getElementById("eval-seed-button"),
     evalRunButton: document.getElementById("eval-run-button"),
     evalSaveButton: document.getElementById("eval-save-button"),
@@ -48,6 +49,7 @@ const elements = {
     askForm: document.getElementById("ask-form"),
     askQuestion: document.getElementById("ask-question"),
     askLimit: document.getElementById("ask-limit"),
+    askLimitCustom: document.getElementById("ask-limit-custom"),
     askSubmit: document.getElementById("ask-submit"),
     answerPanel: document.getElementById("answer-panel"),
     answerReader: document.getElementById("answer-reader"),
@@ -73,6 +75,8 @@ let currentEvalCases = [];
 init();
 
 function init() {
+    syncCustomLimitControl(elements.askLimit, elements.askLimitCustom);
+    syncCustomLimitControl(elements.evalLimit, elements.evalLimitCustom);
     bindEvents();
     renderKeywords([]);
     renderGraphResults({ expanded_keywords: [], results: [] });
@@ -106,6 +110,8 @@ function bindEvents() {
     elements.graphZoomOutButton?.addEventListener("click", () => zoomEvidenceGraph(0.84));
     elements.graphLayoutSelect?.addEventListener("change", relayoutEvidenceGraph);
     elements.graphLabelToggle?.addEventListener("click", toggleGraphLabels);
+    elements.askLimit?.addEventListener("change", () => syncCustomLimitControl(elements.askLimit, elements.askLimitCustom, true));
+    elements.evalLimit?.addEventListener("change", () => syncCustomLimitControl(elements.evalLimit, elements.evalLimitCustom, true));
     elements.answerPanel?.addEventListener("click", handleAnswerPanelClick);
     elements.answerReaderBody?.addEventListener("click", handleAnswerNodeClick);
     elements.answerReaderClose?.addEventListener("click", closeAnswerReader);
@@ -121,6 +127,31 @@ function bindEvents() {
     elements.evalSaveButton?.addEventListener("click", handleEvalSave);
     elements.evalResults?.addEventListener("change", handleEvalCaseChange);
     elements.askForm?.addEventListener("submit", handleAsk);
+}
+
+function syncCustomLimitControl(select, input, shouldFocus = false) {
+    if (!select || !input) {
+        return;
+    }
+    const isCustom = select.value === "custom";
+    input.classList.toggle("d-none", !isCustom);
+    input.disabled = !isCustom;
+    if (isCustom && shouldFocus) {
+        input.focus();
+        input.select();
+    }
+}
+
+function getConfiguredLimit(select, input) {
+    const selected = select?.value || "auto";
+    if (selected !== "custom") {
+        return selected;
+    }
+    const limit = Math.floor(Number(input?.value));
+    if (!Number.isFinite(limit) || limit < 1 || limit > 20) {
+        return "";
+    }
+    return String(limit);
 }
 
 function openAdvancedPanel() {
@@ -374,7 +405,11 @@ async function handleAsk(event) {
         return;
     }
 
-    const limit = elements.askLimit.value || "auto";
+    const limit = getConfiguredLimit(elements.askLimit, elements.askLimitCustom);
+    if (!limit) {
+        showToast("請輸入 1 到 20 的自訂範圍。", "error");
+        return;
+    }
     setButtonLoading(elements.askSubmit, "回答中...");
     elements.answerPanel.innerHTML = renderLoadingInline("正在產生 GraphRAG 回答...");
     renderSources([]);
@@ -422,7 +457,11 @@ async function handleEvalSeed() {
         return;
     }
 
-    const limit = elements.evalLimit?.value || "auto";
+    const limit = getConfiguredLimit(elements.evalLimit, elements.evalLimitCustom);
+    if (!limit) {
+        showToast("請輸入 1 到 20 的自訂範圍。", "error");
+        return;
+    }
     setButtonLoading(elements.evalSeedButton, "產生中...");
     elements.evalSummary.innerHTML = renderLoadingInline("正在產生 golden cases...");
     elements.evalResults.innerHTML = "";

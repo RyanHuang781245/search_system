@@ -39,7 +39,18 @@
                     <option value="5">5</option>
                     <option value="10">10</option>
                     <option value="15">15</option>
+                    <option value="custom">自訂</option>
                 </select>
+                <input
+                    id="ask-limit-custom"
+                    class="form-control graphrag-custom-limit-input d-none"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value="20"
+                    aria-label="自訂問答範圍"
+                    disabled
+                >
                 <button id="ask-submit" class="btn btn-primary btn-primary-custom" type="submit">
                     <i data-lucide="send"></i>
                     <span>詢問</span>
@@ -289,7 +300,18 @@
                             <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="15">15</option>
+                            <option value="custom">自訂</option>
                         </select>
+                        <input
+                            id="eval-limit-custom"
+                            class="form-control graphrag-custom-limit-input d-none"
+                            type="number"
+                            min="1"
+                            max="20"
+                            value="20"
+                            aria-label="自訂評估範圍"
+                            disabled
+                        >
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <button id="eval-seed-button" class="btn btn-light border" type="button">
@@ -332,5 +354,5 @@
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
-<script src="{% static 'js/graphrag-page.js' %}?v=20260622-answer-sources-2"></script>
+<script src="{% static 'js/graphrag-page.js' %}?v=20260623-custom-limit"></script>
 {% endblock %}

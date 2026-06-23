@@ -702,6 +702,8 @@ class _FakeTx:
             ]
 
         if "OPTIONAL MATCH (item)-[:HAS_ACTION]->(action:ActionItem)" in cypher:
+            if normalized_keyword and normalized_keyword not in {"FDA", "CONFORMITY STEM"}:
+                return []
             return [
                 {
                     "meeting_id": "meet_006",
@@ -890,6 +892,42 @@ class GraphSearchTestCase(SimpleTestCase):
 
         self.assertEqual(payload["target"], "action_items")
         self.assertEqual(payload["constraints"]["status"], "completed")
+        self.assertEqual(payload["constraints"]["keyword"], "")
+
+    @override_settings(GRAPH_QUERY_PLANNER_MODE="llm_first")
+    def test_analyze_query_plan_can_prioritize_llm_for_chinese_status_items(self):
+        payload = analyze_graph_query_plan(
+            "已完成的事項有哪些",
+            llm_client=lambda _question: (
+                '{"target":"decisions","constraints":{"person_name":"","unit_name":"","product_name":"",'
+                '"regulation_name":"","status":"completed","keyword":"測試"},"include_followups":false}'
+            ),
+        )
+
+        self.assertEqual(payload["target"], "decisions")
+        self.assertEqual(payload["constraints"]["status"], "completed")
+        self.assertEqual(payload["constraints"]["keyword"], "測試")
+
+    @override_settings(GRAPH_QUERY_PLANNER_MODE="deterministic_only")
+    def test_analyze_query_plan_can_disable_llm(self):
+        payload = analyze_graph_query_plan(
+            "Carol is responsible for FDA not completed Conformity stem items",
+            llm_client=lambda _question: self.fail("LLM should not run in deterministic_only mode"),
+        )
+
+        self.assertEqual(payload["target"], "action_items")
+        self.assertEqual(payload["constraints"]["regulation_name"], "FDA")
+        self.assertEqual(payload["constraints"]["status"], "not_completed")
+
+    def test_analyze_query_plan_keeps_unknown_decision_subject_as_keyword_constraint(self):
+        payload = analyze_graph_query_plan(
+            "晚餐的決議是否已完成？",
+            llm_client=lambda _question: self.fail("Chinese decision status query should not require LLM"),
+        )
+
+        self.assertEqual(payload["target"], "decisions")
+        self.assertEqual(payload["constraints"]["status"], "completed")
+        self.assertEqual(payload["constraints"]["keyword"], "晚餐")
 
     def test_analyze_query_plan_uses_deterministic_plan_for_chinese_mixed_constraints(self):
         payload = analyze_graph_query_plan(
@@ -1015,6 +1053,18 @@ class GraphSearchTestCase(SimpleTestCase):
 
         self.assertEqual(payload["results"][0]["matched_relation"], "RESPONSIBLE_BY")
 
+    def test_search_graph_uses_ascii_responsibility_token_as_exact_person_constraint(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "gdfgdfh負責哪些項目",
+            limit=10,
+            intent_analyzer=analyze_graph_intent,
+        )
+
+        self.assertEqual(payload["intent"], "person_responsibility")
+        self.assertEqual(payload["intent_entities"]["person_name"], "gdfgdfh")
+        self.assertEqual(payload["results"], [])
+
     def test_search_graph_supports_core_relation_intents(self):
         cases = [
             ("person_attendance", {"person_name": "Carol"}, "ATTENDED_BY"),
@@ -1092,6 +1142,18 @@ class GraphSearchTestCase(SimpleTestCase):
         self.assertIn("RESPONSIBLE_BY", evidence_labels)
         self.assertIn("MENTIONS_REGULATION", evidence_labels)
         self.assertIn("MENTIONS_PRODUCT", evidence_labels)
+
+    def test_search_graph_requires_keyword_match_for_unknown_decision_subject(self):
+        payload = search_graph(
+            _FakeGraphClient(),
+            "晚餐的決議是否已完成？",
+            limit=10,
+            query_planner=analyze_graph_query_plan,
+        )
+
+        self.assertEqual(payload["query_plan"]["target"], "decisions")
+        self.assertEqual(payload["query_plan"]["constraints"]["keyword"], "晚餐")
+        self.assertEqual(payload["results"], [])
 
     def test_search_graph_returns_issue_timeline_for_follow_up_mode(self):
         payload = search_graph(

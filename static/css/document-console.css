@@ -1027,6 +1027,11 @@ main.app-shell:has(.graphrag-workspace) {
     font-weight: 800;
 }
 
+.graphrag-custom-limit-input {
+    max-width: 104px;
+    flex: 0 0 104px;
+}
+
 .graphrag-graph-panel {
     position: relative;
     padding: 1rem;

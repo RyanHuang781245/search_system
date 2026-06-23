@@ -113,6 +113,35 @@ class VectorServiceTestCase(SimpleTestCase):
         self.assertEqual(payload["results"][0]["item_id"], "item_001")
         self.assertEqual(payload["results"][0]["semantic_score"], 0.87)
 
+    @override_settings(QDRANT_COLLECTION_NAME="test_meeting_items", QDRANT_VECTOR_DIMENSION=3, QDRANT_SCORE_THRESHOLD=0.8)
+    def test_semantic_search_filters_results_below_score_threshold(self):
+        client = FakeQdrantClient()
+        client.search_results = [
+            {"score": 0.79, "payload": {"item_id": "item_low"}},
+            {"score": 0.86, "payload": {"item_id": "item_high"}},
+        ]
+
+        payload = semantic_search(
+            "dsjfjslkf",
+            client=client,
+            embedder=lambda text: [0.1, 0.2, 0.3],
+            limit=5,
+        )
+
+        self.assertEqual(payload["score_threshold"], 0.8)
+        self.assertEqual([item["item_id"] for item in payload["results"]], ["item_high"])
+
+    @override_settings(QDRANT_COLLECTION_NAME="test_meeting_items", QDRANT_VECTOR_DIMENSION=3)
+    def test_semantic_search_blocks_malformed_pseudonym_token(self):
+        payload = semantic_search(
+            "Person_456465",
+            client=FakeQdrantClient(),
+            embedder=lambda text: self.fail("embedder should not run for malformed pseudonym token"),
+        )
+
+        self.assertEqual(payload["results"], [])
+        self.assertTrue(any("Malformed pseudonym token" in warning for warning in payload["warnings"]))
+
     def test_embedding_text_contains_structured_fields(self):
         text = build_meeting_item_embedding_text(
             {"meeting_name": "設計審查", "meeting_date": "2018-04-03"},

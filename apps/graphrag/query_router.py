@@ -38,20 +38,48 @@ class QueryRoute:
 
 def analyze_query_route(question: str, llm_client=None) -> QueryRoute:
     heuristic_route = route_question(question)
-    if llm_client is None and should_use_deterministic_route(heuristic_route):
+    mode = query_router_mode()
+    if mode == "deterministic_only":
         return replace_route_metadata(heuristic_route, route_source="heuristic")
-    if llm_client is None and not getattr(settings, "GRAPHRAG_QUERY_ROUTER_LLM_ENABLED", True):
+    if not query_router_llm_available(llm_client):
         return replace_route_metadata(heuristic_route, route_source="heuristic")
+    if mode == "deterministic_first" and llm_client is None and should_use_deterministic_route(heuristic_route):
+        return replace_route_metadata(heuristic_route, route_source="heuristic")
+
+    fallback_route = empty_open_route() if mode == "llm_only" else heuristic_route
     try:
         content = (llm_client or ollama_query_understanding)(question)
         payload = parse_query_understanding_json(content)
-        return normalize_llm_route(payload, heuristic_route)
+        return normalize_llm_route(payload, fallback_route)
     except Exception as exc:
         return replace_route_metadata(
-            heuristic_route,
-            route_source="heuristic_fallback",
+            fallback_route,
+            route_source="llm_fallback" if mode == "llm_only" else "heuristic_fallback",
             warnings=(f"LLM query understanding unavailable: {exc}",),
         )
+
+
+def query_router_mode() -> str:
+    raw_mode = str(getattr(settings, "GRAPHRAG_QUERY_ROUTER_MODE", "deterministic_first") or "").strip().lower()
+    aliases = {
+        "heuristic_first": "deterministic_first",
+        "rules_first": "deterministic_first",
+        "llm": "llm_first",
+        "heuristic_only": "deterministic_only",
+        "rules_only": "deterministic_only",
+    }
+    mode = aliases.get(raw_mode, raw_mode)
+    if mode not in {"deterministic_first", "llm_first", "deterministic_only", "llm_only"}:
+        return "deterministic_first"
+    return mode
+
+
+def query_router_llm_available(llm_client=None) -> bool:
+    return llm_client is not None or getattr(settings, "GRAPHRAG_QUERY_ROUTER_LLM_ENABLED", True)
+
+
+def empty_open_route() -> QueryRoute:
+    return replace_route_metadata(make_route("open_qa"), route_source="llm_only", entities=normalize_entities({}))
 
 
 def should_use_deterministic_route(route: QueryRoute) -> bool:

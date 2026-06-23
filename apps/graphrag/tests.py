@@ -1189,6 +1189,30 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(route.entities["date_value"], "2017-12-15")
         self.assertEqual(route.warnings, ())
 
+    @override_settings(GRAPHRAG_QUERY_ROUTER_MODE="llm_first")
+    def test_analyze_query_route_can_prioritize_llm_for_clear_questions(self):
+        route = analyze_query_route(
+            "2017 年 12 月 15 日要完成哪些事項",
+            llm_client=lambda _question: (
+                '{"query_type":"composite_query","entities":{"date_value":"2017-12-15","status":"completed"},"confidence":0.91}'
+            ),
+        )
+
+        self.assertEqual(route.query_type, "composite_query")
+        self.assertEqual(route.route_source, "llm")
+        self.assertEqual(route.entities["date_value"], "2017-12-15")
+        self.assertEqual(route.entities["status"], "completed")
+
+    @override_settings(GRAPHRAG_QUERY_ROUTER_MODE="deterministic_only")
+    def test_analyze_query_route_can_disable_llm(self):
+        route = analyze_query_route(
+            "P1812 那場會議有哪些討論事項",
+            llm_client=lambda _question: self.fail("LLM should not run in deterministic_only mode"),
+        )
+
+        self.assertEqual(route.query_type, "structural_list")
+        self.assertEqual(route.route_source, "heuristic")
+
     def test_analyze_query_route_falls_back_for_invalid_llm_json(self):
         route = analyze_query_route("P1812 會議的討論事項", llm_client=lambda _question: "not json")
 
@@ -1430,6 +1454,41 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(payload["trace"]["context_counts"]["structured"], 0)
         self.assertEqual(payload["sources"], [])
 
+    @override_settings(GRAPHRAG_SEMANTIC_SCORE_THRESHOLD=0.7)
+    def test_answer_question_ignores_low_score_semantic_context(self):
+        meetings = [{"meeting_id": "meeting_001", "meeting_name": "FDA review", "meeting_date": "2018-04-03"}]
+        items = [{"meeting_id": "meeting_001", "item_id": "item_001", "item_no": "01", "content": "FDA evidence."}]
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "dsjfjslkf",
+                semantic_searcher=lambda question, limit: {
+                    "query": question,
+                    "results": [{"meeting_id": "meeting_001", "item_id": "item_001", "content": "FDA evidence.", "semantic_score": 0.2}],
+                },
+                graph_searcher=lambda question, limit, retrieval_modes=None: {"query": question, "results": [], "expanded_keywords": []},
+                llm_client=lambda prompt: self.fail("LLM should not run without valid evidence"),
+            )
+
+        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertTrue(payload["trace"]["is_insufficient"])
+        self.assertEqual(payload["contexts"]["semantic"], [])
+        self.assertTrue(any("Dropped 1 semantic result" in warning for warning in payload["warnings"]))
+
+    def test_answer_question_blocks_malformed_pseudonym_token(self):
+        payload = answer_question(
+            "Person_456465 responsibility",
+            semantic_searcher=lambda question, limit: self.fail("semantic search should not run"),
+            graph_searcher=lambda question, limit, retrieval_modes=None: self.fail("graph search should not run"),
+            llm_client=lambda prompt: self.fail("LLM should not run"),
+        )
+
+        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertTrue(payload["trace"]["is_insufficient"])
+        self.assertTrue(any("Malformed pseudonym token" in warning for warning in payload["warnings"]))
+
     def test_prompt_includes_source_grounding_rules(self):
         prompt = build_graphrag_prompt(
             question="What mentions FDA?",
@@ -1522,6 +1581,67 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(route.query_type, "relation_lookup")
         self.assertEqual(route.entities["person_name"], "Person_366B42697E")
         self.assertFalse(should_allow_keyword_fallback(route, set()))
+
+    def test_ascii_token_before_responsibility_is_precise_person_constraint(self):
+        route = route_question("gdfgdfh負責哪些項目")
+        parsed = deterministic_query_understanding("gdfgdfh負責哪些項目")
+
+        self.assertEqual(parsed["query_type"], "relation_lookup")
+        self.assertEqual(parsed["graph_intent"], "person_responsibility")
+        self.assertEqual(parsed["entities"]["person_name"], "gdfgdfh")
+        self.assertEqual(route.entities["person_name"], "gdfgdfh")
+        self.assertFalse(should_allow_keyword_fallback(route, set()))
+
+    def test_unknown_ascii_person_responsibility_returns_insufficient(self):
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection([])), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection([])
+        ):
+            payload = answer_question(
+                "gdfgdfh負責哪些項目",
+                graph_searcher=lambda question, limit, retrieval_modes=None: {
+                    "query": question,
+                    "intent": "person_responsibility",
+                    "intent_entities": {"person_name": "gdfgdfh"},
+                    "expanded_keywords": [],
+                    "results": [],
+                    "warnings": [],
+                },
+                llm_client=lambda prompt: self.fail("LLM should not run without exact person evidence"),
+            )
+
+        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertTrue(payload["trace"]["is_insufficient"])
+        self.assertEqual(payload["contexts"]["semantic"], [])
+
+    def test_unknown_decision_subject_returns_insufficient(self):
+        meetings = [{"meeting_id": "meeting_001", "meeting_name": "FDA review", "meeting_date": "2018-04-03"}]
+        items = [{"meeting_id": "meeting_001", "item_id": "item_001", "item_no": "01", "content": "FDA decision was completed."}]
+
+        with patch("apps.graphrag.services.get_meeting_minutes_collection", return_value=FakeCollection(meetings)), patch(
+            "apps.graphrag.services.get_meeting_items_collection", return_value=FakeCollection(items)
+        ):
+            payload = answer_question(
+                "晚餐的決議是否已完成？",
+                graph_searcher=lambda question, limit, retrieval_modes=None: {
+                    "query": question,
+                    "query_plan": {
+                        "target": "decisions",
+                        "constraints": {"keyword": "晚餐", "status": "completed"},
+                        "include_followups": False,
+                    },
+                    "intent": "keyword_related",
+                    "intent_entities": {},
+                    "expanded_keywords": [],
+                    "retrieval_modes": ["composite", "relation"],
+                    "results": [],
+                    "warnings": [],
+                },
+                llm_client=lambda prompt: self.fail("LLM should not run without exact decision evidence"),
+            )
+
+        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertTrue(payload["trace"]["is_insufficient"])
+        self.assertEqual(payload["sources"], [])
 
 
 class GraphRagEvaluationTestCase(SimpleTestCase):
