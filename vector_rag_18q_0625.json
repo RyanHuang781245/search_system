@@ -1,0 +1,3187 @@
+{
+  "description": "Vector-RAG baseline: Qdrant top-k MeetingItem evidence + same Ollama inference model; no Neo4j graph query.",
+  "settings": {
+    "top_k": 10,
+    "score_threshold": "0.5",
+    "embedding_model": "nomic-embed-text:latest",
+    "inference_model": "gemma4:26b"
+  },
+  "summary": {
+    "責任歸屬型": {
+      "題數": 3,
+      "正確": 1,
+      "部分正確": 0,
+      "錯誤／限制": 2
+    },
+    "時程狀態型": {
+      "題數": 3,
+      "正確": 2,
+      "部分正確": 0,
+      "錯誤／限制": 1
+    },
+    "關鍵詞探索型": {
+      "題數": 3,
+      "正確": 3,
+      "部分正確": 0,
+      "錯誤／限制": 0
+    },
+    "產品或法規關聯型": {
+      "題數": 3,
+      "正確": 0,
+      "部分正確": 0,
+      "錯誤／限制": 3
+    },
+    "開放模糊型／語意相似型": {
+      "題數": 3,
+      "正確": 3,
+      "部分正確": 0,
+      "錯誤／限制": 0
+    },
+    "資料不足型": {
+      "題數": 3,
+      "正確": 3,
+      "部分正確": 0,
+      "錯誤／限制": 0
+    }
+  },
+  "total": {
+    "題數": 18,
+    "正確": 12,
+    "部分正確": 0,
+    "錯誤／限制": 6,
+    "資料不足正確拒答": 3
+  },
+  "rows": [
+    {
+      "category": "責任歸屬型",
+      "question": "Person_704118B2B1 負責哪些項目？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_375f1d843ef7",
+      "top1_score": 0.66592705,
+      "answer": "無法從提供的證據中找到 Person_704118B2B1 負責項目的相關資訊。",
+      "claims": [],
+      "judgement": "錯誤／限制",
+      "judgement_reason": "未產生可引用來源的回答",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.66592705,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.663537,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.65860975,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.64381933,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6418162,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.6387845,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.63297087,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.62825257,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.62607694,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.62175286,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"無法從提供的證據中找到 Person_704118B2B1 負責項目的相關資訊。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "責任歸屬型",
+      "question": "Person_F03E4ECA0A 負責哪些項目？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_375f1d843ef7",
+      "top1_score": 0.66592705,
+      "answer": "Person_F03E4ECA0A 負責 HA-Fit 專案及 Conformity stem 原型確認會議相關事項。",
+      "claims": [
+        {
+          "claim": "Person_F03E4ECA0A 在 HA-Fit 專案啟動會議中負責相關事項。",
+          "evidence_ids": [
+            "evidence_007"
+          ]
+        },
+        {
+          "claim": "Person_F03E4ECA0A 在 Conformity stem 原型確認會議中負責確認所有輸出文件的時間。",
+          "evidence_ids": [
+            "evidence_009"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_44b7149bd5ed",
+        "item_b022f6c14ea5"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.66592705,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.663537,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.65860975,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.64381933,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6418162,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.6387845,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.63297087,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.62825257,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.62607694,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.62175286,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\n  \"answer\": \"Person_F03E4ECA0A 負責 HA-Fit 專案及 Conformity stem 原型確認會議相關事項。\",\n  \"claims\": [\n    {\n      \"claim\": \"Person_F03E4ECA0A 在 HA-Fit 專案啟動會議中負責相關事項。\",\n      \"evidence_ids\": [\n        \"evidence_007\"\n      ]\n    },\n    {\n      \"claim\": \"Person_F03E4ECA0A 在 Conformity stem 原型確認會議中負責確認所有輸出文件的時間。\",\n      \"evidence_ids\": [\n        \"evidence_009\"\n      ]\n    }\n  ]\n}\n```"
+    },
+    {
+      "category": "責任歸屬型",
+      "question": "Person_BDFC2032C6 負責哪些項目？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_375f1d843ef7",
+      "top1_score": 0.66592705,
+      "answer": "無法從提供的證據中找到 Person_BDFC2032C6 負責項目的相關資訊。",
+      "claims": [],
+      "judgement": "錯誤／限制",
+      "judgement_reason": "未產生可引用來源的回答",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.66592705,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.663537,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.65860975,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.64381933,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6418162,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.6387845,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.63297087,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.62825257,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.62607694,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.62175286,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "---\n```json\n{\"answer\":\"無法從提供的證據中找到 Person_BDFC2032C6 負責項目的相關資訊。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "時程狀態型",
+      "question": "2017 年 12 月 15 日要完成哪些事項？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_78a76358cd2d",
+      "top1_score": 0.7076538,
+      "answer": "2017 年 12 月 15 日要完成的事項包括：\n1. 請UPD與法國分公司確認歐洲地區的需求與數量預估。\n2. 請UPD確認系統名與產品名稱(含中、英文)，是否用代號或縮寫？\n3. 請UPD與大陸的Elisa確認corail stem在大陸地區是否有需求，訂單預估量為多少。\n4. 請UPD確認cemented type 的Stem有哪些品號，品號是否有要增加。\n5. 請UR3確認cemented type 的stem 可搭配的centralizer 與 restrictor。",
+      "claims": [
+        {
+          "claim": "請UPD與法國分公司確認歐洲地區的需求與數量預估",
+          "evidence_ids": [
+            "evidence_001"
+          ]
+        },
+        {
+          "claim": "請UPD確認系統名與產品名稱(含中、英文)，是否用代號或縮寫?",
+          "evidence_ids": [
+            "evidence_002"
+          ]
+        },
+        {
+          "claim": "請UPD與大陸的Elisa確認corail stem在大陸地區是否有需求，訂單預估量為多少。",
+          "evidence_ids": [
+            "evidence_006"
+          ]
+        },
+        {
+          "claim": "請UPD 確認cemented type 的Stem有哪些品荷，品號是否有要增加。",
+          "evidence_ids": [
+            "evidence_008"
+          ]
+        },
+        {
+          "claim": "請UR3確認cemented type 的stem 可搭配的centralizer 與 restrictor",
+          "evidence_ids": [
+            "evidence_009"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_0759f3eddbfe",
+        "item_3d250d7d78e1",
+        "item_78a76358cd2d",
+        "item_ccb4ee8281e5",
+        "item_dff12fe5b092"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.7076538,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_78a76358cd2d",
+          "item_no": "06",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UPD與法國分公司確認歐洲地區的需求與數量預估",
+          "owner": "Person_0FC867F866",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.69424397,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_ccb4ee8281e5",
+          "item_no": "03",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UPD確認系統名與產品名稱(含中、英文)，是否用代號或縮寫?",
+          "owner": "Person_0FC867F866",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.6819148,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.6789527,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.670873,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_03cc4d4684a4",
+          "item_no": "07",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "確認HA coating代工廠商的委外費用與MOQ",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.66816866,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_dff12fe5b092",
+          "item_no": "04",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UPD與大陸的Elisa確認corail stem在大陸地區是否有需求，訂單預估量為多少。",
+          "owner": "Person_0FC867F866",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.66811025,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.6672645,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_3d250d7d78e1",
+          "item_no": "02",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UPD 確認cemented type 的Stem有哪些品號，品號是否有要增加。",
+          "owner": "Person_0FC867F866",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.6619425,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_0759f3eddbfe",
+          "item_no": "05",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UR3確認cemented type 的stem 可搭配的centralizer 與 restrictor",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.65982836,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_080f7ac90d2c",
+          "item_no": "13",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UR3將corail stem寄給高雄鍛造工程師參考，並協助去除HA，進行表面溝槽特徵R角的量測。",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-20",
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\n  \"answer\": \"2017 年 12 月 15 日要完成的事項包括：\\n1. 請UPD與法國分公司確認歐洲地區的需求與數量預估。\\n2. 請UPD確認系統名與產品名稱(含中、英文)，是否用代號或縮寫？\\n3. 請UPD與大陸的Elisa確認corail stem在大陸地區是否有需求，訂單預估量為多少。\\n4. 請UPD確認cemented type 的Stem有哪些品號，品號是否有要增加。\\n5. 請UR3確認cemented type 的stem 可搭配的centralizer 與 restrictor。\",\n  \"claims\": [\n    {\n      \"claim\": \"請UPD與法國分公司確認歐洲地區的需求與數量預估\",\n      \"evidence_ids\": [\n        \"evidence_001\"\n      ]\n    },\n    {\n      \"claim\": \"請UPD確認系統名與產品名稱(含中、英文)，是否用代號或縮寫?\",\n      \"evidence_ids\": [\n        \"evidence_002\"\n      ]\n    },\n    {\n      \"claim\": \"請UPD與大陸的Elisa確認corail stem在大陸地區是否有需求，訂單預估量為多少。\",\n      \"evidence_ids\": [\n        \"evidence_006\"\n      ]\n    },\n    {\n      \"claim\": \"請UPD 確認cemented type 的Stem有哪些品荷，品號是否有要增加。\",\n      \"evidence_ids\": [\n        \"evidence_008\"\n      ]\n    },\n    {\n      \"claim\": \"請UR3確認cemented type 的stem 可搭配的centralizer 與 restrictor\",\n      \"evidence_ids\": [\n        \"evidence_009\"\n      ]\n    }\n  ]\n}\n```"
+    },
+    {
+      "category": "時程狀態型",
+      "question": "2016 年 06 月 05 日要完成哪些事項？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_78a76358cd2d",
+      "top1_score": 0.65314835,
+      "answer": "無法從提供的證據中找到 2016 年 06 月 05 日要完成的事項。",
+      "claims": [],
+      "judgement": "錯誤／限制",
+      "judgement_reason": "未產生可引用來源的回答",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.65314835,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_78a76358cd2d",
+          "item_no": "06",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UPD與法國分公司確認歐洲地區的需求與數量預估",
+          "owner": "Person_0FC867F866",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.64620066,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_8b7689172eb4",
+          "item_no": "02",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "對等產品為Gap II (Stryker)，尺寸選定為72 or 68mm；預測試後再決定購買尺寸。",
+          "owner": "Person_B968188ADA",
+          "planned_date": "2016-04-27",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.63832253,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_ccb4ee8281e5",
+          "item_no": "03",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "請UPD確認系統名與產品名稱(含中、英文)，是否用代號或縮寫?",
+          "owner": "Person_0FC867F866",
+          "planned_date": "2017-12-15",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.63316476,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d1469cd2e0d9",
+          "item_no": "10",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "包裝部分等競品購入之後再進行確認",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-16",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.63248706,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_2ae9866a4ae2",
+          "item_no": "03",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "產品預計申請地區為: CE , FDA, TFDA, CFDA， 請person協助確認是否有日本送件需求",
+          "owner": "Person_8730E629BB",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.6316411,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.6297028,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.6289524,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.6272318,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.62661284,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_e6f15ec7c6c3",
+          "item_no": "04",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "購買樣品十件(靜態測試件三件，動態測試件六件，備用一件)",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"無法從提供的證據中找到 2016 年 06 月 05 日要完成的事項。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "時程狀態型",
+      "question": "完成日期為 2018-04-13 的事項有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_33844f67cc0c",
+      "top1_score": 0.6878125,
+      "answer": "完成日期為 2018-04-13 的事項為：與UR4法規確認 TFDA 工單樣品的數量為10支。",
+      "claims": [
+        {
+          "claim": "與UR4法規確認 TFDA 工單樣品的數量為10支的完成日期為 2018-04-13。",
+          "evidence_ids": [
+            "evidence_001"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_33844f67cc0c"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6878125,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_33844f67cc0c",
+          "item_no": "02",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "與UR4法規確認 TFDA 工單樣品的數量為10支",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-13",
+          "actual_completed_date": "2018-04-13",
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.6865953,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_2ae9866a4ae2",
+          "item_no": "03",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "產品預計申請地區為: CE , FDA, TFDA, CFDA， 請person協助確認是否有日本送件需求",
+          "owner": "Person_8730E629BB",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.6840079,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.68027997,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d1469cd2e0d9",
+          "item_no": "10",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "包裝部分等競品購入之後再進行確認",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-16",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6742207,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d2d008c26cdd",
+          "item_no": "06",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "修正產品名，除Conformity 大寫外，其餘小寫修正後如下:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.66272014,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_622856e0d06d",
+          "item_no": "09",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "提供標籤狀況給UR4確認，詳如附件。",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-16",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.65926373,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_5517acb1dc3d",
+          "item_no": "08",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "導量產數量:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.6589103,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.6578672,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.65517855,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_cfede8f15778",
+          "item_no": "01",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "工程圖發出延後 1個月 10/31 完成，認證以FDA優先人力需要重新安排，原負責人person改人陳聖昌、person",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"完成日期為 2018-04-13 的事項為：與UR4法規確認 TFDA 工單樣品的數量為10支。\",\"claims\":[{\"claim\":\"與UR4法規確認 TFDA 工單樣品的數量為10支的完成日期為 2018-04-13。\",\"evidence_ids\":[\"evidence_001\"]}]}\n```"
+    },
+    {
+      "category": "關鍵詞探索型",
+      "question": "stem 相關的會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_069594007412",
+      "top1_score": 0.74811137,
+      "answer": "與 stem 相關的會議項目包含：\n1. P1812 Coformity stem器械進度會議：涉及 Modular handle 的功能與設計。\n2. Conformity stem 原型確認會議：涉及測試項目及允收標準、實質對等產品（Depuy 的 Corail stem）、Stem fatigue 測試、確認輸出文件時間、產品預計申請地區、TFDA 工單樣品數量、搭配產品、修正產品名稱以及包裝部分確認。",
+      "claims": [
+        {
+          "claim": "P1812 Coformity stem器械進度會議包含 Modular handle 的功能與設計。",
+          "evidence_ids": [
+            "evidence_001"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含測試項目及允收標準。",
+          "evidence_ids": [
+            "evidence_002"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議提到實質對等產品為 Depuy 的 Corail stem。",
+          "evidence_ids": [
+            "evidence_003"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含 Stem fatigue 測試。",
+          "evidence_ids": [
+            "evidence_004"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含確認所有輸出文件的時間。",
+          "evidence_ids": [
+            "evidence_005"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含產品預計申請地區（CE, FDA, TFDA, CFDA）。",
+          "evidence_ids": [
+            "evidence_006"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含與 UR4 法規確認 TFDA 工單樣品數量。",
+          "evidence_ids": [
+            "evidence_007"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含搭配產品項目。",
+          "evidence_ids": [
+            "evidence_008"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含修正產品名稱。",
+          "evidence_ids": [
+            "evidence_009"
+          ]
+        },
+        {
+          "claim": "Conformity stem 原型確認會議包含包裝部分待競品購入後進行確認。",
+          "evidence_ids": [
+            "evidence_010"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_069594007412",
+        "item_2ae9866a4ae2",
+        "item_33844f67cc0c",
+        "item_47055bf68a45",
+        "item_75d86ccc0bb8",
+        "item_94ae44eebcfe",
+        "item_b022f6c14ea5",
+        "item_c781214cbc53",
+        "item_d1469cd2e0d9",
+        "item_d2d008c26cdd"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.74811137,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.74724275,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.74680686,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_94ae44eebcfe",
+          "item_no": "04",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "實質對等產品為Depuy 的Corail stem",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.74346375,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.73873377,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.73160636,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_2ae9866a4ae2",
+          "item_no": "03",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "產品預計申請地區為: CE , FDA, TFDA, CFDA， 請person協助確認是否有日本送件需求",
+          "owner": "Person_8730E629BB",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.73126143,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_33844f67cc0c",
+          "item_no": "02",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "與UR4法規確認 TFDA 工單樣品的數量為10支",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-13",
+          "actual_completed_date": "2018-04-13",
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.73123443,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_75d86ccc0bb8",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "搭配產品：",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.73024106,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d2d008c26cdd",
+          "item_no": "06",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "修正產品名，除Conformity 大寫外，其餘小寫修正後如下:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.72628605,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d1469cd2e0d9",
+          "item_no": "10",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "包裝部分等競品購入之後再進行確認",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-16",
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\n  \"answer\": \"與 stem 相關的會議項目包含：\\n1. P1812 Coformity stem器械進度會議：涉及 Modular handle 的功能與設計。\\n2. Conformity stem 原型確認會議：涉及測試項目及允收標準、實質對等產品（Depuy 的 Corail stem）、Stem fatigue 測試、確認輸出文件時間、產品預計申請地區、TFDA 工單樣品數量、搭配產品、修正產品名稱以及包裝部分確認。\",\n  \"claims\": [\n    {\n      \"claim\": \"P1812 Coformity stem器械進度會議包含 Modular handle 的功能與設計。\",\n      \"evidence_ids\": [\n        \"evidence_001\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含測試項目及允收標準。\",\n      \"evidence_ids\": [\n        \"evidence_002\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議提到實質對等產品為 Depuy 的 Corail stem。\",\n      \"evidence_ids\": [\n        \"evidence_003\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含 Stem fatigue 測試。\",\n      \"evidence_ids\": [\n        \"evidence_004\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含確認所有輸出文件的時間。\",\n      \"evidence_ids\": [\n        \"evidence_005\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含產品預計申請地區（CE, FDA, TFDA, CFDA）。\",\n      \"evidence_ids\": [\n        \"evidence_006\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含與 UR4 法規確認 TFDA 工單樣品數量。\",\n      \"evidence_ids\": [\n        \"evidence_007\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含搭配產品項目。\",\n      \"evidence_ids\": [\n        \"evidence_008\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含修正產品名稱。\",\n      \"evidence_ids\": [\n        \"evidence_009\"\n      ]\n    },\n    {\n      \"claim\": \"Conformity stem 原型確認會議包含包裝部分待競品購入後進行確認。\",\n      \"evidence_ids\": [\n        \"evidence_010\"\n      ]\n    }\n  ]\n}\n```"
+    },
+    {
+      "category": "關鍵詞探索型",
+      "question": "Locking cage 相關的會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_5ee5eb67ebcb",
+      "top1_score": 0.75534993,
+      "answer": "與 Locking cage 相關的會議項目包含：\n1. 「Locking cage產品規格、名稱與測試件數量」會議：包含產品相關明細、購買樣品十件、購買骨螺絲共80支，以及對等產品尺寸選定。\n2. 「P1420 Locking cage_設計移轉會議」會議：包含相關測試報告確認、製程移轉之相關文件確認、可用性評估報告確認、產品設計輸入/產出檢查表確認，以及臨床評估報告確認。\n3. 「P1420 Locking cage設計審查會議」會議：包含 Locking cage 植入物孔位位置度公差值確認。",
+      "claims": [
+        {
+          "claim": "「Locking cage產品規格、名稱與測試件數量」會議包含產品相關明細",
+          "evidence_ids": [
+            "evidence_001"
+          ]
+        },
+        {
+          "claim": "「Locking cage產品規格、名稱與測試件數量」會議包含購買樣品十件",
+          "evidence_ids": [
+            "evidence_004"
+          ]
+        },
+        {
+          "claim": "「Locking cage產品規格、名稱與測試件數量」會議包含購買骨螺絲共80支",
+          "evidence_ids": [
+            "evidence_005"
+          ]
+        },
+        {
+          "claim": "「Locking cage產品規格、名稱與測試件數量」會議包含對等產品尺寸選定",
+          "evidence_ids": [
+            "evidence_009"
+          ]
+        },
+        {
+          "claim": "「P1420 Locking cage_設計移轉會議」會議包含相關測試報告確認",
+          "evidence_ids": [
+            "evidence_002"
+          ]
+        },
+        {
+          "claim": "「P1420 Locking cage_設計移轉會議」會議包含製程移轉之相關文件確認",
+          "evidence_ids": [
+            "evidence_003"
+          ]
+        },
+        {
+          "claim": "「P1420 Locking cage_設計移轉會議」會議包含可用性評估報告確認",
+          "evidence_ids": [
+            "evidence_006"
+          ]
+        },
+        {
+          "claim": "「P1420 Locking cage_設計移轉會議」會議包含產品設計輸入/產出檢查表確認",
+          "evidence_ids": [
+            "evidence_008"
+          ]
+        },
+        {
+          "claim": "「P1420 Locking cage_設計移轉會議」會議包含臨床評估報告確認",
+          "evidence_ids": [
+            "evidence_010"
+          ]
+        },
+        {
+          "claim": "「P1420 Locking cage設計審查會議」會議包含 Locking cage 植入物孔位位置度公差值確認",
+          "evidence_ids": [
+            "evidence_007"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_34f494c5a370",
+        "item_40dfe0d709c5",
+        "item_48a392fe7d08",
+        "item_5ee5eb67ebcb",
+        "item_6ebdd82aa74e",
+        "item_70cd306091d6",
+        "item_7a5590fe697c",
+        "item_8b7689172eb4",
+        "item_c18bde7fe1ac",
+        "item_e6f15ec7c6c3"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.75534993,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.7366868,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_40dfe0d709c5",
+          "item_no": "07",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "相關測試報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.73471737,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_48a392fe7d08",
+          "item_no": "01",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "製程移轉之相關文件確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.72968674,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_e6f15ec7c6c3",
+          "item_no": "04",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "購買樣品十件(靜態測試件三件，動態測試件六件，備用一件)",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.7182287,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_7a5590fe697c",
+          "item_no": "03",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "購買骨螺絲共80支(60mm30支，40mm30支，30mm20支)",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.71445334,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_c18bde7fe1ac",
+          "item_no": "05",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "可用性評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "不適用 ， 詳設計移轉會議投影片 (附件)"
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.71139944,
+          "meeting_id": "meeting_dcfdbde0d39f",
+          "item_id": "item_6ebdd82aa74e",
+          "item_no": "02",
+          "meeting_name": "P1420 Locking cage設計審查會議",
+          "meeting_date": "2018-11-09",
+          "content": "Locking cage植入物孔位位置度公差值待器械nut guide 與品保工程師確認位置度公差值。Locking cage 認證通過，PE工程圖需進版時再次確認位置度公差值後在變更，因此目前Locking cage植入物孔位位置尺寸由尺寸公差±2度標註。",
+          "owner": "Person_56D5421389",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.7112873,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_70cd306091d6",
+          "item_no": "02",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "產品設計輸入/產出檢查表確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.71007097,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_8b7689172eb4",
+          "item_no": "02",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "對等產品為Gap II (Stryker)，尺寸選定為72 or 68mm；預測試後再決定購買尺寸。",
+          "owner": "Person_B968188ADA",
+          "planned_date": "2016-04-27",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.7098228,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_34f494c5a370",
+          "item_no": "06",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "臨床評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        }
+      ],
+      "raw_llm_response": "```json\n{\n  \"answer\": \"與 Locking cage 相關的會議項目包含：\\n1. 「Locking cage產品規格、名稱與測試件數量」會議：包含產品相關明細、購買樣品十件、購買骨螺絲共80支，以及對等產品尺寸選定。\\n2. 「P1420 Locking cage_設計移轉會議」會議：包含相關測試報告確認、製程移轉之相關文件確認、可用性評估報告確認、產品設計輸入/產出檢查表確認，以及臨床評估報告確認。\\n3. 「P1420 Locking cage設計審查會議」會議：包含 Locking cage 植入物孔位位置度公差值確認。\",\n  \"claims\": [\n    {\n      \"claim\": \"「Locking cage產品規格、名稱與測試件數量」會議包含產品相關明細\",\n      \"evidence_ids\": [\n        \"evidence_001\"\n      ]\n    },\n    {\n      \"claim\": \"「Locking cage產品規格、名稱與測試件數量」會議包含購買樣品十件\",\n      \"evidence_ids\": [\n        \"evidence_004\"\n      ]\n    },\n    {\n      \"claim\": \"「Locking cage產品規格、名稱與測試件數量」會議包含購買骨螺絲共80支\",\n      \"evidence_ids\": [\n        \"evidence_005\"\n      ]\n    },\n    {\n      \"claim\": \"「Locking cage產品規格、名稱與測試件數量」會議包含對等產品尺寸選定\",\n      \"evidence_ids\": [\n        \"evidence_009\"\n      ]\n    },\n    {\n      \"claim\": \"「P1420 Locking cage_設計移轉會議」會議包含相關測試報告確認\",\n      \"evidence_ids\": [\n        \"evidence_002\"\n      ]\n    },\n    {\n      \"claim\": \"「P1420 Locking cage_設計移轉會議」會議包含製程移轉之相關文件確認\",\n      \"evidence_ids\": [\n        \"evidence_003\"\n      ]\n    },\n    {\n      \"claim\": \"「P1420 Locking cage_設計移轉會議」會議包含可用性評估報告確認\",\n      \"evidence_ids\": [\n        \"evidence_006\"\n      ]\n    },\n    {\n      \"claim\": \"「P1420 Locking cage_設計移轉會議」會議包含產品設計輸入/產出檢查表確認\",\n      \"evidence_ids\": [\n        \"evidence_008\"\n      ]\n    },\n    {\n      \"claim\": \"「P1420 Locking cage_設計移轉會議」會議包含臨床評估報告確認\",\n      \"evidence_ids\": [\n        \"evidence_010\"\n      ]\n    },\n    {\n      \"claim\": \"「P1420 Locking cage設計審查會議」會議包含 Locking cage 植入物孔位位置度公差值確認\",\n      \"evidence_ids\": [\n        \"evidence_007\"\n      ]\n    }\n  ]\n}\n```"
+    },
+    {
+      "category": "關鍵詞探索型",
+      "question": "HA coating 相關的會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_f53d64b0cc5e",
+      "top1_score": 0.71346426,
+      "answer": "與 HA coating 相關的會議項目包含在「HA-Fit 專案啟動會議」中，涉及委外 coating 製程需進行清洗與滅菌的確效，以及確認 HA coating 代工廠商的委外費用與 MOQ。",
+      "claims": [
+        {
+          "claim": "委外coating製程需進行清洗與滅菌的確效",
+          "evidence_ids": [
+            "evidence_001"
+          ]
+        },
+        {
+          "claim": "確認HA coating代工廠商的委外費用與MOQ",
+          "evidence_ids": [
+            "evidence_002"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_03cc4d4684a4",
+        "item_f53d64b0cc5e"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.71346426,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_f53d64b0cc5e",
+          "item_no": "09",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "委外coating製程需進行清洗與滅菌的確效",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.6838156,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_03cc4d4684a4",
+          "item_no": "07",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "確認HA coating代工廠商的委外費用與MOQ",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.58700573,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.5831862,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.5821941,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.5776489,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_45a324a54d3b",
+          "item_no": "08",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "風險管理報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.57444394,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_40dfe0d709c5",
+          "item_no": "07",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "相關測試報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.5735589,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_48a392fe7d08",
+          "item_no": "01",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "製程移轉之相關文件確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.57079756,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_934379001618",
+          "item_no": "03",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "製程移轉報告一覽表相關文件或供應商首批樣品承認書確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.5696457,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_47ee8f4682a2",
+          "item_no": "04",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "風險管理報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        }
+      ],
+      "raw_llm_response": "```json\n{\n  \"answer\": \"與 HA coating 相關的會議項目包含在「HA-Fit 專案啟動會議」中，涉及委外 coating 製程需進行清洗與滅菌的確效，以及確認 HA coating 代工廠商的委外費用與 MOQ。\",\n  \"claims\": [\n    {\n      \"claim\": \"委外coating製程需進行清洗與滅菌的確效\",\n      \"evidence_ids\": [\n        \"evidence_001\"\n      ]\n    },\n    {\n      \"claim\": \"確認HA coating代工廠商的委外費用與MOQ\",\n      \"evidence_ids\": [\n        \"evidence_002\"\n      ]\n    }\n  ]\n}\n```"
+    },
+    {
+      "category": "產品或法規關聯型",
+      "question": "CE 相關會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_96111c72aba5",
+      "top1_score": 0.6187719,
+      "answer": "無法從提供的證據中找到與 CE 相關的會議項目。",
+      "claims": [],
+      "judgement": "錯誤／限制",
+      "judgement_reason": "未產生可引用來源的回答",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6187719,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.60845315,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.60620797,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.60376376,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_4f51785962a8",
+          "item_no": "02",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "相關的品號與尺寸分佈如下:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.60326564,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.60229766,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.6016939,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.5964683,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.5914211,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.591033,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"無法從提供的證據中找到與 CE 相關的會議項目。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "產品或法規關聯型",
+      "question": "FDA 相關會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_96111c72aba5",
+      "top1_score": 0.6187719,
+      "answer": "提供的證據中沒有關於 FDA 相關會議項目的資訊。",
+      "claims": [],
+      "judgement": "錯誤／限制",
+      "judgement_reason": "未產生可引用來源的回答",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6187719,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.60845315,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.60620797,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.60376376,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_4f51785962a8",
+          "item_no": "02",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "相關的品號與尺寸分佈如下:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.60326564,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.60229766,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.6016939,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.5964683,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.5914211,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.591033,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"提供的證據中沒有關於 FDA 相關會議項目的資訊。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "產品或法規關聯型",
+      "question": "TFDA 相關會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_96111c72aba5",
+      "top1_score": 0.6187719,
+      "answer": "提供的證據中沒有關於 TFDA 相關會議項目的資訊。",
+      "claims": [],
+      "judgement": "錯誤／限制",
+      "judgement_reason": "未產生可引用來源的回答",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6187719,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.60845315,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.60620797,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.60376376,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_4f51785962a8",
+          "item_no": "02",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "相關的品號與尺寸分佈如下:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.60326564,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.60229766,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.6016939,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.5964683,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.5914211,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.591033,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"提供的證據中沒有關於 TFDA 相關會議項目的資訊。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "開放模糊型／語意相似型",
+      "question": "P1812 Coformity stem 會議進度與會議摘要",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_94ae44eebcfe",
+      "top1_score": 0.7730508,
+      "answer": "P1812 Coformity stem 的會議進度與摘要如下：\n\n1. 器械進度（2018-09-13）：討論 Modular handle 具備正敲與反敲功能、抗旋轉，並初步設定金屬與塑膠結合的設計方式。\n2. 原型確認（2018-04-03）：確認實質對等產品為 Depuy 的 Corail stem，並確認 TFDA 工單樣品數量為 10 支。\n3. 設計移轉（2019-08-13）：多項設計與評估項目已確認完成，包括 Stage 4 設計輸出、臨床評估報告、可用性評估報告、分析/測試及評估報告、產品設計輸入/產出檢查表，以及製程移轉報告與供應商首批樣品承認書相關文件。",
+      "claims": [
+        {
+          "claim": "2018-09-13 的器械進度會議討論了 Modular handle 具備正敲與反敲功能、抗旋轉，並初步設定金屬與塑膠結合的設計方式。",
+          "evidence_ids": [
+            "evidence_004"
+          ]
+        },
+        {
+          "claim": "2018-04-03 的原型確認會議確認實質對等產品為 Depuy 的 Corail stem。",
+          "evidence_ids": [
+            "evidence_001"
+          ]
+        },
+        {
+          "claim": "2018-04-03 的原型確認會議確認 TFDA 工單樣品數量為 10 支。",
+          "evidence_ids": [
+            "evidence_006"
+          ]
+        },
+        {
+          "claim": "2019-08-13 的設計移轉會議確認 Stage 4 設計輸出、臨床評估報告、可用性評估報告、分析/測試及評估報告、產品設計輸入/產出檢查表，以及製程移轉報告與供應商首批樣品承認書相關文件均已完成。",
+          "evidence_ids": [
+            "evidence_002",
+            "evidence_003",
+            "evidence_005",
+            "evidence_007",
+            "evidence_008",
+            "evidence_009"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_069594007412",
+        "item_2934f0c3e7df",
+        "item_33844f67cc0c",
+        "item_41071d3e0037",
+        "item_490b86428164",
+        "item_934379001618",
+        "item_94ae44eebcfe",
+        "item_dca93111c0c8",
+        "item_fc0d96053a98"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.7730508,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_94ae44eebcfe",
+          "item_no": "04",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "實質對等產品為Depuy 的Corail stem",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.76860785,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_2934f0c3e7df",
+          "item_no": "07",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "臨床評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.7672679,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_dca93111c0c8",
+          "item_no": "02",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "確認Stage 4 設計輸出已完成",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.7663964,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.76635396,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_41071d3e0037",
+          "item_no": "09",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "可用性評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.7662972,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_33844f67cc0c",
+          "item_no": "02",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "與UR4法規確認 TFDA 工單樣品的數量為10支",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-13",
+          "actual_completed_date": "2018-04-13",
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.7661692,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_fc0d96053a98",
+          "item_no": "06",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "分析、測試及評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.76527995,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_490b86428164",
+          "item_no": "04",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "產品設計輸入/產出檢查表確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.76429975,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_934379001618",
+          "item_no": "03",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "製程移轉報告一覽表相關文件或供應商首批樣品承認書確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.76408637,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_75d86ccc0bb8",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "搭配產品：",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\n  \"answer\": \"P1812 Coformity stem 的會議進度與摘要如下：\\n\\n1. 器械進度（2018-09-13）：討論 Modular handle 具備正敲與反敲功能、抗旋轉，並初步設定金屬與塑膠結合的設計方式。\\n2. 原型確認（2018-04-03）：確認實質對等產品為 Depuy 的 Corail stem，並確認 TFDA 工單樣品數量為 10 支。\\n3. 設計移轉（2019-08-13）：多項設計與評估項目已確認完成，包括 Stage 4 設計輸出、臨床評估報告、可用性評估報告、分析/測試及評估報告、產品設計輸入/產出檢查表，以及製程移轉報告與供應商首批樣品承認書相關文件。\",\n  \"claims\": [\n    {\n      \"claim\": \"2018-09-13 的器械進度會議討論了 Modular handle 具備正敲與反敲功能、抗旋轉，並初步設定金屬與塑膠結合的設計方式。\",\n      \"evidence_ids\": [\n        \"evidence_004\"\n      ]\n    },\n    {\n      \"claim\": \"2018-04-03 的原型確認會議確認實質對等產品為 Depuy 的 Corail stem。\",\n      \"evidence_ids\": [\n        \"evidence_001\"\n      ]\n    },\n    {\n      \"claim\": \"2018-04-03 的原型確認會議確認 TFDA 工單樣品數量為 10 支。\",\n      \"evidence_ids\": [\n        \"evidence_006\"\n      ]\n    },\n    {\n      \"claim\": \"2019-08-13 的設計移轉會議確認 Stage 4 設計輸出、臨床評估報告、可用性評估報告、分析/測試及評估報告、產品設計輸入/產出檢查表，以及製程移轉報告與供應商首批樣品承認書相關文件均已完成。\",\n      \"evidence_ids\": [\n        \"evidence_002\",\n        \"evidence_003\",\n        \"evidence_005\",\n        \"evidence_007\",\n        \"evidence_008\",\n        \"evidence_009\"\n      ]\n    }\n  ]\n}\n```"
+    },
+    {
+      "category": "開放模糊型／語意相似型",
+      "question": "Locking cage 設計移轉會議摘要",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_e6f15ec7c6c3",
+      "top1_score": 0.7686926,
+      "answer": "P1420 Locking cage 設計移轉會議（2019-10-16）摘要：臨床評估報告與相關測試報告均已確認完成，詳細內容請參閱設計移轉會議投影片附件。",
+      "claims": [
+        {
+          "claim": "臨床評估報告確認已完成，詳見設計移轉會議投影片。",
+          "evidence_ids": [
+            "evidence_002"
+          ]
+        },
+        {
+          "claim": "相關測試報告確認已完成，詳見設計移轉會議投影片。",
+          "evidence_ids": [
+            "evidence_003"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_34f494c5a370",
+        "item_40dfe0d709c5"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.7686926,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_e6f15ec7c6c3",
+          "item_no": "04",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "購買樣品十件(靜態測試件三件，動態測試件六件，備用一件)",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.7658597,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_34f494c5a370",
+          "item_no": "06",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "臨床評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.76504076,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_40dfe0d709c5",
+          "item_no": "07",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "相關測試報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.7633375,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_6278360c6594",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "1045",
+          "owner": null,
+          "planned_date": "2016-06-05",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.7603974,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_372d4cab5817",
+          "item_no": "03",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "5202",
+          "owner": null,
+          "planned_date": "Hook, medium",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.7587502,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_4e88b42c65a1",
+          "item_no": "06",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "1040",
+          "owner": null,
+          "planned_date": "2016-06-05",
+          "actual_completed_date": null,
+          "tracking_result": "13"
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.7583438,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.75695866,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_8763c960a907",
+          "item_no": "04",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "1030",
+          "owner": null,
+          "planned_date": "2016-06-05",
+          "actual_completed_date": null,
+          "tracking_result": "11"
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.7561317,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_f31d59c71f76",
+          "item_no": "05",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "1035",
+          "owner": null,
+          "planned_date": "2016-06-05",
+          "actual_completed_date": null,
+          "tracking_result": "12"
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.75569963,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_2a0ed1f5a66b",
+          "item_no": "01",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "1015",
+          "owner": null,
+          "planned_date": "2016-06-05",
+          "actual_completed_date": null,
+          "tracking_result": "8"
+        }
+      ],
+      "raw_llm_response": "```json\n{\n \"answer\": \"P1420 Locking cage 設計移轉會議（2019-10-16）摘要：臨床評估報告與相關測試報告均已確認完成，詳細內容請參閱設計移轉會議投影片附件。\",\n \"claims\": [\n  {\n   \"claim\": \"臨床評估報告確認已完成，詳見設計移轉會議投影片。\",\n   \"evidence_ids\": [\n    \"evidence_002\"\n   ]\n  },\n  {\n   \"claim\": \"相關測試報告確認已完成，詳見設計移轉會議投影片。\",\n   \"evidence_ids\": [\n    \"evidence_003\"\n   ]\n  }\n ]\n}\n```"
+    },
+    {
+      "category": "開放模糊型／語意相似型",
+      "question": "Fatigue test 相關事項摘要",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_4f51785962a8",
+      "top1_score": 0.6478573,
+      "answer": "Stem fatigue 的測試是以 distal width 為 7.5mm 進行。",
+      "claims": [
+        {
+          "claim": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "evidence_ids": [
+            "evidence_003"
+          ]
+        }
+      ],
+      "judgement": "正確",
+      "judgement_reason": "引用來源皆符合測試條件",
+      "used_item_ids": [
+        "item_47055bf68a45"
+      ],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6478573,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_4f51785962a8",
+          "item_no": "02",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "相關的品號與尺寸分佈如下:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.63980097,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.63792115,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.63731724,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6328665,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_934379001618",
+          "item_no": "03",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "製程移轉報告一覽表相關文件或供應商首批樣品承認書確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.63163424,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_c574aacc0608",
+          "item_no": "05",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "醫療器材基本安全要求檢查表確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.62577564,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_aeb3d7e4c5a6",
+          "item_no": "01",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "設計移轉品項:",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "新竹製程確認完成 ， 詳設計移轉會議投影片 ( 附件一)"
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.6257402,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_fc0d96053a98",
+          "item_no": "06",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "分析、測試及評估報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.6222768,
+          "meeting_id": "meeting_41f44b16cf41",
+          "item_id": "item_40dfe0d709c5",
+          "item_no": "07",
+          "meeting_name": "P1420 Locking cage_設計移轉會議",
+          "meeting_date": "2019-10-16",
+          "content": "相關測試報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 ( 附件)"
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.62105316,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_45a324a54d3b",
+          "item_no": "08",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "風險管理報告確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"Stem fatigue 的測試是以 distal width 為 7.5mm 進行。\",\"claims\":[{\"claim\":\"Stem fatigue 的部分以distal width 為7.5mm進行測試\",\"evidence_ids\":[\"evidence_003\"]}]}\n```"
+    },
+    {
+      "category": "資料不足型",
+      "question": "Person_DEADBEEF00 負責哪些項目？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_375f1d843ef7",
+      "top1_score": 0.66592705,
+      "answer": "無法從提供的證據中找到 Person_DEADBEEF00 負責項目的相關資訊。",
+      "claims": [],
+      "judgement": "正確",
+      "judgement_reason": "無證據時未產生引用 claims",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.66592705,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.663537,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.65860975,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.64381933,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6418162,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.6387845,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.63297087,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_44b7149bd5ed",
+          "item_no": "11",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "Cemenless的系列可先開發， Cemented的後面再開發， 請UR3再評估開發時程",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2017-12-13",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.62825257,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.62607694,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.62175286,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "---\n```json\n{\"answer\":\"無法從提供的證據中找到 Person_DEADBEEF00 負責項目的相關資訊。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "資料不足型",
+      "question": "2099 年 01 月 01 日要完成哪些事項？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_cfede8f15778",
+      "top1_score": 0.6060432,
+      "answer": "提供的證據中沒有關於 2099 年 01 月 01 日要完成事項的資訊。",
+      "claims": [],
+      "judgement": "正確",
+      "judgement_reason": "無證據時未產生引用 claims",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6060432,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_cfede8f15778",
+          "item_no": "01",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "工程圖發出延後 1個月 10/31 完成，認證以FDA優先人力需要重新安排，原負責人person改人陳聖昌、person",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.60573137,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_2ae9866a4ae2",
+          "item_no": "03",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "產品預計申請地區為: CE , FDA, TFDA, CFDA， 請person協助確認是否有日本送件需求",
+          "owner": "Person_8730E629BB",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.6013584,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_51acd76da206",
+          "item_no": "08",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UR4建議ROM分析應一併考量金屬球頭",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.60077417,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.6002685,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_4f51785962a8",
+          "item_no": "02",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "相關的品號與尺寸分佈如下:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.59866416,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d1469cd2e0d9",
+          "item_no": "10",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "包裝部分等競品購入之後再進行確認",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-16",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.59711957,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_949241ecafd5",
+          "item_no": "08",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "法規開時間與導量產時間需於後續確認是否需進行 impingement 測試後提供",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-08-24",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.5963693,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_d2d008c26cdd",
+          "item_no": "06",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "修正產品名，除Conformity 大寫外，其餘小寫修正後如下:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.59634763,
+          "meeting_id": "meeting_dcfdbde0d39f",
+          "item_id": "item_cc0c7a87b62e",
+          "item_no": "01",
+          "meeting_name": "P1420 Locking cage設計審查會議",
+          "meeting_date": "2018-11-09",
+          "content": "Locking cage 背側噴粗砂區域從下圖左圖只噴背側本體改成本體及Flange 背側都噴粗砂如下右圖，再與市場確認可不可接受:與Matt 確認後可接受如右下圖本體及 Flange 背側都噴粗砂。",
+          "owner": "Person_56D5421389",
+          "planned_date": "2018-11-12",
+          "actual_completed_date": "2018-11-12",
+          "tracking_result": "完成’"
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.5963278,
+          "meeting_id": "meeting_2a6dbde764da",
+          "item_id": "item_c574aacc0608",
+          "item_no": "05",
+          "meeting_name": "Conformity stem (collared) 設計移轉會議",
+          "meeting_date": "2019-08-13",
+          "content": "醫療器材基本安全要求檢查表確認",
+          "owner": "Person_704118B2B1",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": "確認已完成 ， 詳設計移轉會議投影片 (附件一)"
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"提供的證據中沒有關於 2099 年 01 月 01 日要完成事項的資訊。\",\"claims\":[]}\n```"
+    },
+    {
+      "category": "資料不足型",
+      "question": "Regulation_FAKE000000 相關會議項目有哪些？",
+      "mode": "vector_rag_llm",
+      "vector_source": "live_qdrant",
+      "llm_error": "",
+      "vector_result_count": 10,
+      "top1_item_id": "item_96111c72aba5",
+      "top1_score": 0.6315069,
+      "answer": "無法從提供的會議項目中找到與 Regulation_FAKE000000 相關的資訊。",
+      "claims": [],
+      "judgement": "正確",
+      "judgement_reason": "無證據時未產生引用 claims",
+      "used_item_ids": [],
+      "evidence": [
+        {
+          "evidence_id": "evidence_001",
+          "semantic_score": 0.6315069,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_96111c72aba5",
+          "item_no": "12",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "依據高雄鍛造的經驗，建議Stem表面的溝槽特徵R角不要小於0.5mm，目前製程能力無法符合公差。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_002",
+          "semantic_score": 0.6221107,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_47055bf68a45",
+          "item_no": "11",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "Stem fatigue 的部分以distal width 為7.5mm進行測試",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_003",
+          "semantic_score": 0.6193068,
+          "meeting_id": "meeting_7958791265f8",
+          "item_id": "item_4f51785962a8",
+          "item_no": "02",
+          "meeting_name": "Short neck type conformity Stem 專案啟動會議",
+          "meeting_date": "2018-08-01",
+          "content": "相關的品號與尺寸分佈如下:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_004",
+          "semantic_score": 0.618861,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_375f1d843ef7",
+          "item_no": "14",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "UPD 建議手術器械部分，Broach的設計為滿版設計， 其他器械以沿用UTS器械為目標。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_005",
+          "semantic_score": 0.61797583,
+          "meeting_id": "meeting_5f8810d5b2f5",
+          "item_id": "item_069594007412",
+          "item_no": "02",
+          "meeting_name": "P1812 Coformity stem器械進度會議",
+          "meeting_date": "2018-09-13",
+          "content": "Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_006",
+          "semantic_score": 0.61389136,
+          "meeting_id": "meeting_002152b53a27",
+          "item_id": "item_5ee5eb67ebcb",
+          "item_no": "07",
+          "meeting_name": "Locking cage產品規格、名稱與測試件數量",
+          "meeting_date": "2016-04-21",
+          "content": "產品相關明細請見下頁附件",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_007",
+          "semantic_score": 0.612679,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_c781214cbc53",
+          "item_no": "07",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "測試項目及允收標準:",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_008",
+          "semantic_score": 0.61212,
+          "meeting_id": "meeting_6104c92cd679",
+          "item_id": "item_601e695d25f7",
+          "item_no": "01",
+          "meeting_name": "HA-Fit 專案啟動會議",
+          "meeting_date": "2017-12-05",
+          "content": "#1與#2 distal width的尺寸分別為7.2與8.1mm。",
+          "owner": null,
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_009",
+          "semantic_score": 0.60718703,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_b022f6c14ea5",
+          "item_no": "05",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "確認所有輸出文件的時間， 經確認後所有輸出文件時間為:",
+          "owner": "Person_F03E4ECA0A",
+          "planned_date": "2018-04-11",
+          "actual_completed_date": null,
+          "tracking_result": null
+        },
+        {
+          "evidence_id": "evidence_010",
+          "semantic_score": 0.6041066,
+          "meeting_id": "meeting_a56ecf6f5aa6",
+          "item_id": "item_2ae9866a4ae2",
+          "item_no": "03",
+          "meeting_name": "Conformity stem 原型確認會議",
+          "meeting_date": "2018-04-03",
+          "content": "產品預計申請地區為: CE , FDA, TFDA, CFDA， 請person協助確認是否有日本送件需求",
+          "owner": "Person_8730E629BB",
+          "planned_date": null,
+          "actual_completed_date": null,
+          "tracking_result": null
+        }
+      ],
+      "raw_llm_response": "```json\n{\"answer\":\"無法從提供的會議項目中找到與 Regulation_FAKE000000 相關的資訊。\",\"claims\":[]}\n```"
+    }
+  ]
+}

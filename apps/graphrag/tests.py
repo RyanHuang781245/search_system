@@ -21,6 +21,7 @@ from .evaluation import (
 from .deterministic import deterministic_query_understanding
 from .query_router import analyze_query_route, route_question
 from .services import (
+    INSUFFICIENT_CONTEXT_ANSWER,
     answer_question,
     augment_graph_results_with_structured_context,
     build_graph_context,
@@ -28,6 +29,8 @@ from .services import (
     build_source_metadata_from_evidence,
     determine_effective_limit,
     graph_search_limit,
+    keyword_context_terms,
+    keyword_structured_context,
     meeting_items_structured_context,
     should_allow_keyword_fallback,
     validate_response_evidence_consistency,
@@ -1449,7 +1452,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
                 llm_client=lambda prompt: "should not be called",
             )
 
-        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertEqual(payload["answer"], INSUFFICIENT_CONTEXT_ANSWER)
         self.assertTrue(payload["trace"]["is_insufficient"])
         self.assertEqual(payload["trace"]["context_counts"]["structured"], 0)
         self.assertEqual(payload["sources"], [])
@@ -1472,7 +1475,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
                 llm_client=lambda prompt: self.fail("LLM should not run without valid evidence"),
             )
 
-        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertEqual(payload["answer"], INSUFFICIENT_CONTEXT_ANSWER)
         self.assertTrue(payload["trace"]["is_insufficient"])
         self.assertEqual(payload["contexts"]["semantic"], [])
         self.assertTrue(any("Dropped 1 semantic result" in warning for warning in payload["warnings"]))
@@ -1485,7 +1488,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
             llm_client=lambda prompt: self.fail("LLM should not run"),
         )
 
-        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertEqual(payload["answer"], INSUFFICIENT_CONTEXT_ANSWER)
         self.assertTrue(payload["trace"]["is_insufficient"])
         self.assertTrue(any("Malformed pseudonym token" in warning for warning in payload["warnings"]))
 
@@ -1531,6 +1534,41 @@ class GraphRagServiceTestCase(SimpleTestCase):
         self.assertEqual(parsed["entities"]["regulation_name"].upper(), "FDA")
         self.assertEqual(parsed["entities"]["product_name"], "Conformity stem")
         self.assertEqual(parsed["entities"]["status"], "not_completed")
+
+    def test_deterministic_query_understanding_keeps_united_hip_system_as_product(self):
+        parsed = deterministic_query_understanding("United Hip System相關會議項目有哪些?")
+
+        self.assertEqual(parsed["query_type"], "relation_lookup")
+        self.assertEqual(parsed["graph_intent"], "product_related")
+        self.assertEqual(parsed["entities"]["product_name"], "United Hip System")
+        self.assertEqual(parsed["entities"]["unit_name"], "")
+
+    def test_keyword_context_terms_keep_multi_word_product_phrase_precise(self):
+        self.assertEqual(keyword_context_terms("United Hip System相關會議項目有哪些?"), ["United Hip System"])
+
+    def test_keyword_structured_context_does_not_match_component_system_token(self):
+        meetings = [
+            {"meeting_id": "meeting_001", "meeting_name": "Locking cage review"},
+            {"meeting_id": "meeting_002", "meeting_name": "Instrument review"},
+        ]
+        items = [
+            {
+                "meeting_id": "meeting_001",
+                "item_id": "item_001",
+                "item_no": "01",
+                "content": "系統名稱：United Hip System",
+            },
+            {
+                "meeting_id": "meeting_002",
+                "item_id": "item_002",
+                "item_no": "02",
+                "content": "Modular system instrument list",
+            },
+        ]
+
+        context = keyword_structured_context("United Hip System相關會議項目有哪些?", meetings, items, limit=10)
+
+        self.assertEqual([item["item_id"] for item in context], ["item_001"])
 
     def test_deterministic_query_understanding_routes_status_item_queries_to_composite(self):
         completed = deterministic_query_understanding("已完成的事項有哪些")
@@ -1609,7 +1647,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
                 llm_client=lambda prompt: self.fail("LLM should not run without exact person evidence"),
             )
 
-        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertEqual(payload["answer"], INSUFFICIENT_CONTEXT_ANSWER)
         self.assertTrue(payload["trace"]["is_insufficient"])
         self.assertEqual(payload["contexts"]["semantic"], [])
 
@@ -1639,7 +1677,7 @@ class GraphRagServiceTestCase(SimpleTestCase):
                 llm_client=lambda prompt: self.fail("LLM should not run without exact decision evidence"),
             )
 
-        self.assertEqual(payload["answer"], "Insufficient meeting-record context to answer.")
+        self.assertEqual(payload["answer"], INSUFFICIENT_CONTEXT_ANSWER)
         self.assertTrue(payload["trace"]["is_insufficient"])
         self.assertEqual(payload["sources"], [])
 

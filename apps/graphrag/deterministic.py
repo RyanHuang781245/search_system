@@ -9,6 +9,7 @@ DATE_PATTERNS = (
     re.compile(r"(\d{4})\s*[-/]\s*(\d{1,2})(?:\s*[-/]\s*(\d{1,2}))?"),
 )
 PRODUCT_TERMS = (
+    "United Hip System",
     "Conformity stem",
     "Short neck",
     "Locking cage",
@@ -67,12 +68,17 @@ def determine_query_type(text: str, lowered: str, entities: dict, graph_intent: 
         entities.get("person_name") or has_any(lowered, ("負責", "誰負責", "responsible"))
     ):
         return "relation_lookup"
-    if is_structural_item_list_question(lowered):
-        return "structural_list"
     if is_meeting_summary_question(lowered, entities):
         return "meeting_summary"
     if is_semantic_summary_question(lowered):
         return "semantic_summary"
+    if graph_intent in {"product_related", "regulation_related"} and has_any(
+        lowered,
+        ("相關", "提到", "關於", "related", "mentions", "about"),
+    ):
+        return "relation_lookup"
+    if is_structural_item_list_question(lowered):
+        return "structural_list"
     if graph_intent != "keyword_related":
         return "relation_lookup"
     if is_keyword_exploration_question(text, lowered, entities):
@@ -91,7 +97,7 @@ def determine_graph_intent(text: str, lowered: str, entities: dict) -> str:
         return "meeting_chair"
     if has_any(lowered, ("記錄", "紀錄", "recorder", "recorded")):
         return "meeting_recorder"
-    if has_any(lowered, ("單位", "部門", "unit", "department")) or entities.get("unit_name"):
+    if has_any(lowered, ("單位", "部門")) or has_english_word(lowered, ("unit", "department")) or entities.get("unit_name"):
         return "unit_meetings"
     if entities.get("person_name") and has_item_scope(lowered):
         return "person_responsibility"
@@ -207,11 +213,19 @@ def contains_regulation(text: str) -> bool:
 
 def extract_product_name(text: str) -> str:
     value = str(text or "")
-    lowered = value.lower()
-    matches = [term for term in PRODUCT_TERMS if term.lower() in lowered]
+    matches = [term for term in PRODUCT_TERMS if product_term_matches(value, term)]
     if not matches:
         return ""
     return sorted(matches, key=len, reverse=True)[0]
+
+
+def product_term_matches(text: str, term: str) -> bool:
+    if not text or not term:
+        return False
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9\s_/-]*", term):
+        pattern = r"(?<![A-Za-z0-9])" + r"\s+".join(re.escape(part) for part in term.split()) + r"(?![A-Za-z0-9])"
+        return re.search(pattern, text, flags=re.I) is not None
+    return term.lower() in text.lower()
 
 
 def extract_status(text: str) -> str:
@@ -295,3 +309,7 @@ def normalize_pseudonym_person(value: str) -> str:
 
 def has_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(term in text for term in terms)
+
+
+def has_english_word(text: str, terms: tuple[str, ...]) -> bool:
+    return any(re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text, flags=re.I) for term in terms)

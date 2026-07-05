@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from .services import answer_question, validate_response_evidence_consistency
+from .services import INSUFFICIENT_CONTEXT_ANSWER, answer_question, validate_response_evidence_consistency
 
 
 DEFAULT_CASES_PATH = Path(__file__).resolve().parent / "fixtures" / "graphrag_golden_cases.json"
@@ -237,9 +237,9 @@ def evaluate_payload(case: dict, payload: dict) -> dict:
     trace = payload.get("trace") or {}
 
     if case.get("expect_insufficient") is True:
-        if not trace.get("is_insufficient") and "Insufficient meeting-record context" not in answer:
+        if not trace.get("is_insufficient") and INSUFFICIENT_CONTEXT_ANSWER not in answer:
             failures.append("expected insufficient-context response")
-    elif "Insufficient meeting-record context" in answer:
+    elif INSUFFICIENT_CONTEXT_ANSWER in answer:
         failures.append("unexpected insufficient-context response")
 
     expected_item_ids = normalize_list(case.get("expected_item_ids"))

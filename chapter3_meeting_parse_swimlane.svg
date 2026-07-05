@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      text {
+        font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+        fill: #111827;
+      }
+      .title {
+        font-size: 34px;
+        font-weight: 700;
+      }
+      .lane-title {
+        font-size: 24px;
+        font-weight: 700;
+        fill: #0f172a;
+      }
+      .node-title {
+        font-size: 21px;
+        font-weight: 700;
+      }
+      .node-sub {
+        font-size: 17px;
+        fill: #475569;
+      }
+      .note {
+        font-size: 17px;
+        fill: #334155;
+      }
+      .small {
+        font-size: 15px;
+        fill: #64748b;
+      }
+      .lane {
+        fill: #f8fafc;
+        stroke: #cbd5e1;
+        stroke-width: 2;
+      }
+      .lane-head {
+        fill: #e2e8f0;
+        stroke: #cbd5e1;
+        stroke-width: 2;
+      }
+      .box {
+        fill: #ffffff;
+        stroke: #334155;
+        stroke-width: 2.2;
+        rx: 14;
+      }
+      .box-accent {
+        fill: #eff6ff;
+        stroke: #2563eb;
+      }
+      .box-output {
+        fill: #ecfdf5;
+        stroke: #059669;
+      }
+      .box-warn {
+        fill: #fff7ed;
+        stroke: #ea580c;
+      }
+      .decision {
+        fill: #fefce8;
+        stroke: #ca8a04;
+        stroke-width: 2.2;
+      }
+      .line {
+        stroke: #334155;
+        stroke-width: 2.4;
+        fill: none;
+        marker-end: url(#arrow);
+      }
+      .line-dashed {
+        stroke: #ea580c;
+        stroke-width: 2.4;
+        fill: none;
+        stroke-dasharray: 8 7;
+        marker-end: url(#arrow);
+      }
+      .note-box {
+        fill: #f8fafc;
+        stroke: #94a3b8;
+        stroke-width: 1.8;
+        rx: 12;
+      }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="920" fill="#ffffff"/>
+  <text x="800" y="56" text-anchor="middle" class="title">會議記錄結構化解析流程</text>
+
+  <g id="lanes">
+    <rect x="70" y="95" width="460" height="610" class="lane"/>
+    <rect x="570" y="95" width="460" height="610" class="lane"/>
+    <rect x="1070" y="95" width="460" height="610" class="lane"/>
+
+    <rect x="70" y="95" width="460" height="68" class="lane-head"/>
+    <rect x="570" y="95" width="460" height="68" class="lane-head"/>
+    <rect x="1070" y="95" width="460" height="68" class="lane-head"/>
+
+    <text x="300" y="138" text-anchor="middle" class="lane-title">輸入與條件判斷</text>
+    <text x="800" y="138" text-anchor="middle" class="lane-title">主檔解析</text>
+    <text x="1300" y="138" text-anchor="middle" class="lane-title">項目解析與輸出</text>
+  </g>
+
+  <g id="lane-1">
+    <rect x="150" y="205" width="300" height="82" class="box box-accent"/>
+    <text x="300" y="238" text-anchor="middle" class="node-title">PDF 會議記錄</text>
+    <text x="300" y="266" text-anchor="middle" class="node-sub">meeting_record.pdf</text>
+
+    <rect x="150" y="335" width="300" height="92" class="box"/>
+    <text x="300" y="372" text-anchor="middle" class="node-title">讀取文字與座標</text>
+    <text x="300" y="400" text-anchor="middle" class="node-sub">每頁文字、表格、座標</text>
+
+    <polygon points="300,475 450,555 300,635 150,555" class="decision"/>
+    <text x="300" y="545" text-anchor="middle" class="node-title">符合解析條件？</text>
+    <text x="300" y="575" text-anchor="middle" class="node-sub">文字層與必要標記</text>
+
+    <rect x="150" y="665" width="300" height="70" class="box box-warn"/>
+    <text x="300" y="695" text-anchor="middle" class="node-title">標記 needs_ocr</text>
+    <text x="300" y="721" text-anchor="middle" class="node-sub">停止主要解析流程</text>
+
+    <path d="M300 287 L300 335" class="line"/>
+    <path d="M300 427 L300 475" class="line"/>
+    <path d="M300 635 L300 665" class="line-dashed"/>
+    <text x="331" y="657" class="small">否</text>
+  </g>
+
+  <g id="lane-2">
+    <rect x="650" y="235" width="300" height="92" class="box"/>
+    <text x="800" y="272" text-anchor="middle" class="node-title">抽取主檔欄位</text>
+    <text x="800" y="300" text-anchor="middle" class="node-sub">標籤式欄位擷取</text>
+
+    <rect x="650" y="405" width="300" height="92" class="box"/>
+    <text x="800" y="442" text-anchor="middle" class="node-title">建立文件與會議</text>
+    <text x="800" y="470" text-anchor="middle" class="node-sub">document_id、meeting_id</text>
+
+    <path d="M450 555 C520 555 560 281 650 281" class="line"/>
+    <text x="505" y="528" class="small">是</text>
+    <path d="M800 327 L800 405" class="line"/>
+  </g>
+
+  <g id="lane-3">
+    <rect x="1150" y="190" width="300" height="82" class="box"/>
+    <text x="1300" y="224" text-anchor="middle" class="node-title">偵測項次</text>
+    <text x="1300" y="251" text-anchor="middle" class="node-sub">定位列邊界</text>
+
+    <rect x="1150" y="315" width="300" height="82" class="box"/>
+    <text x="1300" y="349" text-anchor="middle" class="node-title">切分會議項目</text>
+    <text x="1300" y="376" text-anchor="middle" class="node-sub">一列一筆候選項目</text>
+
+    <rect x="1150" y="440" width="300" height="82" class="box"/>
+    <text x="1300" y="474" text-anchor="middle" class="node-title">合併跨行內容</text>
+    <text x="1300" y="501" text-anchor="middle" class="node-sub">同一 item 保持完整</text>
+
+    <rect x="1150" y="565" width="300" height="82" class="box"/>
+    <text x="1300" y="599" text-anchor="middle" class="node-title">欄位正規化</text>
+    <text x="1300" y="626" text-anchor="middle" class="node-sub">日期、負責人、缺漏值</text>
+
+    <rect x="1150" y="690" width="300" height="82" class="box box-output"/>
+    <text x="1300" y="724" text-anchor="middle" class="node-title">產生結構化 JSON</text>
+    <text x="1300" y="751" text-anchor="middle" class="node-sub">Document、Meeting、MeetingItem</text>
+
+    <path d="M950 451 C1032 451 1040 231 1150 231" class="line"/>
+    <path d="M1300 272 L1300 315" class="line"/>
+    <path d="M1300 397 L1300 440" class="line"/>
+    <path d="M1300 522 L1300 565" class="line"/>
+    <path d="M1300 647 L1300 690" class="line"/>
+  </g>
+
+  <g id="notes">
+    <rect x="95" y="790" width="1410" height="92" class="note-box"/>
+    <text x="125" y="823" class="note">註：主檔欄位包含會議名稱、日期、地點、主席、記錄人、權責單位與出席人員。</text>
+    <text x="125" y="853" class="note">註：項目欄位包含項次、會議內容、負責人、預計日期、實際完成日與追蹤結果；每筆 MeetingItem 產生 item_id 供後續來源回溯。</text>
+  </g>
+</svg>

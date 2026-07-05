@@ -1,0 +1,1254 @@
+{
+  "generated_at": "2026-06-24",
+  "description": "Current de-identified GraphRAG evaluation by rerunning approved questions and recording observed evidence IDs.",
+  "elapsed_seconds": 191.02,
+  "total": 18,
+  "rows": [
+    {
+      "id": "person_responsibility_chen_sheng_chang",
+      "question": "陳聖昌負責哪些項目",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 1,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 1,
+      "graph_path_count": 1,
+      "is_insufficient": false,
+      "relations": [
+        "RESPONSIBLE_BY"
+      ],
+      "source_item_ids": [
+        "item_cfede8f15778"
+      ],
+      "source_meeting_ids": [
+        "meeting_5f8810d5b2f5"
+      ],
+      "graph_item_ids": [
+        "item_cfede8f15778"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001"
+        ],
+        "source_evidence_ids": [
+          "evidence_001"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. 陳聖昌 負責，item_no 01: 工程圖發出延後 1個月 10/31 完成，認證以FDA優先人力需要重新安排，原負責人person改人陳聖昌、person（來源：meeting_5f8810d5b2f5 / item_cfede8f15778 / item_no 01 / evidence_001）",
+      "warnings": []
+    },
+    {
+      "id": "planned_date_2017_12_15",
+      "question": "2017 年 12 月 15 日要完成哪些事項",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 5,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 5,
+      "graph_path_count": 5,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_PLANNED_DATE"
+      ],
+      "source_item_ids": [
+        "item_0759f3eddbfe",
+        "item_3d250d7d78e1",
+        "item_78a76358cd2d",
+        "item_ccb4ee8281e5",
+        "item_dff12fe5b092"
+      ],
+      "source_meeting_ids": [
+        "meeting_6104c92cd679"
+      ],
+      "graph_item_ids": [
+        "item_0759f3eddbfe",
+        "item_3d250d7d78e1",
+        "item_78a76358cd2d",
+        "item_ccb4ee8281e5",
+        "item_dff12fe5b092"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. 預計日期 2017-12-15，item_no 06: 請UPD與法國分公司確認歐洲地區的需求與數量預估（來源：meeting_6104c92cd679 / item_78a76358cd2d / item_no 06 / evidence_001）\n2. 預計日期 2017-12-15，item_no 05: 請UR3確認cemented type 的stem 可搭配的centralizer 與 restrictor（來源：meeting_6104c92cd679 / item_0759f3eddbfe / item_no 05 / evidence_002）\n3. 預計日期 2017-12-15，item_no 04: 請UPD與大陸的Elisa確認corail stem在大陸地區是否有需求，訂單預估量為多少。（來源：meeting_6104c92cd679 / item_dff12fe5b092 / item_no 04 / evidence_003）\n4. 預計日期 2017-12-15，item_no 03: 請UPD確認系統名與產品名稱",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "planned_date_2018_04_13",
+      "question": "2018-04-13 要完成哪些事項",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 1,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 1,
+      "graph_path_count": 1,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_PLANNED_DATE"
+      ],
+      "source_item_ids": [
+        "item_33844f67cc0c"
+      ],
+      "source_meeting_ids": [
+        "meeting_a56ecf6f5aa6"
+      ],
+      "graph_item_ids": [
+        "item_33844f67cc0c"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001"
+        ],
+        "source_evidence_ids": [
+          "evidence_001"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. 預計日期 2018-04-13，item_no 02: 與UR4法規確認 TFDA 工單樣品的數量為10支（來源：meeting_a56ecf6f5aa6 / item_33844f67cc0c / item_no 02 / evidence_001）",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "completed_date_2018_04_13",
+      "question": "2018-04-13 實際完成哪些事項",
+      "status": "ok",
+      "query_type": "composite_query",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "composite",
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:composite",
+      "semantic_count": 0,
+      "graph_count": 1,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 1,
+      "graph_path_count": 1,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_COMPLETED_DATE"
+      ],
+      "source_item_ids": [
+        "item_33844f67cc0c"
+      ],
+      "source_meeting_ids": [
+        "meeting_a56ecf6f5aa6"
+      ],
+      "graph_item_ids": [
+        "item_33844f67cc0c"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001"
+        ],
+        "source_evidence_ids": [
+          "evidence_001"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. 完成日期 2018-04-13，item_no 02: 與UR4法規確認 TFDA 工單樣品的數量為10支（來源：meeting_a56ecf6f5aa6 / item_33844f67cc0c / item_no 02 / evidence_001）",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "meeting_items_p1812",
+      "question": "P1812 Coformity stem器械進度 會議包含哪些事項",
+      "status": "ok",
+      "query_type": "structural_list",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "structural"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:structural_list",
+      "semantic_count": 0,
+      "graph_count": 4,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 4,
+      "graph_path_count": 4,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_ITEM"
+      ],
+      "source_item_ids": [
+        "item_069594007412",
+        "item_44e4661e47a2",
+        "item_a14301e0155c",
+        "item_cfede8f15778"
+      ],
+      "source_meeting_ids": [
+        "meeting_5f8810d5b2f5"
+      ],
+      "graph_item_ids": [
+        "item_069594007412",
+        "item_44e4661e47a2",
+        "item_a14301e0155c",
+        "item_cfede8f15778"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. item_no 01: 工程圖發出延後 1個月 10/31 完成，認證以FDA優先人力需要重新安排，原負責人person改人陳聖昌、person（來源：meeting_5f8810d5b2f5 / item_cfede8f15778 / item_no 01 / evidence_001）\n2. item_no 02: Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手。（來源：meeting_5f8810d5b2f5 / item_069594007412 / item_no 02 / evidence_002）\n3. item_no 03: 預計Modular system器械包含以下 1. Canal finder rasp 2. Stem inserter, straight, remaining (quick-connect) 3. Stem inserter, off",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "meeting_items_p1420_design_transfer",
+      "question": "P1420 Locking cage_設計移轉會議包含哪些事項",
+      "status": "ok",
+      "query_type": "structural_list",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "structural"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:structural_list",
+      "semantic_count": 0,
+      "graph_count": 7,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 7,
+      "graph_path_count": 7,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_ITEM"
+      ],
+      "source_item_ids": [
+        "item_34f494c5a370",
+        "item_40dfe0d709c5",
+        "item_47ee8f4682a2",
+        "item_48a392fe7d08",
+        "item_70cd306091d6",
+        "item_c18bde7fe1ac",
+        "item_f7ce75314fb0"
+      ],
+      "source_meeting_ids": [
+        "meeting_41f44b16cf41"
+      ],
+      "graph_item_ids": [
+        "item_34f494c5a370",
+        "item_40dfe0d709c5",
+        "item_47ee8f4682a2",
+        "item_48a392fe7d08",
+        "item_70cd306091d6",
+        "item_c18bde7fe1ac",
+        "item_f7ce75314fb0"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. item_no 01: 製程移轉之相關文件確認（來源：meeting_41f44b16cf41 / item_48a392fe7d08 / item_no 01 / evidence_001）\n2. item_no 02: 產品設計輸入/產出檢查表確認（來源：meeting_41f44b16cf41 / item_70cd306091d6 / item_no 02 / evidence_002）\n3. item_no 03: 醫療器材基本安全要求檢查表確認（來源：meeting_41f44b16cf41 / item_f7ce75314fb0 / item_no 03 / evidence_003）\n4. item_no 04: 風險管理報告確認（來源：meeting_41f44b16cf41 / item_47ee8f4682a2 / item_no 04 / evidence_004）\n5. item_no 05: 可用性評估報告確認（來源：meeting_41f44b16cf41 / item_c18bde7fe1ac / item_no 0",
+      "warnings": []
+    },
+    {
+      "id": "meeting_summary_p1812",
+      "question": "P1812 Coformity stem器械進度 會議摘要",
+      "status": "ok",
+      "query_type": "meeting_summary",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "structural"
+      ],
+      "use_semantic": true,
+      "limit_mode": "auto:meeting_summary",
+      "semantic_count": 28,
+      "graph_count": 0,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 28,
+      "graph_path_count": 28,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_ITEM"
+      ],
+      "source_item_ids": [
+        "item_069594007412",
+        "item_2934f0c3e7df",
+        "item_2ae9866a4ae2",
+        "item_33844f67cc0c",
+        "item_41071d3e0037",
+        "item_44e4661e47a2",
+        "item_45a324a54d3b",
+        "item_47055bf68a45",
+        "item_490b86428164",
+        "item_525b49c1fd99",
+        "item_5517acb1dc3d",
+        "item_622856e0d06d",
+        "item_6f46546181ac",
+        "item_75d86ccc0bb8",
+        "item_86a2cd6fc03f",
+        "item_934379001618",
+        "item_94ae44eebcfe",
+        "item_a14301e0155c",
+        "item_aeb3d7e4c5a6",
+        "item_b022f6c14ea5",
+        "item_b71498f44942",
+        "item_c574aacc0608",
+        "item_c781214cbc53",
+        "item_cfede8f15778",
+        "item_d1469cd2e0d9",
+        "item_d2d008c26cdd",
+        "item_dca93111c0c8",
+        "item_fc0d96053a98"
+      ],
+      "source_meeting_ids": [
+        "meeting_2a6dbde764da",
+        "meeting_5f8810d5b2f5",
+        "meeting_7958791265f8",
+        "meeting_a56ecf6f5aa6"
+      ],
+      "graph_item_ids": [
+        "item_069594007412",
+        "item_2934f0c3e7df",
+        "item_2ae9866a4ae2",
+        "item_33844f67cc0c",
+        "item_41071d3e0037",
+        "item_44e4661e47a2",
+        "item_45a324a54d3b",
+        "item_47055bf68a45",
+        "item_490b86428164",
+        "item_525b49c1fd99",
+        "item_5517acb1dc3d",
+        "item_622856e0d06d",
+        "item_6f46546181ac",
+        "item_75d86ccc0bb8",
+        "item_86a2cd6fc03f",
+        "item_934379001618",
+        "item_94ae44eebcfe",
+        "item_a14301e0155c",
+        "item_aeb3d7e4c5a6",
+        "item_b022f6c14ea5",
+        "item_b71498f44942",
+        "item_c574aacc0608",
+        "item_c781214cbc53",
+        "item_cfede8f15778",
+        "item_d1469cd2e0d9",
+        "item_d2d008c26cdd",
+        "item_dca93111c0c8",
+        "item_fc0d96053a98"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015",
+          "evidence_016",
+          "evidence_017",
+          "evidence_018",
+          "evidence_019",
+          "evidence_020",
+          "evidence_021",
+          "evidence_022",
+          "evidence_023",
+          "evidence_024",
+          "evidence_025",
+          "evidence_026",
+          "evidence_027",
+          "evidence_028"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015",
+          "evidence_016",
+          "evidence_017",
+          "evidence_018",
+          "evidence_019",
+          "evidence_020",
+          "evidence_021",
+          "evidence_022",
+          "evidence_023",
+          "evidence_024",
+          "evidence_025",
+          "evidence_026",
+          "evidence_027",
+          "evidence_028"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015",
+          "evidence_016",
+          "evidence_017",
+          "evidence_018",
+          "evidence_019",
+          "evidence_020",
+          "evidence_021",
+          "evidence_022",
+          "evidence_023",
+          "evidence_024",
+          "evidence_025",
+          "evidence_026",
+          "evidence_027",
+          "evidence_028"
+        ]
+      },
+      "answer_preview": "根據 Conformity stem 原型確認會議、Conformity stem (collared) 設計移轉會議、P1812 Coformity stem器械進度會議 的會議記錄，重點可整理為：item_no 04: 實質對等產品為Depuy 的Corail stem；item_no 07: 臨床評估報告確認；item_no 02: 與UR4法規確認 TFDA 工單樣品的數量為10支；item_no 02: 確認Stage 4 設計輸出已完成；item_no 02: Modular handle 功能: Modular handle 具備正敲與反敲功能，抗旋轉。 相當於Aio Modular handle 把手的設計: 初步設定金屬+塑膠方式。比較各廠把手，例如Stryker 矽膠把手；另有 23 項相關紀錄可作為補充。\n\n依據：meeting_a56ecf6f5aa6 / item_94ae44eebcfe；meeting_2a6dbde764da / item_2934f0c3e7df；meeting_a56ecf6f5aa6 / item_33844f67cc0c；meet",
+      "warnings": []
+    },
+    {
+      "id": "semantic_summary_fda_risks",
+      "question": "FDA 相關風險整理",
+      "status": "ok",
+      "query_type": "semantic_summary",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "composite"
+      ],
+      "use_semantic": true,
+      "limit_mode": "auto:semantic_summary",
+      "semantic_count": 0,
+      "graph_count": 1,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 1,
+      "graph_path_count": 1,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_RISK"
+      ],
+      "source_item_ids": [
+        "item_cfede8f15778"
+      ],
+      "source_meeting_ids": [
+        "meeting_5f8810d5b2f5"
+      ],
+      "graph_item_ids": [
+        "item_cfede8f15778"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001"
+        ],
+        "source_evidence_ids": [
+          "evidence_001"
+        ]
+      },
+      "answer_preview": "根據 P1812 Coformity stem器械進度會議 的會議記錄，HAS_RISK 工程圖發出延後 1個月 10/31 完成，認證以FDA優先人力需要重新安排，原負責人person改人陳聖昌、person，item_no 01: 工程圖發出延後 1個月 10/31 完成，認證以FDA優先人力需要重新安排，原負責人person改人陳聖昌、person。\n\n依據：meeting_5f8810d5b2f5 / item_cfede8f15778",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "semantic_summary_decisions",
+      "question": "有哪些決議",
+      "status": "ok",
+      "query_type": "semantic_summary",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "composite"
+      ],
+      "use_semantic": true,
+      "limit_mode": "auto:semantic_summary",
+      "semantic_count": 0,
+      "graph_count": 4,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 4,
+      "graph_path_count": 4,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_DECISION"
+      ],
+      "source_item_ids": [
+        "item_166880fead27",
+        "item_8b7689172eb4",
+        "item_9b1b2211adf0",
+        "item_dc68cc37d715"
+      ],
+      "source_meeting_ids": [
+        "meeting_002152b53a27",
+        "meeting_523b2503e014"
+      ],
+      "graph_item_ids": [
+        "item_166880fead27",
+        "item_8b7689172eb4",
+        "item_9b1b2211adf0",
+        "item_dc68cc37d715"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ]
+      },
+      "answer_preview": "根據 Skirtless femoral head 、HA/Ti Plasma spray Stem, Short stem, Cement knee spacer, Modular locking cage, USTAR II Design Meeting、Locking cage產品規格、名稱與測試件數量 的會議記錄，重點可整理為：HAS_DECISION 請提出新球頭在不同切角狀況時之外觀以協助最終產品外觀決定。，item_no 04: 請提出新球頭在不同切角狀況時之外觀以協助最終產品外觀決定；HAS_DECISION 請UPD於一周內決定新球頭之系統及產品名。，item_no 06: 請UPD於一周內決定新球頭之系統及產品名；HAS_DECISION 請比較各廠牌及UTF Stem 各尺寸使用量以決定 increment。，item_no 03: 請比較各廠牌及UTF Stem 各尺寸使用量以決定 increment；HAS_DECISION 對等產品為Gap II (Stryker)，尺寸選定為72 or 68mm；預測試後再決定購買尺寸。，item_no 02: 對等產品為",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "follow_up_tracking_all",
+      "question": "跨會議追蹤整理",
+      "status": "ok",
+      "query_type": "follow_up_tracking",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "follow_up"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:follow_up_tracking",
+      "semantic_count": 0,
+      "graph_count": 30,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 30,
+      "graph_path_count": 30,
+      "is_insufficient": false,
+      "relations": [
+        "TRACKS_ISSUE"
+      ],
+      "source_item_ids": [
+        "item_2a0ed1f5a66b",
+        "item_2ae9866a4ae2",
+        "item_30bffa6acf68",
+        "item_34f494c5a370",
+        "item_375f1d843ef7",
+        "item_40dfe0d709c5",
+        "item_44b7149bd5ed",
+        "item_47ee8f4682a2",
+        "item_5ee5eb67ebcb",
+        "item_622856e0d06d",
+        "item_676f2e133baf",
+        "item_6b3fee8ed52c",
+        "item_82dc3affa7e5",
+        "item_86a2cd6fc03f",
+        "item_87661c0ce486",
+        "item_a14301e0155c",
+        "item_aeb3d7e4c5a6",
+        "item_af9de2a9a60a",
+        "item_b71498f44942",
+        "item_bb0b62696376",
+        "item_bcc33a6b1922",
+        "item_c18bde7fe1ac",
+        "item_c2107f7b89d3",
+        "item_cabce97ac3ee",
+        "item_ccb4ee8281e5",
+        "item_d1441ca67cf8",
+        "item_dc68cc37d715",
+        "item_e044d5536f95",
+        "item_e6f15ec7c6c3",
+        "item_f65afa4731e5"
+      ],
+      "source_meeting_ids": [
+        "meeting_002152b53a27",
+        "meeting_2a6dbde764da",
+        "meeting_41f44b16cf41",
+        "meeting_523b2503e014",
+        "meeting_5f8810d5b2f5",
+        "meeting_6104c92cd679",
+        "meeting_7958791265f8",
+        "meeting_a56ecf6f5aa6"
+      ],
+      "graph_item_ids": [
+        "item_2a0ed1f5a66b",
+        "item_2ae9866a4ae2",
+        "item_30bffa6acf68",
+        "item_34f494c5a370",
+        "item_375f1d843ef7",
+        "item_40dfe0d709c5",
+        "item_44b7149bd5ed",
+        "item_47ee8f4682a2",
+        "item_5ee5eb67ebcb",
+        "item_622856e0d06d",
+        "item_676f2e133baf",
+        "item_6b3fee8ed52c",
+        "item_82dc3affa7e5",
+        "item_86a2cd6fc03f",
+        "item_87661c0ce486",
+        "item_a14301e0155c",
+        "item_aeb3d7e4c5a6",
+        "item_af9de2a9a60a",
+        "item_b71498f44942",
+        "item_bb0b62696376",
+        "item_bcc33a6b1922",
+        "item_c18bde7fe1ac",
+        "item_c2107f7b89d3",
+        "item_cabce97ac3ee",
+        "item_ccb4ee8281e5",
+        "item_d1441ca67cf8",
+        "item_dc68cc37d715",
+        "item_e044d5536f95",
+        "item_e6f15ec7c6c3",
+        "item_f65afa4731e5"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015",
+          "evidence_016",
+          "evidence_017",
+          "evidence_018",
+          "evidence_019",
+          "evidence_020",
+          "evidence_021",
+          "evidence_022",
+          "evidence_023",
+          "evidence_024",
+          "evidence_025",
+          "evidence_026",
+          "evidence_027",
+          "evidence_028",
+          "evidence_029",
+          "evidence_030"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015",
+          "evidence_016",
+          "evidence_017",
+          "evidence_018",
+          "evidence_019",
+          "evidence_020",
+          "evidence_021",
+          "evidence_022",
+          "evidence_023",
+          "evidence_024",
+          "evidence_025",
+          "evidence_026",
+          "evidence_027",
+          "evidence_028",
+          "evidence_029",
+          "evidence_030"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015",
+          "evidence_016",
+          "evidence_017",
+          "evidence_018",
+          "evidence_019",
+          "evidence_020",
+          "evidence_021",
+          "evidence_022",
+          "evidence_023",
+          "evidence_024",
+          "evidence_025",
+          "evidence_026",
+          "evidence_027",
+          "evidence_028",
+          "evidence_029",
+          "evidence_030"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. Ø10mm以上尺寸 / 工程圖變更 / mm：追蹤序 1，item_no 03: 請盡快完成Ø10mm以上尺寸之工程圖變更。（來源：meeting_523b2503e014 / item_30bffa6acf68 / item_no 03 / evidence_001）\n2. UPD / 品名 / 產品：追蹤序 1，item_no 02: 請UPD確認各產品之產品名。(4/15回覆)（來源：meeting_523b2503e014 / item_82dc3affa7e5 / item_no 02 / evidence_002）\n3. Fatigue test / 規範 / Fatigue：追蹤序 1，item_no 01: 請確認是否有與Fatigue test相對應之規範。（來源：meeting_523b2503e014 / item_af9de2a9a60a / item_no 01 / evidence_003）\n4. mm / stem / 規格：追蹤序 1，item_no 04: 各種type之stem增加長度125mm之規格。（來源：m",
+      "warnings": []
+    },
+    {
+      "id": "follow_up_tracking_fda",
+      "question": "FDA 相關追蹤事項",
+      "status": "ok",
+      "query_type": "follow_up_tracking",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "follow_up"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:follow_up_tracking",
+      "semantic_count": 0,
+      "graph_count": 4,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 4,
+      "graph_path_count": 4,
+      "is_insufficient": false,
+      "relations": [
+        "TRACKS_ISSUE"
+      ],
+      "source_item_ids": [
+        "item_2ae9866a4ae2",
+        "item_33844f67cc0c",
+        "item_c15b532d79ee",
+        "item_cfede8f15778"
+      ],
+      "source_meeting_ids": [
+        "meeting_5f8810d5b2f5",
+        "meeting_7958791265f8",
+        "meeting_a56ecf6f5aa6"
+      ],
+      "graph_item_ids": [
+        "item_2ae9866a4ae2",
+        "item_33844f67cc0c",
+        "item_c15b532d79ee",
+        "item_cfede8f15778"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. CE / CFDA / FDA：追蹤序 1，item_no 03: 產品預計申請地區為: CE , FDA, TFDA, CFDA， 請person協助確認是否有日本送件需求（來源：meeting_a56ecf6f5aa6 / item_2ae9866a4ae2 / item_no 03 / evidence_001）\n2. TFDA：追蹤序 1，item_no 02: 與UR4法規確認 TFDA 工單樣品的數量為10支（來源：meeting_a56ecf6f5aa6 / item_33844f67cc0c / item_no 02 / evidence_002）\n3. CE / CFDA / FDA：追蹤序 1，item_no 05: 註冊預計申請地區: CE, FDA, TFDA, CFDA, PMDA ，CE認證與cementless type 一起送。（來源：meeting_7958791265f8 / item_c15b532d79ee / item_no 05 / evidence_003）\n4. FDA：追蹤序 1，item_no 0",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "follow_up_tracking_conformity_stem",
+      "question": "Conformity stem 的後續追蹤狀況",
+      "status": "ok",
+      "query_type": "follow_up_tracking",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "follow_up"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:follow_up_tracking",
+      "semantic_count": 0,
+      "graph_count": 2,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 2,
+      "graph_path_count": 2,
+      "is_insufficient": false,
+      "relations": [
+        "TRACKS_ISSUE"
+      ],
+      "source_item_ids": [
+        "item_288727fdb3c3",
+        "item_6f46546181ac"
+      ],
+      "source_meeting_ids": [
+        "meeting_7958791265f8"
+      ],
+      "graph_item_ids": [
+        "item_288727fdb3c3",
+        "item_6f46546181ac"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. Conformity stem / Hip System / United Hip System：追蹤序 1，item_no 04: 系統名:United Hip System 聯合髖關節系統產品名: Conformity stem, short neck, collared, #1 (優康短頸有領股骨柄, #1)（來源：meeting_7958791265f8 / item_288727fdb3c3 / item_no 04 / evidence_001）\n2. conformity stem：追蹤序 1，item_no 06: 建議應把conformity stem 系列的中英文品名統一，以英文表示方式為主，例如: Conformity stem, short neck, collared, #1 (優康短頸有領股骨柄, #1)（來源：meeting_7958791265f8 / item_6f46546181ac / item_no 06 / evidence_002）",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "completed_items",
+      "question": "已完成的事項有哪些",
+      "status": "ok",
+      "query_type": "composite_query",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "composite",
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:composite",
+      "semantic_count": 0,
+      "graph_count": 15,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 15,
+      "graph_path_count": 15,
+      "is_insufficient": false,
+      "relations": [
+        "HAS_ACTION"
+      ],
+      "source_item_ids": [
+        "item_2934f0c3e7df",
+        "item_34f494c5a370",
+        "item_40dfe0d709c5",
+        "item_41071d3e0037",
+        "item_45a324a54d3b",
+        "item_47ee8f4682a2",
+        "item_48a392fe7d08",
+        "item_490b86428164",
+        "item_70cd306091d6",
+        "item_934379001618",
+        "item_aeb3d7e4c5a6",
+        "item_c574aacc0608",
+        "item_dca93111c0c8",
+        "item_f7ce75314fb0",
+        "item_fc0d96053a98"
+      ],
+      "source_meeting_ids": [
+        "meeting_2a6dbde764da",
+        "meeting_41f44b16cf41"
+      ],
+      "graph_item_ids": [
+        "item_2934f0c3e7df",
+        "item_34f494c5a370",
+        "item_40dfe0d709c5",
+        "item_41071d3e0037",
+        "item_45a324a54d3b",
+        "item_47ee8f4682a2",
+        "item_48a392fe7d08",
+        "item_490b86428164",
+        "item_70cd306091d6",
+        "item_934379001618",
+        "item_aeb3d7e4c5a6",
+        "item_c574aacc0608",
+        "item_dca93111c0c8",
+        "item_f7ce75314fb0",
+        "item_fc0d96053a98"
+      ],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015"
+        ],
+        "graph_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015"
+        ],
+        "source_evidence_ids": [
+          "evidence_001",
+          "evidence_002",
+          "evidence_003",
+          "evidence_004",
+          "evidence_005",
+          "evidence_006",
+          "evidence_007",
+          "evidence_008",
+          "evidence_009",
+          "evidence_010",
+          "evidence_011",
+          "evidence_012",
+          "evidence_013",
+          "evidence_014",
+          "evidence_015"
+        ]
+      },
+      "answer_preview": "根據會議記錄，相關事項如下：\n\n1. HAS_ACTION 臨床評估報告確認 確認已完成 ， 詳設計移轉會議投影片 (附件一)，item_no 07: 臨床評估報告確認（來源：meeting_2a6dbde764da / item_2934f0c3e7df / item_no 07 / evidence_001）\n2. HAS_ACTION 可用性評估報告確認 確認已完成 ， 詳設計移轉會議投影片 (附件一)，item_no 09: 可用性評估報告確認（來源：meeting_2a6dbde764da / item_41071d3e0037 / item_no 09 / evidence_002）\n3. HAS_ACTION 風險管理報告確認 確認已完成 ， 詳設計移轉會議投影片 (附件一)，item_no 08: 風險管理報告確認（來源：meeting_2a6dbde764da / item_45a324a54d3b / item_no 08 / evidence_003）\n4. HAS_ACTION 產品設計輸入/產出檢查表確認 確認已完成 ， 詳設計移轉會議投影片 (附件一)，it",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)",
+        "Graph intent analysis unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=12)"
+      ]
+    },
+    {
+      "id": "not_applicable_items",
+      "question": "不適用的事項有哪些",
+      "status": "ok",
+      "query_type": "composite_query",
+      "route_source": "heuristic_fallback",
+      "retrieval_modes": [
+        "composite",
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:composite",
+      "semantic_count": 0,
+      "graph_count": 0,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 0,
+      "graph_path_count": 0,
+      "is_insufficient": true,
+      "relations": [],
+      "source_item_ids": [],
+      "source_meeting_ids": [],
+      "graph_item_ids": [],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [],
+        "graph_evidence_ids": [],
+        "source_evidence_ids": []
+      },
+      "answer_preview": "Insufficient meeting-record context to answer.",
+      "warnings": [
+        "LLM query understanding unavailable: HTTPConnectionPool(host='120.113.70.238', port=10000): Read timed out. (read timeout=8)"
+      ]
+    },
+    {
+      "id": "insufficient_unknown_person",
+      "question": "不存在的人名負責哪些項目",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 0,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 0,
+      "graph_path_count": 0,
+      "is_insufficient": true,
+      "relations": [],
+      "source_item_ids": [],
+      "source_meeting_ids": [],
+      "graph_item_ids": [],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [],
+        "graph_evidence_ids": [],
+        "source_evidence_ids": []
+      },
+      "answer_preview": "Insufficient meeting-record context to answer.",
+      "warnings": []
+    },
+    {
+      "id": "seed_001_張志豪負責哪些事項",
+      "question": "張志豪負責哪些事項",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 0,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 0,
+      "graph_path_count": 0,
+      "is_insufficient": true,
+      "relations": [],
+      "source_item_ids": [],
+      "source_meeting_ids": [],
+      "graph_item_ids": [],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [],
+        "graph_evidence_ids": [],
+        "source_evidence_ids": []
+      },
+      "answer_preview": "Insufficient meeting-record context to answer.",
+      "warnings": []
+    },
+    {
+      "id": "seed_001_倪仲達負責哪些項目",
+      "question": "倪仲達負責哪些項目",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 0,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 0,
+      "graph_path_count": 0,
+      "is_insufficient": true,
+      "relations": [],
+      "source_item_ids": [],
+      "source_meeting_ids": [],
+      "graph_item_ids": [],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [],
+        "graph_evidence_ids": [],
+        "source_evidence_ids": []
+      },
+      "answer_preview": "Insufficient meeting-record context to answer.",
+      "warnings": []
+    },
+    {
+      "id": "seed_001_廖漢星負責些會議項目",
+      "question": "廖漢星負責些會議項目",
+      "status": "ok",
+      "query_type": "relation_lookup",
+      "route_source": "llm",
+      "retrieval_modes": [
+        "relation"
+      ],
+      "use_semantic": false,
+      "limit_mode": "auto:relation",
+      "semantic_count": 0,
+      "graph_count": 0,
+      "mongo_structural_fallback_count": 0,
+      "mongo_keyword_fallback_count": 0,
+      "source_count": 0,
+      "graph_path_count": 0,
+      "is_insufficient": true,
+      "relations": [],
+      "source_item_ids": [],
+      "source_meeting_ids": [],
+      "graph_item_ids": [],
+      "consistency": {
+        "is_consistent": true,
+        "errors": [],
+        "answer_evidence_ids": [],
+        "graph_evidence_ids": [],
+        "source_evidence_ids": []
+      },
+      "answer_preview": "Insufficient meeting-record context to answer.",
+      "warnings": []
+    }
+  ]
+}

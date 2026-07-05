@@ -8,6 +8,7 @@ import re
 from django.conf import settings
 
 from apps.graph.services import graph_search_query
+from apps.graphrag.deterministic import deterministic_query_understanding
 from apps.graphrag.query_router import QueryRoute, analyze_query_route, route_question
 from apps.search.mongo import get_meeting_items_collection, get_meeting_minutes_collection
 from apps.search.ranking import matches_query
@@ -20,6 +21,7 @@ class GraphRagServiceError(Exception):
 
 PSEUDONYM_LIKE_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-Za-z0-9]+(?![A-Za-z0-9_])")
 VALID_PSEUDONYM_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person|Unit|Company|File|Ref|Email|Phone|ID|Token)_[A-F0-9]{10}(?![A-Za-z0-9_])", flags=re.I)
+INSUFFICIENT_CONTEXT_ANSWER = "查無足夠的會議紀錄脈絡可供回答。"
 
 
 @dataclass(frozen=True)
@@ -183,7 +185,7 @@ def answer_question(
             "limit_mode": limit_mode,
             "query_route": query_route.to_dict(),
             "trace": trace,
-            "answer": "Insufficient meeting-record context to answer.",
+            "answer": INSUFFICIENT_CONTEXT_ANSWER,
             "contexts": {
                 "structured": [],
                 "graph": graph_context,
@@ -375,7 +377,7 @@ def insufficient_payload(
         "limit_mode": limit_mode,
         "query_route": query_route.to_dict(),
         "trace": trace,
-        "answer": "Insufficient meeting-record context to answer.",
+        "answer": INSUFFICIENT_CONTEXT_ANSWER,
         "contexts": {
             "structured": [],
             "graph": {"nodes": [], "edges": [], "paths": [], "summary": {"total_paths": 0, "visible_paths": 0, "is_truncated": False}},
@@ -1324,7 +1326,9 @@ def meeting_item_sort_key(item: dict):
 
 
 def keyword_structured_context(question: str, meetings: list[dict], items: list[dict], limit: int) -> list[dict]:
-    lowered_query = question.lower()
+    lowered_terms = [term.lower() for term in keyword_context_terms(question)]
+    if not lowered_terms:
+        return []
     meetings_by_id = {meeting.get("meeting_id"): meeting for meeting in meetings}
     matched = []
     for item in items:
@@ -1339,11 +1343,91 @@ def keyword_structured_context(question: str, meetings: list[dict], items: list[
             item.get("actual_completed_date"),
             item.get("tracking_result"),
         ]
-        if any(matches_query(field, lowered_query) for field in fields):
+        if any(matches_query(field, term) for field in fields for term in lowered_terms):
             matched.append(format_structured_item(meeting, item))
         if len(matched) >= limit:
             break
     return matched
+
+
+def keyword_context_terms(question: str) -> list[str]:
+    parsed = deterministic_query_understanding(question)
+    entities = parsed.get("entities") or {}
+    terms = []
+    for key in ("product_name", "regulation_name", "keyword", "person_name", "unit_name", "date_value"):
+        add_keyword_context_term(terms, entities.get(key))
+
+    cleaned = clean_keyword_question(question)
+    for phrase in re.findall(r"[A-Za-z][A-Za-z0-9-]*(?:\s+[A-Za-z][A-Za-z0-9-]*){0,5}", cleaned):
+        add_keyword_context_term(terms, phrase)
+    for token in re.split(r"[\s,，。；;:：?？()（）\[\]【】]+", cleaned):
+        add_keyword_context_term(terms, token)
+
+    terms = remove_component_english_terms(terms)
+    return sorted(terms, key=lambda value: (-len(value), value.lower()))[:8]
+
+
+def clean_keyword_question(question: str) -> str:
+    text = str(question or "")
+    cues = (
+        "會議項目",
+        "討論事項",
+        "有哪些",
+        "哪些",
+        "相關",
+        "會議",
+        "項目",
+        "事項",
+        "議題",
+        "內容",
+        "提到",
+        "關於",
+        "列出",
+        "請問",
+        "related",
+        "overview",
+        "mentions",
+        "about",
+        "meeting",
+        "meetings",
+        "items",
+        "item",
+        "agenda",
+        "topic",
+        "topics",
+        "which",
+        "what",
+    )
+    for cue in cues:
+        text = re.sub(re.escape(cue), " ", text, flags=re.I)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def add_keyword_context_term(terms: list[str], value) -> None:
+    term = str(value or "").strip(" \t\r\n,，。；;:：?？()（）[]【】\"'")
+    if len(term) < 2:
+        return
+    if term.lower() in {"related", "overview", "meeting", "meetings", "items", "item", "which", "what"}:
+        return
+    if term.lower() not in {existing.lower() for existing in terms}:
+        terms.append(term)
+
+
+def remove_component_english_terms(terms: list[str]) -> list[str]:
+    multi_word_token_sets = [
+        {token.lower() for token in re.findall(r"[A-Za-z][A-Za-z0-9-]*", term)}
+        for term in terms
+        if len(re.findall(r"[A-Za-z][A-Za-z0-9-]*", term)) >= 2
+    ]
+    if not multi_word_token_sets:
+        return terms
+    filtered = []
+    for term in terms:
+        tokens = re.findall(r"[A-Za-z][A-Za-z0-9-]*", term)
+        if len(tokens) == 1 and any(tokens[0].lower() in token_set for token_set in multi_word_token_sets):
+            continue
+        filtered.append(term)
+    return filtered
 
 
 def format_structured_item(meeting: dict, item: dict) -> dict:

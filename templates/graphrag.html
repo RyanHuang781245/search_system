@@ -12,6 +12,10 @@
                 <h1 class="graphrag-title">問答視窗</h1>
             </div>
             <div class="graphrag-head-actions">
+                <button id="meta-toggle" class="btn btn-light btn-sm border" type="button" aria-controls="meta-panel" aria-expanded="false">
+                    <i data-lucide="panel-right-open"></i>
+                    <span>詳細</span>
+                </button>
                 <button id="advanced-toggle" class="btn btn-light btn-sm border" type="button">
                     <i data-lucide="sliders-horizontal"></i>
                     <span>進階</span>
@@ -62,7 +66,17 @@
             <div class="text-muted small">尚未送出問題。</div>
         </div>
 
-        <div class="graphrag-meta-panel">
+        <div id="meta-backdrop" class="meta-backdrop d-none"></div>
+        <aside id="meta-panel" class="graphrag-meta-panel d-none" aria-hidden="true">
+            <div class="meta-panel-head">
+                <div>
+                    <div class="page-kicker">Details</div>
+                    <h2 class="meta-panel-title">回答詳細資訊</h2>
+                </div>
+                <button id="meta-close" class="btn btn-light btn-sm border" type="button" aria-label="關閉詳細資訊">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
             <details class="preview-section">
                 <summary class="preview-section-head">
                     <span>診斷</span>
@@ -88,7 +102,7 @@
                 </summary>
                 <div id="warning-list" class="related-list mt-3"></div>
             </details>
-        </div>
+        </aside>
     </section>
 
     <section class="graphrag-graph-panel">
@@ -354,5 +368,5 @@
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
-<script src="{% static 'js/graphrag-page.js' %}?v=20260623-custom-limit"></script>
+<script src="{% static 'js/graphrag-page.js' %}?v=20260625-meta-drawer"></script>
 {% endblock %}

@@ -1000,6 +1000,16 @@ class GraphSearchTestCase(SimpleTestCase):
                 self.assertEqual(payload["intent"], intent)
                 self.assertEqual(payload["entities"]["person_name"], "陳聖昌")
 
+    def test_analyze_graph_intent_does_not_treat_united_as_unit(self):
+        payload = analyze_graph_intent(
+            "United Hip System相關會議項目有哪些?",
+            llm_client=lambda _query: self.fail("deterministic product intent should not require LLM"),
+        )
+
+        self.assertEqual(payload["intent"], "product_related")
+        self.assertEqual(payload["entities"]["product_name"], "United Hip System")
+        self.assertEqual(payload["entities"]["unit_name"], "")
+
     def test_heuristic_query_plan_extracts_mixed_constraints(self):
         payload = heuristic_query_plan("陳聖昌 FDA Conformity stem 未完成事項")
 

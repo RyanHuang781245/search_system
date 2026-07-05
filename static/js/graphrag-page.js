@@ -1,5 +1,9 @@
 const elements = {
     refreshButton: document.getElementById("refresh-button"),
+    metaToggle: document.getElementById("meta-toggle"),
+    metaClose: document.getElementById("meta-close"),
+    metaPanel: document.getElementById("meta-panel"),
+    metaBackdrop: document.getElementById("meta-backdrop"),
     advancedToggle: document.getElementById("advanced-toggle"),
     advancedClose: document.getElementById("advanced-close"),
     advancedPanel: document.getElementById("advanced-panel"),
@@ -101,6 +105,9 @@ function bindEvents() {
     });
 
     elements.buildGraphButton?.addEventListener("click", handleBuildGraph);
+    elements.metaToggle?.addEventListener("click", openMetaPanel);
+    elements.metaClose?.addEventListener("click", closeMetaPanel);
+    elements.metaBackdrop?.addEventListener("click", closeMetaPanel);
     elements.advancedToggle?.addEventListener("click", openAdvancedPanel);
     elements.advancedClose?.addEventListener("click", closeAdvancedPanel);
     elements.advancedBackdrop?.addEventListener("click", closeAdvancedPanel);
@@ -166,7 +173,29 @@ function closeAdvancedPanel() {
     elements.advancedPanel?.setAttribute("aria-hidden", "true");
 }
 
+function openMetaPanel() {
+    elements.metaPanel?.classList.remove("d-none");
+    elements.metaBackdrop?.classList.remove("d-none");
+    elements.metaPanel?.setAttribute("aria-hidden", "false");
+    elements.metaToggle?.setAttribute("aria-expanded", "true");
+    document.body.classList.add("meta-panel-opened");
+}
+
+function closeMetaPanel() {
+    elements.metaPanel?.classList.add("d-none");
+    elements.metaBackdrop?.classList.add("d-none");
+    elements.metaPanel?.setAttribute("aria-hidden", "true");
+    elements.metaToggle?.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("meta-panel-opened");
+}
+
 function handleAnswerPanelClick(event) {
+    const metaTrigger = event.target.closest("[data-meta-panel-open]");
+    if (metaTrigger) {
+        event.preventDefault();
+        openMetaPanel();
+        return;
+    }
     const readerTrigger = event.target.closest("[data-answer-reader-open]");
     if (readerTrigger) {
         event.preventDefault();
@@ -206,6 +235,10 @@ function closeAnswerReader() {
 function handleDocumentKeydown(event) {
     if (event.key === "Escape" && !elements.answerReader?.classList.contains("d-none")) {
         closeAnswerReader();
+    } else if (event.key === "Escape" && !elements.metaPanel?.classList.contains("d-none")) {
+        closeMetaPanel();
+    } else if (event.key === "Escape" && !elements.advancedPanel?.classList.contains("d-none")) {
+        closeAdvancedPanel();
     }
 }
 
@@ -811,15 +844,19 @@ function renderAnswer(data) {
     elements.answerPanel.innerHTML = `
         <div class="answer-title-row">
             <div class="answer-title">${escapeHtml(data.question || "-")}</div>
-            <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-answer-reader-open title="展開閱讀">
-                <i data-lucide="maximize-2"></i>
-                <span>展開</span>
-            </button>
+            <div class="answer-title-actions">
+                <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-answer-reader-open title="展開閱讀">
+                    <i data-lucide="maximize-2"></i>
+                    <span>展開</span>
+                </button>
+                <button class="btn btn-light btn-sm border answer-reader-open" type="button" data-meta-panel-open title="查看診斷、來源與警告">
+                    <i data-lucide="panel-right-open"></i>
+                    <span>詳細</span>
+                </button>
+            </div>
         </div>
         <div class="answer-body">${renderMarkdownAnswer(data.answer || "-", graph.nodes || [])}</div>
-        ${renderAnswerSources(data.sources || [], { inline: true })}
         ${renderAnswerMetrics(data)}
-        ${renderTraceSummary(data.trace)}
     `;
     renderIcons();
 }

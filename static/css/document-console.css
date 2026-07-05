@@ -1223,8 +1223,7 @@ main.app-shell:has(.graphrag-workspace) {
 }
 
 .graphrag-chat-panel > #ask-form,
-.graphrag-panel-head,
-.graphrag-meta-panel {
+.graphrag-panel-head {
     flex: 0 0 auto;
 }
 
@@ -1234,10 +1233,49 @@ main.app-shell:has(.graphrag-workspace) {
     overflow: auto;
 }
 
+.meta-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    background: rgba(15, 23, 42, 0.28);
+    backdrop-filter: blur(2px);
+}
+
 .graphrag-meta-panel {
-    border-top: 1px solid #e2e8f0;
-    margin-top: 0.8rem;
-    padding-top: 0.8rem;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 45;
+    width: min(420px, calc(100vw - 2rem));
+    overflow: auto;
+    border-radius: 18px;
+    border: 1px solid #dbe3ef;
+    background: #ffffff;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.24);
+    padding: 1rem;
+}
+
+.meta-panel-head {
+    position: sticky;
+    top: -1rem;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: -1rem -1rem 0.85rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    padding: 1rem;
+}
+
+.meta-panel-title {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0;
 }
 
 .diagnostic-panel {
@@ -1563,6 +1601,15 @@ main.app-shell:has(.graphrag-workspace) {
     min-width: 0;
 }
 
+.answer-title-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
 .answer-reader-open {
     flex: 0 0 auto;
     display: inline-flex;
@@ -1738,6 +1785,16 @@ main.app-shell:has(.graphrag-workspace) {
     .answer-reader {
         width: calc(100vw - 1rem);
         height: calc(100vh - 2rem);
+    }
+
+    .graphrag-meta-panel {
+        top: auto;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        left: 0.5rem;
+        width: auto;
+        max-height: min(78vh, 720px);
+        border-radius: 18px 18px 14px 14px;
     }
 
     .hero-panel {
