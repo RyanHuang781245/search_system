@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <title>圖 3.1 研究方法總架構圖</title>
+  <desc>呈現會議記錄由原始文件轉換為來源限制 GraphRAG 回答的四層研究方法。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#222"/>
+    </marker>
+    <style>
+      .title{font:700 25px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .label{font:700 18px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .text{font:600 16px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .small{font:500 14px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#333}
+      .box{fill:#fff;stroke:#111;stroke-width:1.8}
+      .soft{fill:#f7f7f7;stroke:#111;stroke-width:1.5}
+      .arrow{fill:none;stroke:#111;stroke-width:1.9;marker-end:url(#arrow)}
+      .dash{fill:none;stroke:#555;stroke-width:1.4;stroke-dasharray:7 5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="720" fill="#fff"/>
+  <text x="600" y="42" text-anchor="middle" class="title">研究方法總架構圖</text>
+
+  <rect x="55" y="110" width="185" height="110" rx="10" class="soft"/>
+  <text x="147" y="146" text-anchor="middle" class="label">原始資料</text>
+  <text x="147" y="174" text-anchor="middle" class="text">固定格式</text>
+  <text x="147" y="198" text-anchor="middle" class="text">企業會議記錄</text>
+
+  <rect x="290" y="95" width="190" height="140" rx="10" class="box"/>
+  <text x="385" y="128" text-anchor="middle" class="label">第一層</text>
+  <text x="385" y="160" text-anchor="middle" class="text">資料模型與</text>
+  <text x="385" y="184" text-anchor="middle" class="text">最小證據單位</text>
+  <text x="385" y="214" text-anchor="middle" class="small">Document / Meeting / MeetingItem</text>
+
+  <rect x="530" y="95" width="190" height="140" rx="10" class="box"/>
+  <text x="625" y="128" text-anchor="middle" class="label">第二層</text>
+  <text x="625" y="160" text-anchor="middle" class="text">混合式</text>
+  <text x="625" y="184" text-anchor="middle" class="text">證據檢索</text>
+  <text x="625" y="214" text-anchor="middle" class="small">欄位、關係、語意互補</text>
+
+  <rect x="770" y="95" width="190" height="140" rx="10" class="box"/>
+  <text x="865" y="128" text-anchor="middle" class="label">第三層</text>
+  <text x="865" y="160" text-anchor="middle" class="text">GraphRAG</text>
+  <text x="865" y="184" text-anchor="middle" class="text">證據集合組裝</text>
+  <text x="865" y="214" text-anchor="middle" class="small">去重、排序、來源正規化</text>
+
+  <rect x="1010" y="95" width="155" height="140" rx="10" class="box"/>
+  <text x="1088" y="128" text-anchor="middle" class="label">第四層</text>
+  <text x="1088" y="160" text-anchor="middle" class="text">來源限制</text>
+  <text x="1088" y="184" text-anchor="middle" class="text">回答生成</text>
+  <text x="1088" y="214" text-anchor="middle" class="small">可回溯、可拒答</text>
+
+  <path d="M240 165 H280" class="arrow"/>
+  <path d="M480 165 H520" class="arrow"/>
+  <path d="M720 165 H760" class="arrow"/>
+  <path d="M960 165 H1000" class="arrow"/>
+
+  <rect x="120" y="330" width="255" height="86" rx="10" class="soft"/>
+  <text x="248" y="360" text-anchor="middle" class="label">欄位事實</text>
+  <text x="248" y="388" text-anchor="middle" class="text">會議名稱、項次、內容</text>
+  <text x="248" y="412" text-anchor="middle" class="text">負責人、日期、追蹤結果</text>
+
+  <rect x="472" y="330" width="255" height="86" rx="10" class="soft"/>
+  <text x="600" y="360" text-anchor="middle" class="label">關係脈絡</text>
+  <text x="600" y="388" text-anchor="middle" class="text">人員、單位、日期</text>
+  <text x="600" y="412" text-anchor="middle" class="text">產品、法規、關鍵詞路徑</text>
+
+  <rect x="824" y="330" width="255" height="86" rx="10" class="soft"/>
+  <text x="952" y="360" text-anchor="middle" class="label">語意召回</text>
+  <text x="952" y="388" text-anchor="middle" class="text">補足用詞不同</text>
+  <text x="952" y="412" text-anchor="middle" class="text">造成的查詢落差</text>
+
+  <path d="M248 330 C248 280 625 275 625 245" class="dash"/>
+  <path d="M600 330 V245" class="dash"/>
+  <path d="M952 330 C952 280 625 275 625 245" class="dash"/>
+
+  <rect x="265" y="510" width="670" height="86" rx="10" class="box"/>
+  <text x="600" y="544" text-anchor="middle" class="label">研究主張</text>
+  <text x="600" y="574" text-anchor="middle" class="text">會議記錄問答應同時保留欄位事實、關係脈絡與來源位置，</text>
+  <text x="600" y="598" text-anchor="middle" class="text">而不是只依賴文字相似度或自由生成回答。</text>
+
+  <text x="600" y="675" text-anchor="middle" class="small">資料來源：本研究整理</text>
+</svg>

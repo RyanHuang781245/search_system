@@ -28,6 +28,15 @@ STATUS_TERMS = {
     "in_progress": ("進行中", "處理中", "pending", "ongoing", "in progress"),
 }
 PSEUDONYM_PERSON_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(Person_[A-F0-9]{10})(?![A-Za-z0-9_])", flags=re.I)
+QUESTION_CUE_TERMS = {
+    "\u63d0\u53ca",  # mention
+    "\u76f8\u95dc",  # related
+    "\u95dc\u65bc",  # about
+    "\u6703\u8b70",
+    "\u9805\u76ee",
+    "\u6709\u54ea\u4e9b",
+    "\u54ea\u4e9b",
+}
 
 
 def deterministic_query_understanding(question: str) -> dict:
@@ -77,12 +86,12 @@ def determine_query_type(text: str, lowered: str, entities: dict, graph_intent: 
         ("相關", "提到", "關於", "related", "mentions", "about"),
     ):
         return "relation_lookup"
+    if graph_intent == "keyword_related" and is_keyword_exploration_question(text, lowered, entities):
+        return "keyword_exploration"
     if is_structural_item_list_question(lowered):
         return "structural_list"
     if graph_intent != "keyword_related":
         return "relation_lookup"
-    if is_keyword_exploration_question(text, lowered, entities):
-        return "keyword_exploration"
     return "open_qa"
 
 
@@ -175,6 +184,8 @@ def is_meeting_summary_question(text: str, entities: dict) -> bool:
 
 
 def is_keyword_exploration_question(text: str, lowered: str, entities: dict) -> bool:
+    if has_any(text, tuple(QUESTION_CUE_TERMS)):
+        return True
     return bool(entities.get("regulation_name") or entities.get("product_name")) or has_any(
         lowered,
         ("相關", "提到", "關於", "related", "mentions", "about"),
@@ -245,7 +256,9 @@ def extract_person_name(text: str) -> str:
         return value
     match = re.search(r"([\u4e00-\u9fff]{2,4})(?:負責|出席|參加|主持|記錄|紀錄)", value)
     if match:
-        return match.group(1)
+        candidate = match.group(1)
+        if not is_question_placeholder(candidate):
+            return candidate
     match = re.search(r"\b([A-Za-z][A-Za-z0-9_-]{1,})\s*(?:負責|出席|參加|主持|記錄|紀錄)", value)
     if match:
         candidate = match.group(1).strip()
@@ -253,7 +266,9 @@ def extract_person_name(text: str) -> str:
             return candidate
     match = re.search(r"^([\u4e00-\u9fff]{2,4})(?=\s|,|，|FDA|TFDA|CFDA|PMDA|CE|Conformity|stem|cage|handle|未完成|已完成|負責|出席|主持|記錄|紀錄)", value, flags=re.I)
     if match:
-        return match.group(1)
+        candidate = match.group(1)
+        if not is_question_placeholder(candidate):
+            return candidate
     match = re.search(r"\b(?:is|what is|what's)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:responsible|owner|attended|chair|chaired|recorder|recorded)\b", value, flags=re.I)
     if match:
         candidate = match.group(1).strip()
@@ -272,6 +287,13 @@ def is_question_placeholder(value: str) -> bool:
         "items",
         "owner",
         "responsible",
+        "\u63d0\u53ca",
+        "\u76f8\u95dc",
+        "\u95dc\u65bc",
+        "\u6703\u8b70",
+        "\u9805\u76ee",
+        "\u6709\u54ea\u4e9b",
+        "\u54ea\u4e9b",
     }
 
 

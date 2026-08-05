@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <title>系統流程圖</title>
+  <desc>論文用系統流程圖，以概念化方式描述文件匯入、解析、知識建置與查詢回應流程。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#222222"/>
+    </marker>
+    <style>
+      .title { font: 700 25px "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; fill: #111111; }
+      .header { font: 700 18px "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; fill: #111111; }
+      .lane { font: 700 17px "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; fill: #111111; writing-mode: vertical-rl; glyph-orientation-vertical: 0; }
+      .box-text { font: 600 17px "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; fill: #111111; }
+      .small-text { font: 500 14px "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif; fill: #333333; }
+      .frame { fill: #ffffff; stroke: #111111; stroke-width: 1.5; }
+      .stage { fill: #f5f5f5; stroke: #111111; stroke-width: 1.4; }
+      .box { fill: #ffffff; stroke: #111111; stroke-width: 1.7; }
+      .decision { fill: #ffffff; stroke: #111111; stroke-width: 1.7; }
+      .store { fill: #fbfbfb; stroke: #111111; stroke-width: 1.6; }
+      .line { fill: none; stroke: #111111; stroke-width: 1.2; }
+      .arrow { fill: none; stroke: #111111; stroke-width: 1.8; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="980" fill="#ffffff"/>
+  <text x="800" y="42" text-anchor="middle" class="title">結構化會議文件檢索系統流程圖</text>
+
+  <rect x="45" y="65" width="1510" height="840" class="frame"/>
+  <rect x="155" y="65" width="1400" height="46" class="stage"/>
+  <line x1="45" y1="111" x2="1555" y2="111" class="line"/>
+  <line x1="45" y1="280" x2="1555" y2="280" class="line"/>
+  <line x1="45" y1="695" x2="1555" y2="695" class="line"/>
+  <line x1="155" y1="65" x2="155" y2="905" class="line"/>
+  <line x1="505" y1="65" x2="505" y2="905" class="line"/>
+  <line x1="855" y1="65" x2="855" y2="905" class="line"/>
+  <line x1="1205" y1="65" x2="1205" y2="905" class="line"/>
+
+  <text x="330" y="94" text-anchor="middle" class="header">資料匯入</text>
+  <text x="680" y="94" text-anchor="middle" class="header">文件解析</text>
+  <text x="1030" y="94" text-anchor="middle" class="header">知識建置</text>
+  <text x="1380" y="94" text-anchor="middle" class="header">查詢回應</text>
+
+  <text x="95" y="178" text-anchor="middle" class="lane">使用者操作</text>
+  <text x="95" y="488" text-anchor="middle" class="lane">系統處理</text>
+  <text x="95" y="788" text-anchor="middle" class="lane">輸出結果</text>
+
+  <!-- User lane -->
+  <rect x="215" y="145" width="230" height="64" rx="10" class="box"/>
+  <text x="330" y="171" text-anchor="middle" class="box-text">
+    <tspan x="330" dy="0">上傳會議紀錄</tspan>
+    <tspan x="330" dy="23">與文件說明</tspan>
+  </text>
+
+  <rect x="565" y="145" width="230" height="64" rx="10" class="box"/>
+  <text x="680" y="171" text-anchor="middle" class="box-text">
+    <tspan x="680" dy="0">啟動文件解析</tspan>
+    <tspan x="680" dy="23">確認處理狀態</tspan>
+  </text>
+
+  <rect x="915" y="145" width="230" height="64" rx="10" class="box"/>
+  <text x="1030" y="171" text-anchor="middle" class="box-text">
+    <tspan x="1030" dy="0">更新系統索引</tspan>
+    <tspan x="1030" dy="23">維持資料一致性</tspan>
+  </text>
+
+  <rect x="1265" y="136" width="230" height="82" rx="10" class="box"/>
+  <text x="1380" y="161" text-anchor="middle" class="box-text">
+    <tspan x="1380" dy="0">輸入查詢條件</tspan>
+    <tspan x="1380" dy="23">或自然語言問題</tspan>
+    <tspan x="1380" dy="23">檢視系統回覆</tspan>
+  </text>
+
+  <path d="M445 177 H555" class="arrow"/>
+  <path d="M795 177 H905" class="arrow"/>
+  <path d="M1145 177 H1255" class="arrow"/>
+
+  <!-- Processing lane -->
+  <rect x="215" y="325" width="230" height="64" rx="10" class="box"/>
+  <text x="330" y="351" text-anchor="middle" class="box-text">
+    <tspan x="330" dy="0">檢查文件格式</tspan>
+    <tspan x="330" dy="23">建立文件基本資料</tspan>
+  </text>
+
+  <rect x="215" y="435" width="230" height="76" rx="10" class="box"/>
+  <text x="330" y="460" text-anchor="middle" class="box-text">
+    <tspan x="330" dy="0">移除或替換</tspan>
+    <tspan x="330" dy="23">可識別資訊</tspan>
+    <tspan x="330" dy="23">保存文件紀錄</tspan>
+  </text>
+
+  <rect x="565" y="315" width="230" height="64" rx="10" class="box"/>
+  <text x="680" y="341" text-anchor="middle" class="box-text">
+    <tspan x="680" dy="0">擷取文件文字</tspan>
+    <tspan x="680" dy="23">與表格內容</tspan>
+  </text>
+
+  <polygon points="680,410 790,462 680,514 570,462" class="decision"/>
+  <text x="680" y="458" text-anchor="middle" class="box-text">
+    <tspan x="680" dy="0">內容是否</tspan>
+    <tspan x="680" dy="23">可解析？</tspan>
+  </text>
+
+  <rect x="565" y="545" width="230" height="76" rx="10" class="box"/>
+  <text x="680" y="570" text-anchor="middle" class="box-text">
+    <tspan x="680" dy="0">整理會議資訊</tspan>
+    <tspan x="680" dy="23">與追蹤事項</tspan>
+    <tspan x="680" dy="23">形成結構化資料</tspan>
+  </text>
+
+  <rect x="325" y="545" width="120" height="58" rx="10" class="box"/>
+  <text x="385" y="568" text-anchor="middle" class="box-text">
+    <tspan x="385" dy="0">標記需</tspan>
+    <tspan x="385" dy="23">人工處理</tspan>
+  </text>
+
+  <rect x="915" y="310" width="230" height="64" rx="10" class="box"/>
+  <text x="1030" y="336" text-anchor="middle" class="box-text">
+    <tspan x="1030" dy="0">建立文件、會議</tspan>
+    <tspan x="1030" dy="23">與事項關聯</tspan>
+  </text>
+
+  <rect x="915" y="420" width="230" height="76" rx="10" class="box"/>
+  <text x="1030" y="445" text-anchor="middle" class="box-text">
+    <tspan x="1030" dy="0">抽取人員、單位</tspan>
+    <tspan x="1030" dy="23">日期、主題</tspan>
+    <tspan x="1030" dy="23">及追蹤關係</tspan>
+  </text>
+
+  <rect x="915" y="545" width="230" height="64" rx="10" class="box"/>
+  <text x="1030" y="571" text-anchor="middle" class="box-text">
+    <tspan x="1030" dy="0">建立語意索引</tspan>
+    <tspan x="1030" dy="23">支援相似內容查找</tspan>
+  </text>
+
+  <rect x="1265" y="305" width="230" height="64" rx="10" class="box"/>
+  <text x="1380" y="331" text-anchor="middle" class="box-text">
+    <tspan x="1380" dy="0">分析查詢意圖</tspan>
+    <tspan x="1380" dy="23">套用篩選條件</tspan>
+  </text>
+
+  <rect x="1265" y="415" width="230" height="76" rx="10" class="box"/>
+  <text x="1380" y="440" text-anchor="middle" class="box-text">
+    <tspan x="1380" dy="0">比對結構資料</tspan>
+    <tspan x="1380" dy="23">知識關聯</tspan>
+    <tspan x="1380" dy="23">與語意相似度</tspan>
+  </text>
+
+  <rect x="1265" y="545" width="230" height="76" rx="10" class="box"/>
+  <text x="1380" y="570" text-anchor="middle" class="box-text">
+    <tspan x="1380" dy="0">彙整可信證據</tspan>
+    <tspan x="1380" dy="23">生成回答</tspan>
+    <tspan x="1380" dy="23">附上來源依據</tspan>
+  </text>
+
+  <path d="M330 209 V315" class="arrow"/>
+  <path d="M330 389 V425" class="arrow"/>
+  <path d="M445 473 H555" class="arrow"/>
+  <path d="M680 209 V305" class="arrow"/>
+  <path d="M680 379 V408" class="arrow"/>
+  <path d="M680 514 V535" class="arrow"/>
+  <path d="M570 462 H385 V535" class="arrow"/>
+  <text x="704" y="531" class="small-text">是</text>
+  <text x="512" y="454" class="small-text">否</text>
+  <path d="M795 583 H905" class="arrow"/>
+  <path d="M1030 209 V300" class="arrow"/>
+  <path d="M1030 374 V410" class="arrow"/>
+  <path d="M1030 496 V535" class="arrow"/>
+  <path d="M1145 577 H1255" class="arrow"/>
+  <path d="M1380 218 V295" class="arrow"/>
+  <path d="M1380 369 V405" class="arrow"/>
+  <path d="M1380 491 V535" class="arrow"/>
+
+  <!-- Output lane -->
+  <rect x="215" y="745" width="230" height="72" rx="10" class="box"/>
+  <text x="330" y="770" text-anchor="middle" class="box-text">
+    <tspan x="330" dy="0">文件清單</tspan>
+    <tspan x="330" dy="23">解析狀態</tspan>
+    <tspan x="330" dy="23">與基本資訊</tspan>
+  </text>
+
+  <rect x="565" y="745" width="230" height="72" rx="10" class="box"/>
+  <text x="680" y="770" text-anchor="middle" class="box-text">
+    <tspan x="680" dy="0">會議主檔</tspan>
+    <tspan x="680" dy="23">追蹤事項</tspan>
+    <tspan x="680" dy="23">與表格欄位</tspan>
+  </text>
+
+  <rect x="915" y="745" width="230" height="72" rx="10" class="box"/>
+  <text x="1030" y="770" text-anchor="middle" class="box-text">
+    <tspan x="1030" dy="0">知識脈絡圖</tspan>
+    <tspan x="1030" dy="23">關聯推薦</tspan>
+    <tspan x="1030" dy="23">與相似事項</tspan>
+  </text>
+
+  <rect x="1265" y="735" width="230" height="82" rx="10" class="box"/>
+  <text x="1380" y="759" text-anchor="middle" class="box-text">
+    <tspan x="1380" dy="0">排序後搜尋結果</tspan>
+    <tspan x="1380" dy="23">問答摘要</tspan>
+    <tspan x="1380" dy="23">與佐證來源</tspan>
+  </text>
+
+  <rect x="1265" y="850" width="230" height="42" rx="10" class="box"/>
+  <text x="1380" y="877" text-anchor="middle" class="box-text">使用紀錄回饋排序</text>
+
+  <path d="M330 511 V735" class="arrow"/>
+  <path d="M680 621 V735" class="arrow"/>
+  <path d="M1030 609 V735" class="arrow"/>
+  <path d="M1380 621 V725" class="arrow"/>
+  <path d="M1380 817 V840" class="arrow"/>
+  <path d="M1265 871 H1215 V453 H1255" class="arrow"/>
+
+  <!-- Conceptual data stores -->
+  <text x="800" y="935" text-anchor="middle" class="small-text">註：系統內部包含文件資料庫、知識關聯庫、語意索引與語言模型服務，本圖以功能流程呈現。</text>
+</svg>

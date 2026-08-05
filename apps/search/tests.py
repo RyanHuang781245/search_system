@@ -9,7 +9,7 @@ from rest_framework.test import APISimpleTestCase
 
 from apps.item_status import classify_item_status, is_meaningful_value
 
-from .ranking import has_task_intent, score_item
+from .ranking import has_task_intent, matches_query, score_item
 
 
 class SearchRankingTestCase(SimpleTestCase):
@@ -38,6 +38,11 @@ class SearchRankingTestCase(SimpleTestCase):
         self.assertTrue(has_task_intent("未完成追蹤"))
         self.assertEqual(topic_score["task_score"], 0.0)
         self.assertEqual(task_score["task_score"], 7.0)
+
+    def test_matches_query_extracts_ascii_phrase_from_chinese_question(self):
+        query = "\u63d0\u53ca Taper length \u76f8\u95dc\u7684\u6703\u8b70\u9805\u76ee\u6709\u54ea\u4e9b\uff1f"
+
+        self.assertTrue(matches_query("Taper length \u78ba\u5b9a\u70ba10mm\u3002", query.lower()))
 
 
 class FakeCursor:

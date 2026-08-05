@@ -1380,8 +1380,10 @@ def clean_keyword_question(question: str) -> str:
         "事項",
         "議題",
         "內容",
+        "\u63d0\u53ca",
         "提到",
         "關於",
+        "\u7684",
         "列出",
         "請問",
         "related",
@@ -1407,7 +1409,24 @@ def add_keyword_context_term(terms: list[str], value) -> None:
     term = str(value or "").strip(" \t\r\n,，。；;:：?？()（）[]【】\"'")
     if len(term) < 2:
         return
-    if term.lower() in {"related", "overview", "meeting", "meetings", "items", "item", "which", "what"}:
+    if term.lower() in {
+        "related",
+        "overview",
+        "meeting",
+        "meetings",
+        "items",
+        "item",
+        "which",
+        "what",
+        "\u63d0\u53ca",
+        "\u76f8\u95dc",
+        "\u95dc\u65bc",
+        "\u6703\u8b70",
+        "\u9805\u76ee",
+        "\u6709\u54ea\u4e9b",
+        "\u54ea\u4e9b",
+        "\u7684",
+    }:
         return
     if term.lower() not in {existing.lower() for existing in terms}:
         terms.append(term)

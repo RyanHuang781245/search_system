@@ -1546,6 +1546,33 @@ class GraphRagServiceTestCase(SimpleTestCase):
     def test_keyword_context_terms_keep_multi_word_product_phrase_precise(self):
         self.assertEqual(keyword_context_terms("United Hip System相關會議項目有哪些?"), ["United Hip System"])
 
+    def test_taper_length_question_routes_to_keyword_exploration(self):
+        question = "\u63d0\u53ca Taper length \u76f8\u95dc\u7684\u6703\u8b70\u9805\u76ee\u6709\u54ea\u4e9b\uff1f"
+        parsed = deterministic_query_understanding(question)
+        route = route_question(question)
+
+        self.assertEqual(parsed["query_type"], "keyword_exploration")
+        self.assertEqual(parsed["entities"]["person_name"], "")
+        self.assertEqual(route.query_type, "keyword_exploration")
+        self.assertTrue(should_allow_keyword_fallback(route, set()))
+        self.assertEqual(keyword_context_terms(question), ["Taper length"])
+
+    def test_keyword_structured_context_matches_taper_length_question(self):
+        question = "\u63d0\u53ca Taper length \u76f8\u95dc\u7684\u6703\u8b70\u9805\u76ee\u6709\u54ea\u4e9b\uff1f"
+        meetings = [{"meeting_id": "meeting_523b2503e014", "meeting_name": "Design meeting"}]
+        items = [
+            {
+                "meeting_id": "meeting_523b2503e014",
+                "item_id": "item_4437863f2db3",
+                "item_no": "02",
+                "content": "Taper length \u78ba\u5b9a\u70ba10mm\u3002",
+            }
+        ]
+
+        context = keyword_structured_context(question, meetings, items, limit=10)
+
+        self.assertEqual([item["item_id"] for item in context], ["item_4437863f2db3"])
+
     def test_keyword_structured_context_does_not_match_component_system_token(self):
         meetings = [
             {"meeting_id": "meeting_001", "meeting_name": "Locking cage review"},

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <title>圖 3.5 GraphRAG 證據集合組裝圖</title>
+  <desc>呈現候選證據經去重、排序與來源正規化後，形成 GraphRAG 回答上下文。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#222"/>
+    </marker>
+    <style>
+      .title{font:700 25px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .label{font:700 18px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .text{font:600 16px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .small{font:500 14px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#333}
+      .box{fill:#fff;stroke:#111;stroke-width:1.8}
+      .soft{fill:#f7f7f7;stroke:#111;stroke-width:1.5}
+      .key{fill:#fff;stroke:#111;stroke-width:2.2}
+      .arrow{fill:none;stroke:#111;stroke-width:1.9;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="720" fill="#fff"/>
+  <text x="600" y="42" text-anchor="middle" class="title">GraphRAG 證據集合組裝圖</text>
+
+  <rect x="65" y="130" width="210" height="92" rx="10" class="box"/>
+  <text x="170" y="160" text-anchor="middle" class="label">候選證據</text>
+  <text x="170" y="188" text-anchor="middle" class="text">欄位、圖譜、語意</text>
+  <text x="170" y="212" text-anchor="middle" class="text">多來源召回結果</text>
+
+  <rect x="340" y="130" width="190" height="92" rx="10" class="box"/>
+  <text x="435" y="160" text-anchor="middle" class="label">去重合併</text>
+  <text x="435" y="188" text-anchor="middle" class="text">依 item_id</text>
+  <text x="435" y="212" text-anchor="middle" class="text">整合同一項目</text>
+
+  <rect x="595" y="130" width="190" height="92" rx="10" class="box"/>
+  <text x="690" y="160" text-anchor="middle" class="label">排序篩選</text>
+  <text x="690" y="188" text-anchor="middle" class="text">控制證據量</text>
+  <text x="690" y="212" text-anchor="middle" class="text">降低弱相關干擾</text>
+
+  <rect x="850" y="130" width="210" height="92" rx="10" class="box"/>
+  <text x="955" y="160" text-anchor="middle" class="label">來源正規化</text>
+  <text x="955" y="188" text-anchor="middle" class="text">保存 document_id</text>
+  <text x="955" y="212" text-anchor="middle" class="text">meeting_id / item_id</text>
+
+  <path d="M275 176 H330" class="arrow"/>
+  <path d="M530 176 H585" class="arrow"/>
+  <path d="M785 176 H840" class="arrow"/>
+
+  <rect x="120" y="355" width="215" height="82" rx="10" class="soft"/>
+  <text x="228" y="386" text-anchor="middle" class="label">結構化上下文</text>
+  <text x="228" y="414" text-anchor="middle" class="text">會議、項次、欄位事實</text>
+
+  <rect x="380" y="355" width="215" height="82" rx="10" class="soft"/>
+  <text x="488" y="386" text-anchor="middle" class="label">圖譜上下文</text>
+  <text x="488" y="414" text-anchor="middle" class="text">關係路徑與節點脈絡</text>
+
+  <rect x="640" y="355" width="215" height="82" rx="10" class="soft"/>
+  <text x="748" y="386" text-anchor="middle" class="label">語意上下文</text>
+  <text x="748" y="414" text-anchor="middle" class="text">相近會議項目</text>
+
+  <rect x="900" y="355" width="215" height="82" rx="10" class="soft"/>
+  <text x="1008" y="386" text-anchor="middle" class="label">來源中繼資料</text>
+  <text x="1008" y="414" text-anchor="middle" class="text">來源列表與證據編號</text>
+
+  <rect x="390" y="545" width="420" height="78" rx="10" class="key"/>
+  <text x="600" y="576" text-anchor="middle" class="label">GraphRAG 回答上下文</text>
+  <text x="600" y="606" text-anchor="middle" class="text">提供給語言模型的唯一回答依據</text>
+
+  <path d="M955 222 C955 285 228 300 228 345" class="arrow"/>
+  <path d="M955 222 C955 285 488 300 488 345" class="arrow"/>
+  <path d="M955 222 C955 285 748 300 748 345" class="arrow"/>
+  <path d="M955 222 C955 285 1008 300 1008 345" class="arrow"/>
+  <path d="M228 437 C228 505 600 500 600 535" class="arrow"/>
+  <path d="M488 437 C488 505 600 500 600 535" class="arrow"/>
+  <path d="M748 437 C748 505 600 500 600 535" class="arrow"/>
+  <path d="M1008 437 C1008 505 600 500 600 535" class="arrow"/>
+
+  <text x="600" y="675" text-anchor="middle" class="small">資料來源：本研究整理</text>
+</svg>

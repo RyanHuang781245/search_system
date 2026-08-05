@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <title>圖 3.2 資料模型與最小證據單位圖</title>
+  <desc>呈現 Document、Meeting 與 MeetingItem 三層資料模型，以及 MeetingItem 作為最小證據單位的設計。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#222"/>
+    </marker>
+    <style>
+      .title{font:700 25px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .label{font:700 18px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .text{font:600 16px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#111}
+      .small{font:500 14px "Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;fill:#333}
+      .box{fill:#fff;stroke:#111;stroke-width:1.8}
+      .soft{fill:#f7f7f7;stroke:#111;stroke-width:1.5}
+      .key{fill:#fff;stroke:#111;stroke-width:2.2}
+      .arrow{fill:none;stroke:#111;stroke-width:1.9;marker-end:url(#arrow)}
+      .dash{fill:none;stroke:#555;stroke-width:1.4;stroke-dasharray:7 5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="720" fill="#fff"/>
+  <text x="600" y="42" text-anchor="middle" class="title">資料模型與最小證據單位圖</text>
+
+  <rect x="90" y="130" width="250" height="105" rx="10" class="box"/>
+  <text x="215" y="164" text-anchor="middle" class="label">Document</text>
+  <text x="215" y="194" text-anchor="middle" class="text">原始 PDF 文件</text>
+  <text x="215" y="218" text-anchor="middle" class="small">document_id、檔名、上傳來源</text>
+
+  <rect x="475" y="130" width="250" height="105" rx="10" class="box"/>
+  <text x="600" y="164" text-anchor="middle" class="label">Meeting</text>
+  <text x="600" y="194" text-anchor="middle" class="text">會議主檔</text>
+  <text x="600" y="218" text-anchor="middle" class="small">meeting_id、名稱、日期、人員</text>
+
+  <rect x="860" y="110" width="260" height="145" rx="10" class="key"/>
+  <text x="990" y="145" text-anchor="middle" class="label">MeetingItem</text>
+  <text x="990" y="176" text-anchor="middle" class="text">會議項目列</text>
+  <text x="990" y="203" text-anchor="middle" class="small">item_id、項次、內容</text>
+  <text x="990" y="225" text-anchor="middle" class="small">負責人、日期、追蹤結果</text>
+  <text x="990" y="247" text-anchor="middle" class="small">主要檢索與最小證據單位</text>
+
+  <path d="M340 182 H465" class="arrow"/>
+  <path d="M725 182 H850" class="arrow"/>
+  <text x="405" y="165" text-anchor="middle" class="small">包含</text>
+  <text x="790" y="165" text-anchor="middle" class="small">包含</text>
+
+  <rect x="120" y="370" width="230" height="78" rx="10" class="soft"/>
+  <text x="235" y="400" text-anchor="middle" class="label">結構化資料</text>
+  <text x="235" y="428" text-anchor="middle" class="text">保存完整欄位事實</text>
+
+  <rect x="485" y="370" width="230" height="78" rx="10" class="soft"/>
+  <text x="600" y="400" text-anchor="middle" class="label">知識關聯</text>
+  <text x="600" y="428" text-anchor="middle" class="text">連結人員、日期、主題</text>
+
+  <rect x="850" y="370" width="230" height="78" rx="10" class="soft"/>
+  <text x="965" y="400" text-anchor="middle" class="label">語意索引</text>
+  <text x="965" y="428" text-anchor="middle" class="text">召回相近會議項目</text>
+
+  <rect x="390" y="545" width="420" height="72" rx="10" class="box"/>
+  <text x="600" y="574" text-anchor="middle" class="label">共同連結鍵：item_id</text>
+  <text x="600" y="602" text-anchor="middle" class="text">使不同證據來源能合併並回溯原始文件</text>
+
+  <path d="M990 255 C990 315 235 315 235 360" class="dash"/>
+  <path d="M990 255 C990 315 600 315 600 360" class="dash"/>
+  <path d="M990 255 C990 315 965 315 965 360" class="dash"/>
+  <path d="M235 448 C235 510 600 505 600 535" class="dash"/>
+  <path d="M600 448 V535" class="dash"/>
+  <path d="M965 448 C965 510 600 505 600 535" class="dash"/>
+
+  <text x="600" y="675" text-anchor="middle" class="small">資料來源：本研究整理</text>
+</svg>

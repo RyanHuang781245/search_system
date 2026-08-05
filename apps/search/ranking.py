@@ -186,10 +186,29 @@ def matches_query(value, lowered_query: str) -> bool:
         return any(matches_query(item, lowered_query) for item in value)
 
     haystack = str(value).lower()
+    if query_matches_haystack(haystack, lowered_query):
+        return True
+    return any(
+        query_matches_haystack(haystack, term)
+        for term in extracted_query_terms(lowered_query)
+        if term != lowered_query
+    )
+
+
+def query_matches_haystack(haystack: str, lowered_query: str) -> bool:
     if is_ascii_term(lowered_query):
         pattern = rf"(?<![a-z0-9]){re.escape(lowered_query)}(?![a-z0-9])"
         return re.search(pattern, haystack) is not None
     return lowered_query in haystack
+
+
+def extracted_query_terms(query: str) -> list[str]:
+    terms = []
+    for phrase in re.findall(r"[a-z0-9][a-z0-9._/-]*(?:\s+[a-z0-9][a-z0-9._/-]*){0,5}", str(query or "").lower()):
+        phrase = phrase.strip()
+        if len(phrase) >= 2 and phrase not in terms:
+            terms.append(phrase)
+    return sorted(terms, key=lambda value: (-len(value), value))
 
 
 def is_ascii_term(query: str) -> bool:
