@@ -6,9 +6,7 @@
 - `config/`：Django 設定與 URL 路由。
 - `templates/`：Console UI 使用的 HTML 頁面。
 - `static/`：JavaScript 與 CSS 靜態資源。
-- `docs/`：交接筆記與系統文件。
-- `_handoff/`：封存的論文、簡報、實驗資料、範例資料、參考程式與一次性研究檔案。
-- `uploads/`：執行期間的上傳檔案。Django 啟動時會重建此目錄，檔案已設定忽略。
+- `uploads/`：執行期間的上傳檔案。Django 啟動時會重建此目錄。
 - `work/`：本機匯出或暫存輸出目錄，已設定忽略。
 
 ## 環境建立
@@ -18,6 +16,15 @@ uv sync
 ```
 
 接著編輯 `.env`，設定 MongoDB、Neo4j、Qdrant 與 Ollama 的連線資訊。
+
+## MongoDB 安裝
+https://www.mongodb.com/try/download/community
+
+## Docker-Compose 啟動 Neo4j、Qdrant
+
+```powershell
+docker compose up -d
+```
 
 ## 執行系統
 
