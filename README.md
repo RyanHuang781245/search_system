@@ -16,10 +16,7 @@
 ## 環境建立
 
 ```powershell
-python -m venv .venv
-.\\.venv\\Scripts\\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
+uv sync
 ```
 
 接著編輯 `.env`，設定 MongoDB、Neo4j、Qdrant 與 Ollama 的連線資訊。
@@ -38,17 +35,3 @@ python manage.py runserver
 - `/meetings/`
 - `/search/`
 - `/graphrag/`
-
-## 測試
-
-```powershell
-python manage.py test
-```
-
-部分整合測試或功能流程需要 MongoDB、Neo4j、Qdrant 與 Ollama 服務已啟動。
-
-## 封存資料
-
-範例 PDF 與過去上傳過的檔案放在 `_handoff/sample-data/`。舊版獨立的 Qdrant / Neo4j / Ollama 參考實作放在 `_handoff/reference-implementation/`。
-
-更詳細的維護與交接說明請看 `docs/handoff.md`、`docs/maintainer_guide.md` 與 `docs/program_map_zh.md`。正式交接前請使用 `HANDOFF_CHECKLIST.md` 檢查。
