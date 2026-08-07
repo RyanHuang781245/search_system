@@ -526,95 +526,7 @@ GraphRAG golden case 測試資料。如果要讓後續維護者比較系統修�
 
 搜尋排序、推薦、GraphRAG 都可能間接依賴這裡。
 
-## 11. 管理指令
-
-### `apps/privacy/management/commands/reset_ingested_data.py`
-
-重置匯入資料的管理指令。預設 dry-run，不會真的刪資料。要真的刪除必須加 `--apply`。
-
-可用來清 MongoDB、Neo4j、Qdrant、uploads。這支很危險，交接時要特別提醒：執行前先備份，且確認參數。
-
-### `apps/graph/management/commands/deidentify_data.py`
-
-對已匯入資料進行去識別化，可處理 MongoDB、Neo4j、Qdrant、search history、mapping file、rebuild graph / vector index。
-
-### `apps/graph/management/commands/debug_item_status.py`
-
-debug 議案狀態判斷用。如果搜尋或 GraphRAG 對完成 / 未完成狀態判斷不合理，可以用這支檢查。
-
-### `apps/graph/management/commands/repair_item_statuses.py`
-
-修補既有議案資料的狀態欄位。如果改過 `apps/item_status.py` 的邏輯，可能需要跑這支更新舊資料。
-
-### `apps/graphrag/management/commands/seed_graphrag_cases.py`
-
-建立 GraphRAG golden cases。適合在交接時建立一組問題集，讓後續維護者驗證系統有沒有壞。
-
-### `apps/graphrag/management/commands/eval_graphrag.py`
-
-執行 GraphRAG 評估，可用來比較修改前後的回答品質。
-
-## 12. 前端頁面
-
-前端是 Django template + static JS，不是 React/Vue 專案。
-
-### `templates/base_console.html`
-
-所有 console 頁面的共同 layout，包含 navbar、toast、Bootstrap、Lucide icons、共用 CSS/JS。
-
-### `templates/documents.html`
-
-文件管理頁：上傳文件、列出文件、查看文件詳情、觸發解析、刪除文件。
-
-對應 JS：`static/js/documents-page.js`
-
-### `templates/meetings.html`
-
-會議資料頁：查詢會議、查看會議詳情、篩選議案、查看議案資料。
-
-對應 JS：`static/js/meetings-page.js`
-
-### `templates/search.html`
-
-搜尋頁：關鍵字搜尋、進階篩選、搜尋結果、相關會議 / 議案、搜尋統計。
-
-對應 JS：`static/js/search-page.js`
-
-### `templates/graphrag.html`
-
-GraphRAG 頁：問答、evidence 顯示、graph 可視化、建立圖譜、重建向量索引、關鍵字抽取、graph search、vector search、Text2Cypher、golden cases / evaluation。
-
-對應 JS：`static/js/graphrag-page.js`
-
-### `static/css/document-console.css`
-
-主要樣式檔。雖然名稱是 document-console，但實際上多個 console 頁面都會用到。
-
-### `static/js/document-console.js`
-
-前端共用 helper，例如 toast、API helper、共用 UI 行為。
-
-## 13. 測試檔
-
-各 app 底下都有 `tests.py` 或其他測試檔：
-
-- `apps/documents/tests.py`
-- `apps/documents/tests_integration.py`
-- `apps/meetings/tests.py`
-- `apps/search/tests.py`
-- `apps/vector/tests.py`
-- `apps/graph/tests.py`
-- `apps/graph/tests_deidentify.py`
-- `apps/graphrag/tests.py`
-- `apps/privacy/tests_deidentification.py`
-
-交接建議：
-
-1. 小改動先跑相關 app 測試。
-2. 大改動跑全部測試。
-3. 至少跑 `python manage.py check` 確認 Django 設定沒壞。
-
-## 14. 外部服務與資料庫
+## 11. 外部服務與資料庫
 
 ### MongoDB
 
@@ -640,7 +552,7 @@ MongoDB 是主要資料來源。大部分功能若沒有 MongoDB，就沒有可�
 
 負責 embedding、GraphRAG 回答、optional intent / planner / keyword extraction。如果 LLM 或 embedding model 沒啟動，系統部分功能會降級或失敗。
 
-## 15. 常見維護情境
+## 12. 常見問題
 
 | 問題 | 優先檢查 |
 | --- | --- |
@@ -662,23 +574,3 @@ MongoDB 是主要資料來源。大部分功能若沒有 MongoDB，就沒有可�
 | GraphRAG 評估要新增題目 | `apps/graphrag/evaluation.py`、`apps/graphrag/fixtures/` |
 | 個資要處理 | `apps/privacy/deidentification.py`、`.env` |
 | 要清空重匯資料 | `apps/privacy/management/commands/reset_ingested_data.py` |
-
-## 16. 交接時建議講法
-
-可以這樣跟學弟說：
-
-> 這個系統是 Django 後端加上 MongoDB、Neo4j、Qdrant、Ollama。資料先從文件上傳開始，`documents` 負責存檔與建立文件紀錄；接著 `meetings` 和 `parser` 把 PDF 會議紀錄解析成 MongoDB 的會議與議案資料；搜尋功能在 `search`；語意搜尋索引在 `vector`；知識圖譜在 `graph`；最後 GraphRAG 問答在 `graphrag`，它會整合 MongoDB、Neo4j、Qdrant 和 LLM 的結果。前端頁面放在 `templates` 和 `static/js`，只是簡單的 Django template，不是獨立前端框架。
-
-再補充：
-
-> 維護時先分清楚問題發生在哪一層。如果是檔案上傳，看 `documents`；PDF 解析錯，看 `parser`；資料存取看 MongoDB helper；搜尋不準看 `search`；圖譜不準看 `graph`；語意搜尋看 `vector`；問答品質看 `graphrag/services.py` 和 `query_router.py`。外部服務壞掉時先看 `.env` 和 `config/settings.py`。
-
-## 17. 特別注意
-
-- `.env` 是本機私密設定，已放回專案根目錄，但不要提交到 git。
-- `.env.example` 才是可以交接的設定範本。
-- `_handoff/` 是清理時移出的備份與本機資料，不應提交。
-- `.venv-uv/` 是 uv 建立的新環境。
-- 舊的 `.venv/` 目前可能仍有 Python process 佔用，若要刪除要先確認沒有服務在跑。
-- 部分舊檔案中的中文字串在終端機顯示可能有亂碼。如果前端或錯誤訊息真的出現亂碼，優先檢查檔案編碼與原始字串是否已經 mojibake。
-- `reset_ingested_data.py`、`deidentify_data.py` 這類管理指令可能大量修改或刪除資料，務必先 dry-run、備份，再加 `--apply`。
