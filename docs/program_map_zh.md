@@ -1,0 +1,684 @@
+# 論文系統程式交接總覽
+
+這份文件是給接手維護的人看的「程式地圖」。重點是說明每個目錄、每個主要程式在做什麼，以及遇到問題時應該先看哪裡。
+
+## 1. 系統用途總覽
+
+這個系統是 Django 後端加上 MongoDB、Neo4j、Qdrant、Ollama，主要功能包含：
+
+- 上傳與管理會議文件
+- 解析 PDF 會議紀錄
+- 將會議、議案、出席者、關鍵字等資料存進 MongoDB
+- 建立 Neo4j 知識圖譜
+- 建立 Qdrant 向量索引
+- 提供關鍵字搜尋、語意搜尋、圖譜搜尋與 GraphRAG 問答
+- 提供簡易 Web Console 操作文件、會議、搜尋與 GraphRAG
+
+整體資料流：
+
+```text
+PDF / DOCX 上傳
+  -> documents 模組建立文件紀錄
+  -> meetings + parser 模組解析會議紀錄
+  -> MongoDB 儲存 meeting_minutes / meeting_items
+  -> graph 模組建立 Neo4j 知識圖譜
+  -> vector 模組建立 Qdrant 向量索引
+  -> search / graphrag 模組提供查詢與問答
+  -> templates + static 提供前端操作頁面
+```
+
+## 2. 目錄總表
+
+| 路徑 | 用途 |
+| --- | --- |
+| `config/` | Django 專案設定、總路由、WSGI |
+| `apps/documents/` | 文件上傳、列表、詳情、刪除、MongoDB 文件資料 |
+| `apps/meetings/` | 會議紀錄解析結果、議案資料、會議 API |
+| `apps/parser/` | PDF 文字抽取與會議紀錄格式解析 |
+| `apps/search/` | 關鍵字搜尋、排序、摘要、高亮、推薦、搜尋紀錄統計 |
+| `apps/vector/` | Qdrant 向量索引與語意搜尋 |
+| `apps/graph/` | Neo4j 知識圖譜建立、圖譜搜尋、Text2Cypher |
+| `apps/graphrag/` | GraphRAG 問答流程、查詢路由、證據整合、評估 |
+| `apps/privacy/` | 去識別化、重置已匯入資料的管理指令 |
+| `apps/item_status.py` | 會議議案狀態判斷共用工具 |
+| `templates/` | Django HTML 頁面 |
+| `static/css/` | 前端樣式 |
+| `static/js/` | 前端互動邏輯 |
+| `uploads/` | 使用者上傳檔案，通常不應進 git |
+| `_handoff/` | 清理時移出的交接備份、舊資料、本機私有資料，已被 git ignore |
+| `docs/` | 交接、維護與說明文件 |
+
+## 3. 啟動與設定相關
+
+### `manage.py`
+
+Django 專案入口。常用指令：
+
+```powershell
+uv run python manage.py runserver
+uv run python manage.py check
+uv run python manage.py test
+```
+
+目前 uv 環境已建立在 `.venv-uv/`，也可以用：
+
+```powershell
+.\.venv-uv\Scripts\python.exe manage.py check
+```
+
+### `config/settings.py`
+
+系統設定集中在這裡，會讀取 `.env`。主要設定包含：
+
+- Django apps
+- MongoDB 連線
+- Neo4j 連線
+- Qdrant 連線
+- Ollama / LLM / embedding model
+- 上傳檔案大小與副檔名限制
+- `UPLOAD_ROOT`
+- 去識別化開關
+
+維護時如果外部服務連不上，通常先檢查 `.env` 與這個檔案。
+
+### `config/urls.py`
+
+總路由。主要頁面與 API 掛載在這裡：
+
+- `/documents/`
+- `/meetings/`
+- `/search/`
+- `/graphrag/`
+- `/api/documents/`
+- `/api/meetings/`
+- `/api/search/`
+- `/api/vector/`
+- `/api/graph/`
+- `/api/graphrag/`
+
+首頁會導向 `/documents/`。
+
+## 4. 文件管理模組：`apps/documents/`
+
+這個模組負責「檔案上傳與文件紀錄」，是整個系統的第一站。
+
+### `apps/documents/views.py`
+
+提供文件相關 API：
+
+- 上傳文件
+- 查詢文件列表
+- 查詢單一文件詳情
+- 刪除文件
+
+主要 class：
+
+- `DocumentUploadView`
+- `DocumentListView`
+- `DocumentDetailDeleteView`
+
+如果前端上傳失敗、刪除失敗、列表沒有資料，先看這裡。
+
+### `apps/documents/services.py`
+
+文件管理的核心商業邏輯：
+
+- 產生文件 ID，例如 `doc_YYYYMMDD_xxxxxx`
+- 儲存上傳檔案到 `uploads/`
+- 正規化 tag
+- 建立 MongoDB 文件紀錄
+- 查詢文件列表與詳情
+- 軟刪除文件
+
+如果要改「文件資料長什麼樣子」或「上傳後存哪些欄位」，主要改這裡。
+
+### `apps/documents/mongo.py`
+
+MongoDB 連線工具，提供 `get_mongo_client()`、`get_database()`、`get_documents_collection()`。
+
+### `apps/documents/validators.py`
+
+上傳檔案驗證：
+
+- 副檔名是否允許
+- 檔案是否為空
+- 檔案大小是否超過限制
+- 是否為危險副檔名
+
+如果要允許新格式，例如 `.txt` 或 `.xlsx`，要同時檢查 `settings.py` 與這裡。
+
+### `apps/documents/urls.py`
+
+文件 API 路由表。
+
+## 5. 會議與解析模組：`apps/meetings/`、`apps/parser/`
+
+這一段負責把文件解析成會議紀錄與議案資料。
+
+### `apps/meetings/views.py`
+
+提供會議相關 API：
+
+- 解析已上傳文件
+- 查詢會議列表
+- 查詢會議詳情
+- 查詢議案列表
+- 查詢議案詳情
+
+常見入口：
+
+- `ParseMeetingMinutesView`
+- `MeetingMinuteListView`
+- `MeetingMinuteDetailView`
+- `MeetingItemListView`
+- `MeetingItemDetailView`
+
+如果按下「解析」後回傳錯誤，先看這裡接到哪個 service。
+
+### `apps/meetings/services.py`
+
+會議解析與儲存的核心：
+
+- 從文件 ID 找到上傳檔案
+- 呼叫 PDF 文字抽取
+- 呼叫會議紀錄 parser
+- 套用去識別化
+- 寫入 `meeting_minutes`
+- 寫入 `meeting_items`
+- 更新文件狀態，例如 `parsed` 或 `needs_ocr`
+- 提供會議與議案查詢 helper
+
+如果 PDF 解析結果不正確，這裡是第一個追流程的地方。
+
+### `apps/meetings/mongo.py`
+
+會議資料 MongoDB collection helper，主要使用 `meeting_minutes` 與 `meeting_items`。
+
+### `apps/parser/pdf_text_extractor.py`
+
+PDF 文字抽取器，使用 PyMuPDF，也就是 `fitz`。它會抽出每頁文字、words、表格、頁面大小與總字數。
+
+如果遇到掃描檔、圖片型 PDF，可能抽不到文字，系統會判斷為 `needs_ocr`。
+
+### `apps/parser/meeting_minutes_parser.py`
+
+會議紀錄格式解析器。它是規則式 parser，針對目前論文資料的會議紀錄版型做解析。
+
+主要負責：
+
+- 判斷是否需要 OCR
+- 解析會議 metadata
+- 解析會議議案
+- 從表格與 word position 抓欄位
+
+注意：這支程式有大量針對原始 PDF 版型與中文欄位的規則。如果之後換了不同格式的會議紀錄，最常需要改的就是這裡。
+
+## 6. 搜尋模組：`apps/search/`
+
+這個模組負責傳統關鍵字搜尋、排序、摘要、推薦與搜尋紀錄。
+
+### `apps/search/views.py`
+
+搜尋 API 入口，提供搜尋、點擊紀錄、相關會議推薦、相關議案推薦與搜尋統計。
+
+### `apps/search/services.py`
+
+搜尋核心流程：
+
+- 從 MongoDB 讀取會議與議案
+- 套用查詢條件與 filters
+- 取得 graph score context
+- 取得 feedback score
+- 呼叫 ranking 排序
+- 產生 snippet 與 highlight
+- 紀錄 search log 與 click log
+
+如果搜尋結果不準、排序不合理、查不到資料，這裡是主要維護入口。
+
+### `apps/search/ranking.py`
+
+排序演算法集中在這裡：
+
+- 會議 metadata 分數
+- 議案文字分數
+- 任務意圖分數
+- 時間新近度分數
+- 最終分數合併
+
+它也會用 `apps/item_status.py` 判斷議案狀態。
+
+### `apps/search/highlighter.py`
+
+產生搜尋結果摘要與 `<mark>` 高亮。如果搜尋結果頁面的摘要太短、太長、標錯字，通常改這裡。
+
+### `apps/search/recommender.py`
+
+相關會議與相關議案推薦。推薦依據包含相同單位、相同出席者 / 負責人、共同關鍵字、計畫日期、追蹤狀態。
+
+### `apps/search/feedback.py`
+
+用搜尋與點擊紀錄調整分數。使用者常點的結果可以加分，類似查詢也能共用部分 feedback 訊號。
+
+### `apps/search/stats.py`
+
+搜尋統計，例如總搜尋次數、總點擊次數、熱門查詢、熱門會議 / 議案、最近搜尋。
+
+### `apps/search/mongo.py`
+
+搜尋相關 collection helper 與 index 建立：
+
+- `meeting_minutes`
+- `meeting_items`
+- `search_logs`
+- `search_click_logs`
+
+## 7. 向量搜尋模組：`apps/vector/`
+
+這個模組負責 Qdrant 向量索引與語意搜尋。
+
+### `apps/vector/views.py`
+
+提供重新建立向量索引與語意搜尋 API。
+
+### `apps/vector/services.py`
+
+核心功能：
+
+- 從 MongoDB 讀取 `meeting_items`
+- 組合 embedding text
+- 呼叫 Ollama embedding model
+- 建立 / 確認 Qdrant collection
+- upsert 向量點
+- 依查詢語句進行 semantic search
+
+如果 GraphRAG 語意搜尋找不到資料，常見原因是 Qdrant 沒啟動、collection 沒建立、embedding model 沒拉下來、meeting items 尚未 reindex，或 score threshold 太高。
+
+## 8. 知識圖譜模組：`apps/graph/`
+
+這個模組負責 Neo4j 知識圖譜、圖譜搜尋、關鍵字抽取與 Text2Cypher。
+
+### `apps/graph/views.py`
+
+Graph API 入口，提供建立圖譜、查詢關聯關鍵字、圖譜搜尋、關鍵字抽取、Text2Cypher、節點展開。
+
+### `apps/graph/services.py`
+
+Graph 功能的 orchestration layer，通常只是把 view 的請求轉給底層功能，例如 `build_graph_from_mongo`、`search_graph`、`extract_keywords`。
+
+### `apps/graph/neo4j_client.py`
+
+Neo4j client singleton。重要設計是：如果 Neo4j 設定不存在或連線失敗，會回傳 `DisabledNeo4jClient`，讓系統不要整個 crash，而是讓圖譜功能降級。
+
+### `apps/graph/graph_builder.py`
+
+從 MongoDB 建立 Neo4j 圖譜。它會建立的主要節點：
+
+- `Document`
+- `Meeting`
+- `MeetingItem`
+- `Unit`
+- `Person`
+- `Date`
+- `Keyword`
+- `Product`
+- `Regulation`
+- `ActionItem`
+- `Decision`
+- `Risk`
+- `Issue`
+
+主要關係包含：
+
+- `HAS_MEETING`
+- `HAS_ITEM`
+- `BELONGS_TO_UNIT`
+- `RESPONSIBLE_BY`
+- `MENTIONS`
+- `HAS_ACTION`
+- `HAS_DECISION`
+- `HAS_RISK`
+- `TRACKS_ISSUE`
+- `FOLLOW_UP_OF`
+- `CO_OCCURS_WITH`
+
+如果圖譜結構要改，例如新增節點種類或關係，主要改這裡與 `cypher_queries.py`。
+
+### `apps/graph/cypher_queries.py`
+
+Cypher query 集中管理，避免 builder、search、Text2Cypher 到處散落 query 字串。
+
+Cypher 是 Neo4j 圖資料庫的查詢語言，可以把它理解成：
+
+```text
+SQL 是用來查關聯式資料庫
+Cypher 是用來查 Neo4j 圖資料庫
+```
+
+在這個系統裡，Cypher 主要做兩件事。
+
+第一，建立知識圖譜的節點與關聯。例如建立會議議案節點：
+
+```cypher
+MERGE (i:MeetingItem {item_id: $item_id})
+SET i.item_no = $item_no,
+    i.content = $content
+```
+
+意思是：如果 Neo4j 裡還沒有這個 `item_id` 的 `MeetingItem` 節點，就建立；如果已經存在，就更新它的欄位。
+
+再例如建立會議與議案的關聯：
+
+```cypher
+MATCH (m:Meeting {meeting_id: $meeting_id})
+MATCH (i:MeetingItem {item_id: $item_id})
+MERGE (m)-[:HAS_ITEM]->(i)
+```
+
+意思是：找到某場會議與某個議案，建立 `HAS_ITEM` 關係，表示這場會議包含這個議案。
+
+第二，查詢知識圖譜中的節點與關聯。例如查某個人負責哪些議案：
+
+```cypher
+MATCH (item:MeetingItem)-[:RESPONSIBLE_BY]->(person:Person)
+WHERE person.name = $person_name
+RETURN item.item_id, item.content, person.name
+```
+
+意思是：找出所有由這個人負責的會議議案，回傳議案 ID、內容和人名。
+
+交接時可以說：Cypher 是 Neo4j 的查詢語言。系統用 Cypher 把 MongoDB 裡的會議資料轉成圖譜節點與關聯，也用 Cypher 查詢某個人、產品、法規、關鍵字和會議議案之間的關係。
+
+### 知識圖譜與 LLM 的關係
+
+這套系統的知識圖譜不是完全透過 LLM 建立。主要邏輯是：
+
+```text
+規則式抽取為主
++ 部分 LLM 輔助
++ Neo4j Cypher 寫入與查詢節點關聯
+```
+
+也就是說，圖譜的節點與關聯不是讓 LLM 自由決定，而是從 MongoDB 的會議與議案欄位出發，用固定規則與 Cypher 建立。
+
+LLM 主要出現在這些輔助位置：
+
+- `apps/graph/keyword_extractor.py`：關鍵字、產品、法規抽取先用 regex / jieba，如果設定開啟，才用 Ollama 補候選詞。
+- `apps/graph/intent.py`：圖譜查詢意圖先用 deterministic 規則判斷，判斷不明確時才可能用 Ollama 做 intent classification。
+- `apps/graph/query_planner.py`：複合圖譜問題可以用 deterministic 或 Ollama 產生查詢計畫。
+- `apps/graph/text2cypher.py`：Text2Cypher 可用 LLM 產生 read-only Cypher，但會檢查禁止寫入語句。
+- `apps/graphrag/services.py`：GraphRAG 最後回答與 evidence selection 會用 LLM，但資料來源仍要回到 Neo4j / Qdrant / MongoDB 的 evidence。
+
+交接時可以這樣說：知識圖譜建置是規則與 Cypher 為主，LLM 只是輔助理解問題、補關鍵字或產生探索用查詢。真正資料對齊仍靠 `meeting_id`、`item_id` 與 Neo4j 裡明確建立的節點關聯。
+
+### `apps/graph/graph_search.py`
+
+圖譜搜尋核心。支援 `structural`、`composite`、`relation`、`keyword`、`follow_up` 等模式。
+
+它會整合 intent、query planner、related keywords、Neo4j 查詢結果，最後整理成可給 API / GraphRAG 用的結果格式。
+
+### `apps/graph/intent.py`
+
+圖譜查詢意圖分類。先用 deterministic 規則，必要時可用 Ollama 做 JSON intent classification。
+
+常見 intent 包含人員負責事項、人員出席、主席 / 紀錄者、單位會議、預計完成日期、實際完成日期、產品相關、法規相關、關鍵字相關。
+
+### `apps/graph/query_planner.py`
+
+把使用者問題轉成圖譜查詢計畫，決定查詢目標與限制條件，例如人名、單位、產品、法規、狀態、關鍵字。
+
+### `apps/graph/keyword_extractor.py`
+
+關鍵字、產品、法規候選抽取。使用 regex、jieba、optional Ollama LLM、optional embedding rerank。
+
+### `apps/graph/semantic_extractor.py`
+
+從議案文字抽出 action、decision、risk、issue、responsible people、product、regulation，也會計算 issue ID，讓追蹤類問題可以關聯前後議案。
+
+### `apps/graph/text2cypher.py`
+
+Text2Cypher 探索工具。它有安全限制：
+
+- 只允許 read-only 查詢
+- 禁止 CREATE / MERGE / DELETE / SET 等寫入語句
+- 限制可用 label 與 relationship
+- 自動補 LIMIT
+- 將 Neo4j path / row 轉成前端可視化 nodes / edges
+
+這支適合 demo 或 debug 圖譜，但不應讓使用者任意執行危險 Cypher。
+
+## 9. GraphRAG 模組：`apps/graphrag/`
+
+這是系統問答功能的核心。它會整合使用者問題、deterministic routing、Neo4j graph search、Qdrant semantic search、MongoDB fallback context、Ollama LLM 與 evidence grounding。
+
+### `apps/graphrag/views.py`
+
+GraphRAG API 入口，提供問答、golden cases seed、evaluation run、evaluation save。前端 `/graphrag/` 頁面主要打這裡。
+
+### `apps/graphrag/query_router.py`
+
+查詢路由器。它會判斷問題類型與查詢策略，例如：
+
+- `structural_list`
+- `relation_lookup`
+- `composite_query`
+- `meeting_summary`
+- `semantic_summary`
+- `follow_up_tracking`
+- `keyword_exploration`
+- `open_qa`
+
+輸出 `QueryRoute`，內容包含 query type、retrieval modes、是否使用 semantic search、是否允許 keyword fallback、預設 limit、answer style、entities。
+
+### `apps/graphrag/deterministic.py`
+
+規則式問題理解，會抽會議提示、人名、日期、產品、法規、狀態、graph intent。
+
+### `apps/graphrag/services.py`
+
+GraphRAG 主流程，最重要的一支：
+
+```text
+answer_question()
+  -> normalize question
+  -> route query
+  -> decide retrieval limit
+  -> semantic search
+  -> graph search
+  -> MongoDB fallback context
+  -> merge evidence
+  -> optional evidence selector
+  -> build prompt
+  -> call Ollama answer model
+  -> parse claims / evidence ids
+  -> restrict evidence
+  -> render grounded answer
+```
+
+如果 GraphRAG 回答說沒有資料、引用證據錯誤、回答太發散、沒有用到圖譜或向量資料、LLM 回答格式不對，主要看這支。
+
+### `apps/graphrag/evaluation.py`
+
+GraphRAG 評估工具，支援 golden cases 載入與儲存、從問題建立測資、檢查 expected item IDs / meeting IDs / relations / answer contains，以及 answer / source / graph evidence 一致性。
+
+### `apps/graphrag/fixtures/`
+
+GraphRAG golden case 測試資料。如果要讓後續維護者比較系統修改前後問答品質，應該維護這裡。
+
+## 10. 去識別化與共用狀態
+
+### `apps/privacy/deidentification.py`
+
+去識別化模組，由 `.env` 裡的 `DEIDENTIFICATION_ENABLED` 控制是否啟用。
+
+功能包含：
+
+- 人名假名化
+- 單位假名化
+- 公司 / 地點 / 檔名 / 參照文字處理
+- 寫出 mapping 檔
+- neutralize 敏感文字
+
+如果要交接真實資料，務必確認這個模組與 `.env` 設定。
+
+### `apps/item_status.py`
+
+議案狀態判斷共用工具。它會依據 `actual_completed_date`、`tracking_result` 與其他狀態文字，判斷議案是 completed、in_progress、pending 或 not_applicable。
+
+搜尋排序、推薦、GraphRAG 都可能間接依賴這裡。
+
+## 11. 管理指令
+
+### `apps/privacy/management/commands/reset_ingested_data.py`
+
+重置匯入資料的管理指令。預設 dry-run，不會真的刪資料。要真的刪除必須加 `--apply`。
+
+可用來清 MongoDB、Neo4j、Qdrant、uploads。這支很危險，交接時要特別提醒：執行前先備份，且確認參數。
+
+### `apps/graph/management/commands/deidentify_data.py`
+
+對已匯入資料進行去識別化，可處理 MongoDB、Neo4j、Qdrant、search history、mapping file、rebuild graph / vector index。
+
+### `apps/graph/management/commands/debug_item_status.py`
+
+debug 議案狀態判斷用。如果搜尋或 GraphRAG 對完成 / 未完成狀態判斷不合理，可以用這支檢查。
+
+### `apps/graph/management/commands/repair_item_statuses.py`
+
+修補既有議案資料的狀態欄位。如果改過 `apps/item_status.py` 的邏輯，可能需要跑這支更新舊資料。
+
+### `apps/graphrag/management/commands/seed_graphrag_cases.py`
+
+建立 GraphRAG golden cases。適合在交接時建立一組問題集，讓後續維護者驗證系統有沒有壞。
+
+### `apps/graphrag/management/commands/eval_graphrag.py`
+
+執行 GraphRAG 評估，可用來比較修改前後的回答品質。
+
+## 12. 前端頁面
+
+前端是 Django template + static JS，不是 React/Vue 專案。
+
+### `templates/base_console.html`
+
+所有 console 頁面的共同 layout，包含 navbar、toast、Bootstrap、Lucide icons、共用 CSS/JS。
+
+### `templates/documents.html`
+
+文件管理頁：上傳文件、列出文件、查看文件詳情、觸發解析、刪除文件。
+
+對應 JS：`static/js/documents-page.js`
+
+### `templates/meetings.html`
+
+會議資料頁：查詢會議、查看會議詳情、篩選議案、查看議案資料。
+
+對應 JS：`static/js/meetings-page.js`
+
+### `templates/search.html`
+
+搜尋頁：關鍵字搜尋、進階篩選、搜尋結果、相關會議 / 議案、搜尋統計。
+
+對應 JS：`static/js/search-page.js`
+
+### `templates/graphrag.html`
+
+GraphRAG 頁：問答、evidence 顯示、graph 可視化、建立圖譜、重建向量索引、關鍵字抽取、graph search、vector search、Text2Cypher、golden cases / evaluation。
+
+對應 JS：`static/js/graphrag-page.js`
+
+### `static/css/document-console.css`
+
+主要樣式檔。雖然名稱是 document-console，但實際上多個 console 頁面都會用到。
+
+### `static/js/document-console.js`
+
+前端共用 helper，例如 toast、API helper、共用 UI 行為。
+
+## 13. 測試檔
+
+各 app 底下都有 `tests.py` 或其他測試檔：
+
+- `apps/documents/tests.py`
+- `apps/documents/tests_integration.py`
+- `apps/meetings/tests.py`
+- `apps/search/tests.py`
+- `apps/vector/tests.py`
+- `apps/graph/tests.py`
+- `apps/graph/tests_deidentify.py`
+- `apps/graphrag/tests.py`
+- `apps/privacy/tests_deidentification.py`
+
+交接建議：
+
+1. 小改動先跑相關 app 測試。
+2. 大改動跑全部測試。
+3. 至少跑 `python manage.py check` 確認 Django 設定沒壞。
+
+## 14. 外部服務與資料庫
+
+### MongoDB
+
+主要 collection：
+
+- `documents`
+- `meeting_minutes`
+- `meeting_items`
+- `search_logs`
+- `search_click_logs`
+
+MongoDB 是主要資料來源。大部分功能若沒有 MongoDB，就沒有可查資料。
+
+### Neo4j
+
+存知識圖譜，由 `apps/graph/graph_builder.py` 從 MongoDB 重建。如果 Neo4j 壞掉，GraphRAG 仍可能靠 MongoDB / Qdrant 部分回答，但圖譜相關問題會變差。
+
+### Qdrant
+
+存議案向量，由 `apps/vector/services.py` 從 MongoDB `meeting_items` 重建。如果 Qdrant 壞掉，語意搜尋與 GraphRAG semantic retrieval 會受影響。
+
+### Ollama
+
+負責 embedding、GraphRAG 回答、optional intent / planner / keyword extraction。如果 LLM 或 embedding model 沒啟動，系統部分功能會降級或失敗。
+
+## 15. 常見維護情境
+
+| 問題 | 優先檢查 |
+| --- | --- |
+| 文件上傳失敗 | `apps/documents/views.py`、`apps/documents/validators.py`、`.env` 上傳限制 |
+| 文件上傳成功但列表沒有 | `apps/documents/services.py`、MongoDB `documents` |
+| PDF 解析不到文字 | `apps/parser/pdf_text_extractor.py`、PDF 是否為掃描檔 |
+| 會議欄位解析錯 | `apps/parser/meeting_minutes_parser.py` |
+| 解析後 MongoDB 沒資料 | `apps/meetings/services.py`、MongoDB `meeting_minutes` / `meeting_items` |
+| 搜尋結果排序怪 | `apps/search/services.py`、`apps/search/ranking.py` |
+| 搜尋摘要或高亮怪 | `apps/search/highlighter.py` |
+| 相關推薦不準 | `apps/search/recommender.py` |
+| 圖譜沒有資料 | `apps/graph/graph_builder.py`、Neo4j 連線、是否已 build graph |
+| 圖譜查詢不準 | `apps/graph/graph_search.py`、`apps/graph/intent.py`、`apps/graph/query_planner.py` |
+| 關鍵字抽取不準 | `apps/graph/keyword_extractor.py` |
+| Text2Cypher 沒結果 | `apps/graph/text2cypher.py`、Neo4j schema |
+| 語意搜尋沒結果 | `apps/vector/services.py`、Qdrant、embedding model、是否已 reindex |
+| GraphRAG 回答沒有引用 | `apps/graphrag/services.py` |
+| GraphRAG 問題分流錯 | `apps/graphrag/query_router.py`、`apps/graphrag/deterministic.py` |
+| GraphRAG 評估要新增題目 | `apps/graphrag/evaluation.py`、`apps/graphrag/fixtures/` |
+| 個資要處理 | `apps/privacy/deidentification.py`、`.env` |
+| 要清空重匯資料 | `apps/privacy/management/commands/reset_ingested_data.py` |
+
+## 16. 交接時建議講法
+
+可以這樣跟學弟說：
+
+> 這個系統是 Django 後端加上 MongoDB、Neo4j、Qdrant、Ollama。資料先從文件上傳開始，`documents` 負責存檔與建立文件紀錄；接著 `meetings` 和 `parser` 把 PDF 會議紀錄解析成 MongoDB 的會議與議案資料；搜尋功能在 `search`；語意搜尋索引在 `vector`；知識圖譜在 `graph`；最後 GraphRAG 問答在 `graphrag`，它會整合 MongoDB、Neo4j、Qdrant 和 LLM 的結果。前端頁面放在 `templates` 和 `static/js`，只是簡單的 Django template，不是獨立前端框架。
+
+再補充：
+
+> 維護時先分清楚問題發生在哪一層。如果是檔案上傳，看 `documents`；PDF 解析錯，看 `parser`；資料存取看 MongoDB helper；搜尋不準看 `search`；圖譜不準看 `graph`；語意搜尋看 `vector`；問答品質看 `graphrag/services.py` 和 `query_router.py`。外部服務壞掉時先看 `.env` 和 `config/settings.py`。
+
+## 17. 特別注意
+
+- `.env` 是本機私密設定，已放回專案根目錄，但不要提交到 git。
+- `.env.example` 才是可以交接的設定範本。
+- `_handoff/` 是清理時移出的備份與本機資料，不應提交。
+- `.venv-uv/` 是 uv 建立的新環境。
+- 舊的 `.venv/` 目前可能仍有 Python process 佔用，若要刪除要先確認沒有服務在跑。
+- 部分舊檔案中的中文字串在終端機顯示可能有亂碼。如果前端或錯誤訊息真的出現亂碼，優先檢查檔案編碼與原始字串是否已經 mojibake。
+- `reset_ingested_data.py`、`deidentify_data.py` 這類管理指令可能大量修改或刪除資料，務必先 dry-run、備份，再加 `--apply`。

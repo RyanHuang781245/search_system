@@ -55,6 +55,7 @@ Start with these files:
 
 - `README.md`: quick setup and run instructions.
 - `docs/maintainer_guide.md`: system purpose, API surface, commands, and code ownership map.
+- `docs/program_map_zh.md`: Chinese program map for explaining each module and major file to the next maintainer.
 - `HANDOFF_CHECKLIST.md`: final handoff checklist.
 
 Verification note: if `.venv/` only contains `Scripts/python.exe` and `python manage.py check` reports `No pyvenv.cfg file`, remove the broken `.venv/` after closing running Python processes, then rebuild it from `requirements.txt`.
