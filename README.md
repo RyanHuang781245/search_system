@@ -25,8 +25,6 @@ uv sync
 docker compose up -d
 ```
 
-接著編輯 `.env`，設定 MongoDB、Neo4j、Qdrant 與 Ollama 的連線資訊。
-
 ## 執行系統
 
 ```powershell
